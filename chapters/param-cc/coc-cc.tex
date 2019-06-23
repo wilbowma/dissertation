@@ -1,0 +1,623 @@
+\newcommand{\FigCoCCCSyntax}[1][t]{
+  \begin{figure}[#1]
+    \begin{bnfgrammar}
+      \bnflabel{Universes} &
+      \pccU & \bnfdef & \pccstarty \bnfalt \pccboxty
+      \bnfnewline
+
+      \bnflabel{Expressions} &
+      \pcce,\pccA,\pccB & \bnfdef & \pccx \bnfalt \pccstarty
+                                    \bnfalt \pcccodety{(\pccn:\pccApr,\pccx:\pccA)}{\pccB}
+                                    \\ && \bnfalt & \pcctrlufunty{\pcce}{\pcccodety{\pccn:\pccApr}{\pccB}}
+                                    \bnfalt \pccnfune{(\pccn:\pccApr,\pccx:\pccA)}{\pcce}
+                                    \bnfalt \pccappe{\pccein{f}}{\pcceone~\pccetwo}
+                                    \\ && \bnfalt & \pccsigmaty{\pccx}{\pccA}{\pccB}
+                                    \bnfalt \pccdpaire{\pcce}{\pcce}{\pccsigmaty{\pccx}{\pccA}{\pccB}}
+                                    \bnfalt \pccfste{\pcce}
+                                    \bnfalt \pccsnde{\pcce}
+                                    \\&& \bnfalt & \pccalete{\pccx}{\pcce}{\pccA}{\pcce}
+                                    \bnfalt \pccnexistty{(\pccalpha:\pccA,\pccn:\pccApr)}{\pccB}
+                                    \\&& \bnfalt & \pccnpacke{\pccA,\pccepr,\pcce}{\pccnexistty{(\pccalpha:\pccA,\pccn:\pccApr)}{\pccB}}
+                                    \\&& \bnfalt & \pccnunpacke{\pccx,\pccx,\pccx}{\pcce}{\pcce} \bnfalt \cdots
+      \bnfnewline
+
+      \bnflabel{Environments} &
+      \pcclenv & \bnfdef & \cdot \bnfalt \pcclenv,\pccx:\pccA \bnfalt \pcclenv,\pccx = \pcce:\pccA
+    \end{bnfgrammar}
+    \caption{\pcctlang Syntax (excerpts)}
+    \label{fig:coc-cc:syntax}
+  \end{figure}
+}
+
+\newcommand{\FigCoCCCSyntaxFull}[1][t]{
+  \begin{figure}[#1]
+    \begin{bnfgrammar}
+      \bnflabel{Universes} &
+      \pccU & \bnfdef & \pccstarty \bnfalt \pccboxty
+      \bnfnewline
+
+      \bnflabel{Expressions} &
+      \pcce,\pccA,\pccB & \bnfdef & \pccx \bnfalt \pccstarty
+                                    \bnfalt \pcccodety{(\pccn:\pccApr,\pccx:\pccA)}{\pccB}
+                                    \\ && \bnfalt & \pcctrlufunty{\pcce}{\pcccodety{\pccn:\pccApr}{\pccB}}
+                                    \bnfalt \pccnfune{(\pccn:\pccApr,\pccx:\pccA)}{\pcce}
+                                    \bnfalt \pccappe{\pccein{f}}{\pcceone~\pccetwo}
+                                    \\&& \bnfalt& \pccsigmaty{\pccx}{\pccA}{\pccB} \bnfalt
+                                    \pccdpaire{\pcce}{\pcce}{\pccsigmaty{\pccx}{\pccA}{\pccB}}
+                                    \bnfalt \pccfste{\pcce}
+                                    \bnfalt \pccsnde{\pcce}
+                                    \\ && \bnfalt & \pccboolty
+                                    \bnfalt \pcctruee
+                                    \bnfalt \pccfalsee
+                                    \bnfalt \pccife{\pcce}{\pcceone}{\pccetwo}
+                                    \\ && \bnfalt & \pccalete{\pccx}{\pcce}{\pccA}{\pcce}
+                                    \bnfalt \pccnexistty{(\pccalpha:\pccA,\pccn:\pccApr)}{\pccB}
+                                    \\&& \bnfalt & \pccnpacke{\pccA,\pccepr,\pcce}{\pccnexistty{(\pccalpha:\pccA,\pccn:\pccApr)}{\pccB}}
+                                    \\&& \bnfalt & \pccnunpacke{\pccx,\pccx,\pccx}{\pcce}{\pcce}
+      \bnfnewline
+
+      \bnflabel{Environments} &
+      \pcclenv & \bnfdef & \cdot \bnfalt \pcclenv,\pccx:\pccA \bnfalt \pcclenv,\pccx = \pcce:\pccA
+    \end{bnfgrammar}
+    \caption{\pcctlang Syntax}
+    \label{fig:coc-cc:syntax-full}
+  \end{figure}
+}
+
+\newcommand{\FigCoCCCSugar}[1][t]{
+  \begin{figure}[#1]
+    \begin{displaymath}
+      \begin{array}{rcl}
+        \pcce:\pcct & \defeq & \pcctyjudg{\pcclenv}{\pcce}{\pccA}~\where{\pcclenv\text{
+            is obvious from context}}
+        \\
+        \pccnpackoe{\pccei\dots} & \defeq &
+        \pccnpacke{\pccei\dots}{\pccnexistty{\pccxi:\pccti\dots}}~\where{\pccei:\subst{\pccti}{\pccein{i-1}}{\pccxin{i-1}}}
+        \\
+        \pccnpaire{\pccei\dots} & \defeq & \pccdnpaire{\pccei\dots}{\pccnsigmaty{(\pccxi:\pccti\dots)}}~\where{\pccei:\subst{\pccti}{\pccein{i-1}}{\pccxin{i-1}}}
+        \\
+        \pcclete{\pccx}{\pcce}{\pccepr} & \defeq & \pccalete{\pccx}{\pcce}{\pcct}{\pccepr}~\where{\pcce:\pcct}
+        \\
+        \pcclete{\pccnpaire{\pccxi\dots}}{\pcce}{\pccepr} & \defeq & \pcclete{\pccxin{0}}{\pccprje{0}{\pcce}}{\dots\pcclete{\pccxin{\len{i}}}{\pccprje{\len{i}}}{\pccepr}}
+        \\
+        \subst{\pcce}{\pccnpaire{\pccxi\dots}}{\pcce} & \defeq & \subst{\pcce}{\pccxin{i}}{\pccprje{i}{\pcce}}
+      \end{array}
+    \end{displaymath}
+    \caption{\pcctlang Syntactic Sugar}
+    \label{fig:coc-cc:sugar}
+  \end{figure}
+}
+
+\newcommand{\FigCoCCCRedFull}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\pccstepjudg[\step]{\pcclenv}{\pcce}{\pccepr}}
+    \begin{reductionrules}
+      \tlenv \vdash\tappe{(\tnfune{\txpr:\tApr,\tx:\tA}{\teone})}{\tepr~\te}
+      & \step_{\beta} & \subst{\subst{\teone}{\tepr}{\txpr}}{\te}{\tx}
+      \stepnewline
+
+      \tlenv \vdash \tfste{\tpaire{\teone}{\tetwo}} & \step_{\pi_{1}} & \teone
+      \stepnewline
+
+      \tlenv \vdash \tsnde{\tpaire{\teone}{\tetwo}} & \step_{\pi_{2}} & \tetwo
+      \stepnewline
+
+      \tlenv \vdash \tife{\ttruee}{\teone}{\tetwo} & \step_{\iota_{1}} & \teone
+      \stepnewline
+
+      \tlenv \vdash \tife{\tfalsee}{\teone}{\tetwo} & \step_{\iota_{2}} & \tetwo
+      \stepnewline
+
+      \tlenv \vdash \tx & \step_{\delta} & \te \\
+      && \where{\tx = \te : \pccA \in \tlenv}
+      \stepnewline
+
+      \tlenv \vdash \talete{\tx}{\te}{\tA}{\teone} & \step_{\zeta} & \subst{\teone}{\te}{\tx}
+      \stepnewline
+
+      \pcclenv \vdash \pccnunpacke{\pccx,\pccxpr,\pccxin{b}}{\pccnpackoe{\pcce,\pccepr,\pccein{b}}}{\pccetwo} & \step_{\exists} & \subst{\pccetwo}{\pccnpaire{\pcce,\pccepr,\pccein{b}}}{\pccnpaire{\pccx,\pccxpr,\pccxin{b}}}
+    \end{reductionrules}
+    \caption{\pcctlang Reduction}
+    \label{fig:coc-cc:red-full}
+  \end{figure}
+}
+
+\newcommand{\FigCoCCCRed}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\pccstepjudg[\step]{\pcclenv}{\pcce}{\pccepr}}
+    \begin{reductionrules}
+      & \vdots & \\
+      \pccnunpacke{\pccx,\pccxpr,\pccxin{b}}{\pccnpackoe{\pcce,\pccepr,\pccein{b}}}{\pccetwo} & \step_{\exists} & \subst{\pccetwo}{\pccnpaire{\pcce,\pccepr,\pccein{b}}}{\pccnpaire{\pccx,\pccxpr,\pccxin{b}}}
+    \end{reductionrules}
+    \caption{\pcctlang Reduction (excerpts)}
+    \label{fig:coc-cc:red}
+  \end{figure}
+}
+
+\newcommand{\FigCoCCCConv}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\pccstepjudg[\stepstar]{\pcclenv}{\pcce}{\pccepr}}
+    \begin{mathpar}
+      \inferrule*[right=\defrule{Red-Cong-T-Code}]
+      {\pccstepjudg[\stepstar]{\pcclenv}{\pccAone}{\pccAonepr} \\
+       \pccstepjudg[\stepstar]{\pcclenv,\pccn:\pccAonepr}{\pccAtwo}{\pccAtwopr} \\
+       \pccstepjudg[\stepstar]{\pcclenv,\pccn:\pccAonepr,\pccx:\pccAtwopr}{\pccB}{\pccBpr}}
+      {\pccstepjudg[\stepstar]{\pcclenv}{\pcccodety{\pccn:\pccAone,\pccx:\pccAtwo}{\pccB}}{\pcccodety{\pccn:\pccAonepr,\pccx:\pccAtwopr}{\pccBpr}}}
+
+      \inferrule*[right=\defrule*{Red-Cong-trlufunty}{Red-Cong-\im{\trlufunarrow}}]
+      {\pccstepjudg[\stepstar]{\pcclenv}{\pcce}{\pccepr} \\
+       \pccstepjudg[\stepstar]{\pcclenv}{\pccAtwo}{\pccAtwopr} \\
+       \pccstepjudg[\stepstar]{\pcclenv,\pccx:\pccAtwopr}{\pccB}{\pccBpr}}
+      {\pccstepjudg[\stepstar]{\pcclenv}{\pcctrlufunty{\pcce}{\pcccodety{\pccx:\pccAtwo}{\pccB}}}
+        {\pcctrlufunty{\pccepr}{\pcccodety{\pccx:\pccAtwopr}{\pccBpr}}}}
+
+
+      \inferrule*[right=\defrule{Red-Cong-Code}]
+      {\pccstepjudg[\stepstar]{\tlenv}{\tAone}{\tAonepr} \\
+       \pccstepjudg[\stepstar]{\tlenv,\tn:\tAonepr}{\tAtwo}{\tAtwopr} \\
+       \pccstepjudg[\stepstar]{\tlenv,\tn:\tAonepr,\tx:\tAtwopr}{\te}{\tepr}}
+      {\pccstepjudg[\stepstar]{\tlenv}{\tnfune{(\tn:\tAone,\tx:\tAtwo)}{\te}}{\tnfune{(\tn:\tAonepr,\tx:\tAtwopr)}{\tepr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-App}]
+      {\pccstepjudg[\stepstar]{\pcclenv}{\pcceone}{\pcceonepr} \\
+       \pccstepjudg[\stepstar]{\pcclenv}{\pccetwo}{\pccetwopr}}
+      {\pccstepjudg[\stepstar]{\pcclenv}{\pccappe{\pcceone}{\pccetwo}}{\pccappe{\pcceonepr}{\pccetwopr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Sig}]
+      {\pccstepjudg[\stepstar]{\tlenv}{\tA}{\tApr} \\
+       \pccstepjudg[\stepstar]{\tlenv,\tx:\tApr}{\te}{\tepr}}
+      {\pccstepjudg[\stepstar]{\tlenv}{\tsigmaty{\tx}{\tA}{\te}}{\tsigmaty{\tx}{\tApr}{\tepr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Pair}]
+      {\pccstepjudg[\stepstar]{\tlenv}{\teone}{\teonepr} \\
+       \pccstepjudg[\stepstar]{\tlenv}{\tetwo}{\tetwopr} \\
+       \pccstepjudg[\stepstar]{\tlenv}{\tA}{\tApr}}
+      {\pccstepjudg[\stepstar]{\tlenv}{\tdpaire{\teone}{\tetwo}{\tA}}{\tdpaire{\teonepr}{\tetwopr}{\tApr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Fst}]
+      {\pccstepjudg[\stepstar]{\tlenv}{\te}{\tepr}}
+      {\pccstepjudg[\stepstar]{\tlenv}{\tfste{\te}}{\tfste{\tepr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Snd}]
+      {\pccstepjudg[\stepstar]{\tlenv}{\te}{\tepr}}
+      {\pccstepjudg[\stepstar]{\tlenv}{\tsnde{\te}}{\tsnde{\tepr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-If}]
+      {\tstepjudg[\stepstar]{\tlenv}{\te}{\tepr} \\
+       \tstepjudg[\stepstar]{\tlenv}{\teone}{\teonepr} \\
+       \tstepjudg[\stepstar]{\tlenv}{\tetwo}{\tetwopr}}
+      {\sstepjudg[\stepstar]{\tlenv}{\tife{\te}{\teone}{\tetwo}}{\tife{\tepr}{\teonepr}{\tetwopr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Let}]
+      {\pccstepjudg[\stepstar]{\pcclenv}{\pcceone}{\pcceonepr} \\
+       \pccstepjudg[\stepstar]{\pcclenv}{\pccA}{\pccApr} \\
+       \pccstepjudg[\stepstar]{\pcclenv,\pccx = \pccepr:\pccApr}{\pccetwo}{\pccetwopr}}
+      {\pccstepjudg[\stepstar]{\pcclenv}{\pccalete{\pccx}{\pcceone}{\pccA}{\pccetwo}}{\pccalete{\pccx}{\pcceonepr}{\pccApr}{\pccetwopr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Exist}]
+      {\pccstepjudg[\stepstar]{\pcclenv}{\pccAone}{\pccAonepr} \\
+       \pccstepjudg[\stepstar]{\pcclenv,\pccx:\pccAonepr}{\pccAtwo}{\pccAtwopr} \\
+       \pccstepjudg[\stepstar]{\pcclenv,\pccx:\pccAonepr,\pccxpr:\pccAtwopr}{\pccB}{\pccBpr}}
+      {\pccstepjudg[\stepstar]{\pcclenv}{\pccnexistty{(\pccx:\pccA,\pccxpr:\pccApr)}{\pccB}}{\pccnexistty{(\pccx:\pccAone,\pccxpr:\pccAtwo)}{\pccBpr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Pack}]
+      {\pccstepjudg[\stepstar]{\pcclenv}{\pccA}{\pccApr} \\
+       \pccstepjudg[\stepstar]{\pcclenv}{\pcceone}{\pcceonepr} \\
+       \pccstepjudg[\stepstar]{\pcclenv}{\pccetwo}{\pccetwopr} \\
+       \pccstepjudg[\stepstar]{\pcclenv}{\pccethree}{\pccethreepr}}
+      {\pccstepjudg[\stepstar]{\pcclenv}{\pccnpacke{\pcceone,\pccetwo,\pccein{3}}{\pccA}}{\pccnpacke{\pcceonepr,\pccetwopr,\pccethreepr}{\pccApr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Unpack}]
+      {\pccstepjudg[\stepstar]{\pcclenv}{\pcceone}{\pcceonepr} \\
+       \pccstepjudg[\stepstar]{\pcclenv,\pccx:\pccA,\pccxpr:\pccApr,\pccxin{b}:\pccB}{\pccetwo}{\pccetwo}}
+      {\pccstepjudg[\stepstar]{\pcclenv}{\pccnunpacke{\pccx,\pccxpr,\pccxin{b}}{\pcceone}{\pccetwo}}
+        {\pccnunpacke{\pccx,\pccxpr,\pccxin{b}}{\pcceonepr}{\pccetwopr}}}
+    \end{mathpar}
+    \caption{\pcctlang Conversion}
+    \label{fig:coc-cc:conv}
+  \end{figure}
+}
+
+\newcommand{\FigCoCCCEquivFull}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\pccequivjudg{\pcclenv}{\pcce}{\pccepr}}
+    \begin{mathpar}
+      \inferrule*[right=\defrule*{eqv}{\im{\equiv}}]
+      {\tstepjudg[\stepstar]{\tlenv}{\teone}{\te} \\
+       \tstepjudg[\stepstar]{\tlenv}{\tetwo}{\te}}
+      {\tequivjudg{\tlenv}{\teone}{\tetwo}}
+
+      \inferrule*[right=\defrule*{eqv-eta1}{\im{\equiv}-\im{\eta_1}}]
+      {\pccstepjudg[\stepstar]{\pcclenv}{\pcceone}{\pccnpackoe{\pccApr,\pccepr,
+            \pccnfune{(\pccn:\pccApr,\pccx:\pccA)}{\pcceonepr}}} \\
+       \pccstepjudg[\stepstar]{\pcclenv}{\pccetwo}{\pccetwopr} \\
+       \pccequivjudg{\pcclenv,\pccx:\subst{\pccA}{\pccepr}{\pccn}}{\subst{\pcceonepr}{\pccepr}{\pccn}}{\pccnunpacke{\pccalpha,\pccn,\pccf}{\pccetwopr}{\pccappe{\pccf}{\pccn~\pccx}}}}
+      {\pccequivjudg{\pcclenv}{\pcceone}{\pccetwo}}
+
+      \inferrule*[right=\defrule*{eqv-eta2}{\im{\equiv}-\im{\eta_2}}]
+      {\pccstepjudg[\stepstar]{\pcclenv}{\pcceone}{\pcceonepr} \\
+       \pccstepjudg[\stepstar]{\pcclenv}{\pccetwo}{\pccnpackoe{\pccApr,\pccepr,
+           \pccnfune{(\pccn:\pccApr,\pccx:\pccA)}{\pccetwopr}}} \\
+       \pccequivjudg{\pcclenv,\pccx:\subst{\pccA}{\pccepr}{\pccn}}{\pccnunpacke{\pccalpha,\pccn,\pccf}{\pcceonepr}{\pccappe{\pccf}{\pccn~\pccx}}}{\subst{\pccetwopr}{\pccepr}{\pccn}}}
+      {\pccequivjudg{\pcclenv}{\pcceone}{\pccetwo}}
+    \end{mathpar}
+    \caption{\pcctlang Equivalence}
+  \end{figure}
+}
+
+\newcommand{\FigCoCCCEquiv}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\pccequivjudg{\pcclenv}{\pcce}{\pccepr}}
+    \begin{mathpar}
+      \cdots
+
+      \inferrule*[right=\defrule*{eqv-eta1}{\im{\equiv}-\im{\eta_1}}]
+      {\pccstepjudg[\stepstar]{\pcclenv}{\pcceone}{\pccnpackoe{\pccApr,\pccepr,
+            \pccnfune{(\pccn:\pccApr,\pccx:\pccA)}{\pcceonepr}}} \\
+       \pccstepjudg[\stepstar]{\pcclenv}{\pccetwo}{\pccetwopr} \\
+       \pccequivjudg{\pcclenv,\pccx:\subst{\pccA}{\pccepr}{\pccn}}{\subst{\pcceonepr}{\pccepr}{\pccn}}{\pccnunpacke{\pccalpha,\pccn,\pccf}{\pccetwopr}{\pccappe{\pccf}{\pccn~\pccx}}}}
+      {\pccequivjudg{\pcclenv}{\pcceone}{\pccetwo}}
+
+      \inferrule*[right=\defrule*{eqv-eta2}{\im{\equiv}-\im{\eta_2}}]
+      {\pccstepjudg[\stepstar]{\pcclenv}{\pcceone}{\pcceonepr} \\
+       \pccstepjudg[\stepstar]{\pcclenv}{\pccetwo}{\pccnpackoe{\pccApr,\pccepr,
+           \pccnfune{(\pccn:\pccApr,\pccx:\pccA)}{\pccetwopr}}} \\
+       \pccequivjudg{\pcclenv,\pccx:\subst{\pccA}{\pccepr}{\pccn}}{\pccnunpacke{\pccalpha,\pccn,\pccf}{\pcceonepr}{\pccappe{\pccf}{\pccn~\pccx}}}{\subst{\pccetwopr}{\pccepr}{\pccn}}}
+      {\pccequivjudg{\pcclenv}{\pcceone}{\pccetwo}}
+    \end{mathpar}
+    \caption{\pcctlang Equivalence (excerpts)}
+    \label{fig:coc-cc:equiv}
+  \end{figure}
+}
+
+\newcommand{\FigCoCCCTypingOne}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\pcctyjudg{\pcclenv}{\pcce}{\pccA}}
+    \begin{mathpar}
+      \inferrule*[right=\defrule{Var}]
+      {(\cpsx : \cpsA \in \cpslenv \text{ or }
+        \cpsx = \cpse : \cpsA \in \cpslenv) \\
+        \cpswf{\cpslenv}}
+      {\cpstyjudg{\cpslenv}{\cpsx}{\cpsA}}
+
+      \inferrule*[right=\defrule{*}]
+      {\cpswf{\cpslenv}}
+      {\cpstyjudg{\cpslenv}{\cpsstarty}{\cpsboxty}}
+
+      \inferrule*[right=\defrule{Sig}]
+      {\cpstyjudg{\cpslenv}{\cpsA}{\cpsstarty} \\
+       \cpstyjudg{\cpslenv,\cpsx:\cpsA}{\cpsB}{\cpsstarty}}
+      {\cpstyjudg{\cpslenv}{\cpssigmaty{\cpsx}{\cpsA}{\cpsB}}{\cpsstarty}}
+
+      \inferrule*[right=\defrule{Pair}]
+      {\cpstyjudg{\cpslenv}{\cpseone}{\cpsA} \\
+       \cpstyjudg{\cpslenv}{\cpsetwo}{\subst{\cpsB}{\cpseone}{\cpsx}}}
+      {\cpstyjudg{\cpslenv}{\cpsdpaire{\cpseone}{\cpsetwo}{\cpssigmaty{\cpsx}{\cpsA}{\cpsB}}}{\cpssigmaty{\cpsx}{\cpsA}{\cpsB}}}
+
+      \inferrule*[right=\defrule{Fst}]
+      {\cpstyjudg{\cpslenv}{\cpse}{\cpssigmaty{\cpsx}{\cpsA}{\cpsB}}}
+      {\cpstyjudg{\cpslenv}{\cpsfste{\cpse}}{\cpsA}}
+
+      \inferrule*[right=\defrule{Snd}]
+      {\cpstyjudg{\cpslenv}{\cpse}{\cpssigmaty{\cpsx}{\cpsA}{\cpsB}}}
+      {\cpstyjudg{\cpslenv}{\cpssnde{\cpse}}{\subst{\cpsB}{\cpsfste{\cpse}}{\cpsx}}}
+
+      \inferrule*[right=\defrule{Bool}]
+      {\cpswf{\cpslenv}}
+      {\cpstyjudg{\cpslenv}{\cpsboolty}{\cpsstarty}}
+
+      \inferrule*[right=\defrule{True}]
+      {\cpswf{\cpslenv}}
+      {\cpstyjudg{\cpslenv}{\cpstruee}{\cpsboolty}}
+
+      \inferrule*[right=\defrule{False}]
+      {\cpswf{\cpslenv}}
+      {\cpstyjudg{\cpslenv}{\cpsfalsee}{\cpsboolty}}
+
+      \inferrule*[right=\defrule{If}]
+      {\cpstyjudg{\cpslenv}{\cpse}{\cpsboolty} \\
+       \cpstyjudg{\cpslenv}{\cpseone}{\cpsB} \\
+       \cpstyjudg{\cpslenv}{\cpsetwo}{\cpsB}}
+      {\cpstyjudg{\cpslenv}{\cpsife{\cpse}{\cpseone}{\cpsetwo}}{\cpsB}}
+
+      \inferrule*[right=\defrule{Let}]
+      {\cpstyjudg{\cpslenv}{\cpse}{\cpsA} \\
+       \cpstyjudg{\cpslenv,\cpsx=\cpse:\cpsA}{\cpsepr}{\cpsB}}
+      {\cpstyjudg{\cpslenv}{\cpsalete{\cpsx}{\cpse}{\cpsA}{\cpsepr}}{\subst{\cpsB}{\cpse}{\cpsx}}}
+
+      \inferrule*[right=\defrule{Conv}]
+      {\cpstyjudg{\cpslenv}{\cpse}{\cpsA} \\
+       \cpstyjudg{\cpslenv}{\cpsB}{\cpsU} \\
+       \cpsequivjudg{\cpslenv}{\cpsA}{\cpsB}}
+      {\cpstyjudg{\cpslenv}{\cpse}{\cpsB}}
+    \end{mathpar}
+    \caption{\pcctlang Typing (1/2)}
+  \end{figure}
+}
+
+\newcommand{\FigCoCCCTypingTwo}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\pcctyjudg{\pcclenv}{\pcce}{\pccA}}
+    \begin{mathpar}
+      \inferrule*[right=\defrule{Code-*}]
+      {\pcctyjudg{\pcclenv}{\pccB}{\pccstarty}}
+      {\pcctyjudg{\pcclenv}{\pcccodety{(\pccxpr:\pccApr,\pccx:\pccA)}{\pccB}}{\pccstarty}}
+
+      \inferrule*[right=\defrule*{trfunty}{\im{\trlufunarrow}}]
+      {\pcctyjudg{\pcclenv}{\pcce}{\pccApr} \\
+       \pcctyjudg{\pcclenv}{\pcccodety{(\pccxpr:\pccApr,\pccx:\pccA)}{\pccB}}{\pccU}}
+      {\pcctyjudg{\pcclenv}{\pcctrlufunty{\pcce}{\pcccodety{\pccx:\pccA}{\pccB}}}{\pccU}}
+
+      \inferrule*[right=\defrule{TrFun}]
+      {\pcctyjudg{\pcclenv}{\pcce}{\pcccodety{(\pccxpr:\pccApr,\pccx:\pccA)}{\pccB}} \\
+       \pcctyjudg{\pcclenv}{\pccepr}{\pccApr}}
+      {\pcctyjudg{\pcclenv}{\pcce}{\pcctrlufunty{\pccepr}{\pcccodety{(\pccx:\subst{\pccA}{\pccepr}{\pccxpr})}{\subst{\pccB}{\pccepr}{\pccxpr}}}}}
+
+      \inferrule*[right=\defrule{Code}]
+      {\pcctyjudg{\cdot,\pccxpr:\pccApr,\pccx:\pccA}{\pcce}{\pccB}}
+      {\pcctyjudg{\pcclenv}{\pccnfune{(\pccxpr:\pccApr,\pccx:\pccA)}{\pcce}}{\pcccodety{\pccxpr:\pccApr,\pccx:\pccA}{\pccB}}}
+
+      \inferrule*[right=\defrule{TrApp}]
+      {\pcctyjudg{\pcclenv}{\pccf}{\pcctrlufunty{\pccepr}{\pcccodety{\pccx:\pccA}{\pccB}}} \\
+       \pcctyjudg{\pcclenv}{\pcce}{\pccA}}
+      {\pcctyjudg{\pcclenv}{\pccappe{\pccf}{\pccepr\:\pcce}}{\subst{\pccB}{\pcce}{\pccx}}}
+
+      \inferrule*[right=\defrule{Exist}]
+      {\pcctyjudg{\pcclenv}{\pccA}{\pccU} \\
+       \pcctyjudg{\pcclenv,\pccx:\pccA}{\pccApr}{\pccUpr} \\
+       \pcctyjudg{\pcclenv,\pccx:\pccA,\pccxpr:\pccApr}{\pccB}{\pccstarty}}
+      {\pcctyjudg{\pcclenv}{\pccnexistty{(\pccx:\pccA,\pccxpr:\pccApr)}{\pccB}}{\pccstarty}}
+
+      \inferrule*[right=\defrule{Pack}]
+      {\pcctyjudg{\pcclenv}{\pccnexistty{(\pccx:\pccA,\pccxpr:\pccApr)}{\pccB}}{\pccU} \\
+       \pcctyjudg{\pcclenv}{\pcce}{\pccA} \\
+       \pcctyjudg{\pcclenv}{\pccepr}{\subst{\pccApr}{\pcce}{\pccx}} \\
+       \pcctyjudg{\pcclenv}{\pccein{b}}{\subst{\subst{\pccB}{\pcce}{\pccx}}{\pccepr}{\pccxpr}}}
+      {\pcctyjudg{\pcclenv}{\pccnpacke{\pcce,\pccepr,\pccein{b}}{\pccnexistty{(\pccx:\pccA,\pccxpr:\pccApr)}{\pccB}}}{\pccnexistty{(\pccx:\pccA,\pccxpr:\pccApr)}{\pccB}}}
+
+      \inferrule*[right=\defrule{Unpack}]
+      {\pcctyjudg{\pcclenv}{\pcce}{\pccnexistty{(\pccx:\pccA,\pccxpr:\pccApr)}{\pccB}} \\
+       \pcctyjudg{\pcclenv,\pccx:\pccA,\pccxpr:\pccApr,\pccxin{b}:\pccB}{\pccepr}{\pccBpr} \\
+       \pcctyjudg{\pcclenv}{\pccBpr}{\pccU}}
+      {\pcctyjudg{\pcclenv}{\pccnunpacke{\pccx,\pccxpr,\pccxin{b}}{\pcce}{\pccepr}}{\pccBpr}}
+    \end{mathpar}
+    \caption{\pcctlang Typing (2/2)}
+  \end{figure}
+}
+
+\newcommand{\FigCoCCCTypingNew}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\pcctyjudg{\pcclenv}{\pcce}{\pccA}}
+    \begin{mathpar}
+      \cdots
+
+      \inferrule*[right=\defrule{Code-*}]
+      {\pcctyjudg{\pcclenv}{\pccB}{\pccstarty}}
+      {\pcctyjudg{\pcclenv}{\pcccodety{(\pccxpr:\pccApr,\pccx:\pccA)}{\pccB}}{\pccstarty}}
+
+      \inferrule*[right=\defrule*{trfunty}{\im{\trlufunarrow}}]
+      {\pcctyjudg{\pcclenv}{\pcce}{\pccApr} \\
+       \pcctyjudg{\pcclenv}{\pcccodety{(\pccxpr:\pccApr,\pccx:\pccA)}{\pccB}}{\pccU}}
+      {\pcctyjudg{\pcclenv}{\pcctrlufunty{\pcce}{\pcccodety{\pccx:\pccA}{\pccB}}}{\pccU}}
+
+      \inferrule*[right=\defrule{TrFun}]
+      {\pcctyjudg{\pcclenv}{\pcce}{\pcccodety{(\pccxpr:\pccApr,\pccx:\pccA)}{\pccB}} \\
+       \pcctyjudg{\pcclenv}{\pccepr}{\pccApr}}
+      {\pcctyjudg{\pcclenv}{\pcce}{\pcctrlufunty{\pccepr}{\pcccodety{(\pccx:\subst{\pccA}{\pccepr}{\pccxpr})}{\subst{\pccB}{\pccepr}{\pccxpr}}}}}
+
+      \inferrule*[right=\defrule{Code}]
+      {\pcctyjudg{\cdot,\pccxpr:\pccApr,\pccx:\pccA}{\pcce}{\pccB}}
+      {\pcctyjudg{\pcclenv}{\pccnfune{(\pccxpr:\pccApr,\pccx:\pccA)}{\pcce}}{\pcccodety{\pccxpr:\pccApr,\pccx:\pccA}{\pccB}}}
+
+      \inferrule*[right=\defrule{TrApp}]
+      {\pcctyjudg{\pcclenv}{\pccf}{\pcctrlufunty{\pccepr}{\pcccodety{\pccx:\pccA}{\pccB}}} \\
+       \pcctyjudg{\pcclenv}{\pcce}{\pccA}}
+      {\pcctyjudg{\pcclenv}{\pccappe{\pccf}{\pccepr\:\pcce}}{\subst{\pccB}{\pcce}{\pccx}}}
+
+      \inferrule*[right=\defrule{Exist}]
+      {\pcctyjudg{\pcclenv}{\pccA}{\pccU} \\
+       \pcctyjudg{\pcclenv,\pccx:\pccA}{\pccApr}{\pccUpr} \\
+       \pcctyjudg{\pcclenv,\pccx:\pccA,\pccxpr:\pccApr}{\pccB}{\pccstarty}}
+      {\pcctyjudg{\pcclenv}{\pccnexistty{(\pccx:\pccA,\pccxpr:\pccApr)}{\pccB}}{\pccstarty}}
+
+      \inferrule*[right=\defrule{Pack}]
+      {\pcctyjudg{\pcclenv}{\pccnexistty{(\pccx:\pccA,\pccxpr:\pccApr)}{\pccB}}{\pccU} \\
+       \pcctyjudg{\pcclenv}{\pcce}{\pccA} \\
+       \pcctyjudg{\pcclenv}{\pccepr}{\subst{\pccApr}{\pcce}{\pccx}} \\
+       \pcctyjudg{\pcclenv}{\pccein{b}}{\subst{\subst{\pccB}{\pcce}{\pccx}}{\pccepr}{\pccxpr}}}
+      {\pcctyjudg{\pcclenv}{\pccnpacke{\pcce,\pccepr,\pccein{b}}{\pccnexistty{(\pccx:\pccA,\pccxpr:\pccApr)}{\pccB}}}{\pccnexistty{(\pccx:\pccA,\pccxpr:\pccApr)}{\pccB}}}
+
+      \inferrule*[right=\defrule{Unpack}]
+      {\pcctyjudg{\pcclenv}{\pcce}{\pccnexistty{(\pccx:\pccA,\pccxpr:\pccApr)}{\pccB}} \\
+       \pcctyjudg{\pcclenv,\pccx:\pccA,\pccxpr:\pccApr,\pccxin{b}:\pccB}{\pccepr}{\pccBpr} \\
+       \pcctyjudg{\pcclenv}{\pccBpr}{\pccU}}
+      {\pcctyjudg{\pcclenv}{\pccnunpacke{\pccx,\pccxpr,\pccxin{b}}{\pcce}{\pccepr}}{\pccBpr}}
+    \end{mathpar}
+    \caption{\pcctlang Typing (excerpts)}
+    \label{fig:coc-cc:type-new}
+  \end{figure}
+}
+
+\section{Parametric Closure Conversion {{IL}}}
+\label{sec:param-cc:coc-cc}
+
+\FigCoCCCSyntax
+In \fullref[]{fig:coc-cc:syntax}, I present the syntax of \pcctlang, a
+\tech{dependently typed} \tech{closure converted} language based on
+\pccslang.
+As in \fullref[]{chp:abs-cc}, closed \tech{code} is written as
+\im{\pccnfune{(\pccn:\pccApr,\pccx:\pccA)}{\pcce}} and has type
+\im{\pcccodety{(\pccn:\pccApr,\pccx:\pccA)}{\pccB}}.
+All \tech{code} takes two arguments, which are intuitively the
+\tech{environment} \im{\pccn} and the original argument \im{\pccx}.
+I add 2-ary \tech{existential types}
+\im{\pccnexistty{(\pccalpha:\pccA,\pccn:\pccApr)}{\pccB}} to encode
+\tech{closures}, with the introduction form
+\im{\pccnpacke{\pccA,\pccepr,\pcce}{\pccnexistty{(\pccalpha:\pccA,\pccn:\pccApr)}{\pccB}}}
+and the elimination form
+\im{\pccnunpacke{\pccalpha,\pccn,\pccf}{\pccepr}{\pcce}}.
+As with \tech{dependent pairs}, I omit the type annotation on
+\im{\pccfont{pack}} for brevity, as in \im{\pccnpackoe{\pccA,\pccepr,\pcce}}.
+Finally, I add a variant of \emph{translucent function types}, specialized to
+\tech{code} types, written
+\im{\pcctrlufunty{\pcce}{\pcccodety{\pccx:\pccA}{\pccB}}}.
+Since all \tech{code} is 2-ary, the \tech{translucent function type} is
+specialized to only curry \tech{code} types.
+This type represents a \tech{code} that can only be applied to the term
+\im{\pcce} as its first argument, and something of type \im{\pccA} as its second
+argument, and results in a term of the type \im{\pccB}.
+Note that this type is not \tech{dependent} in the usual sense on its first
+argument---\ie, there is no name bound for the term \im{\pcce}---since
+\im{\pcce} has already been substituted into the types \im{\pccA} and
+\im{\pccB}.
+%
+\marginpar{We could simplify the type system by encoding 2-ary constructs such as
+\pccfonttext{code} and \pccfonttext{pack} the same way we encode n-ary
+\tech{dependent pairs}.
+However, this complicates \(\eta\)-equivalence for \tech{closures}, which relies
+on the canonical forms.}
+
+\FigCoCCCTypingNew
+In \fullref[]{fig:coc-cc:type-new}, I define the key typing rules for the target
+language; the complete definition is given in \fullref[]{sec:param-cc:appendix}.
+I explain \tech{translucent function types} in detail shortly.
+I add the standard rules for \tech{existential types}.
+Notice that \tech{existential types} are \tech{impredicative} (\refrule{Exist});
+unlike \tech{dependent pairs} (strong dependent pairs with projection),
+\tech{existential types} (weak dependent pairs with pattern matching) are
+consistent with \tech{impredicativity}.
+Furthermore, \tech{impredicativity} is necessary for expressing the type of
+\tech{closures}.
+\refrule{TrFun} is the introduction rule for the \tech{translucent type}.
+Intuitively, any function can be statically specialized to a specific argument.
+To ascribe a term a \tech{translucent type}, we must check that the specific
+argument is of the same type as expected by the \tech{code}.
+\refrule{TrApp} eliminates a \tech{translucent type}.
+When applying \tech{code} ascribed a \tech{translucent type}, we check that the
+first argument is \emph{equal} to the argument specified by the
+\tech{translucent type}.
+
+As an example of the \tech{translucent type}, consider the following example in
+which we ascribe two different types to the polymorphic identity function.
+\begin{displaymath}
+  \begin{stackTL}
+    \pccfont{id} : \pcccodety{(\pccA:\pccstarty,\pccx:\pccA)}{\pccA}\\
+    \pccfont{id} : \pcctrlufunty{\pccboolty}{\pcccodety{\pccx:\pccboolty}{\pccboolty}}\\
+  \end{stackTL}
+\end{displaymath}
+In the first case, we ascribe \im{\pccfont{id}} the type
+\im{\pcccodety{(\pccA:\pccstarty,\pcca:\pccA)}{\pccA}}.
+This is the standard type, compiled to a \tech{code} type.
+In the second case, we ascribe \im{\pccfont{id}} a \tech{translucent type}.
+Notice that we do not actually apply \im{\pccfont{id}} to any arguments; we
+specialize only its \tech{type}.
+By ascribing it a \tech{translucent type}, we know statically that when this
+function is applied to the type \im{\pccboolty}, it accepts and return a
+\im{\pccboolty}.
+This gives us the ability to reason about the result of applying
+\im{\pccfont{id}} before applying it.
+As a result, after ascribing this type we \emph{must} only apply
+\im{\pccfont{id}} to \im{\pccboolty}, or the additional static reasoning would
+not be valid.
+
+\FigCoCCCRed
+In \fullref[]{fig:coc-cc:red} I give the new reduction rule for \tech{existential types}.
+The rule is completely standard.
+\tech{Translucent types} do not introduce new dynamic semantics.
+
+\begin{digression}
+  If we had recursion, and therefore recursive \tech{closures}, we would need a
+  non-standard reduction rule for \pccfonttext{unpack} to ensure normalization.
+  In the same way that recursive functions in Coq only reduce when applied to a
+  constant, a recursive \tech{closure} should only reduce when
+  \pccfonttext{unpack}ed and applied to a constant.
+\end{digression}
+
+\FigCoCCCEquiv
+In \fullref[]{fig:coc-cc:equiv} I present new \(\eta\)-equivalence rules for
+\tech{closures}.
+These new rules are the result of \tech{closure converting} the
+\(\eta\)-equivalence rules from \pccslang.
+
+This \(\eta\)-equivalence is specialized to \tech{closures} and necessarily
+differs from the standard \(\eta\)-equivalence for \tech{existential types}.
+To see why, consider the normal \(\eta\)-equivalence for \tech{existential types}.
+\begin{displaymath}
+  C[\pcce] \equiv \pccunpacke{\pccalpha}{\pccx}{\pcce}{C[\pccpackoe{\pccalpha}{\pccx}]}\\
+\end{displaymath}
+This states that the expression \im{\pcce} in some arbitrary program
+\deftech{context} (a program with a \emph{hole}, or single linear variable,
+\im{\hole}) \im{C}
+is \tech{equivalent} to \pccfonttext{unpack}ing \im{\pcce} and executing \im{C}
+with the canonical form of the \tech{existential type}
+\im{\pccpackoe{\pccalpha}{\pccx}}.
+In a \tech{closure-converted} language, we can't use this rule, since
+\im{C} may be \tech{code} \im{\pccnfune{\pccy:\pccA}{\hole}},
+and we can't push this context under the scope of the free variables
+\im{\pccalpha, \pccx}.
+In general, after \tech{closure conversion} we cannot introduce references to
+free variables in arbitrary contexts.
+Since the normal \(\eta\)-equivalence for \tech{existential types} introduces
+references to free variables in an arbitrary context, it is not valid in our
+\tech{closure-converted} language.
+
+\subsection{Meta-theory}
+As the target language is relatively standard, I do not prove any meta-theoretic
+results about \pcctlang; I sketch most of a model below.
+I conjecture that \pcctlang is \tech{consistent} and \tech{type safe}, strongly
+normalizing, and satisfies \tech{subject reduction}.
+However, decidability is an open question; the presentation of \tech{translucent
+  types} is not syntax directed and likely requires changes to ensure
+decidability.
+
+Both \tech{translucent types} and \tech{existential types} are easily modeled in
+\tech{CIC}.
+\tech{Existential types} are included in Coq's standard library, so I focus on
+\tech{translucent types}.
+I give an implementation in \fullref[]{sec:param-cc:appendix}, but give an
+intuitive presentation here.
+
+The \tech{translucent type} is easily modeled with the \tech{identity type} as
+follows.
+\begin{displaymath}
+  \begin{array}{rcl}
+  \sembrace{\pcctrlufunty{\pcce}{\pccB}}^\circ &\defeq& \spity{\sx}{\sembrace{\pccA}^\circ}{
+    \pccfunty{{\sx = \sembrace{\pcce}^\circ}}{\sembrace{\pccB}^\circ}}
+    \\&& \where{{\pcce : \pccA}}
+  \end{array}
+\end{displaymath}
+Here, I write \im{\sembrace{\pcce}^\circ} to give a model of \im{\pcce} in
+\slang extended with \tech{existential types} and the \tech{identity type}.
+The \tech{translucent type} is modeled as a function that demands some
+argument \im{\sx} of type \im{\pccA} and a proof that \im{\sx} is equal to
+\im{\pcce}, using the \tech{identity type}.
+
+The introduction and elimination forms are modeled as the following.
+\begin{displaymath}
+  \begin{array}{rcl}
+  \sembrace{\pcce : \pcctrlufunty{\pccepr}{\pccB}}^\circ &\defeq& \snfune{(\sx:\sembrace{\pccA}^\circ,\sy:\sx = \sembrace{\pccepr}^\circ)}{\sfont{case}~\sy~\sfont{of}~\sfont{refl}.\sappe{\sembrace{\pcce}^\circ}{\sx}}
+  \\
+  \sembrace{\pccappe{\pcce}{\pccepr}}^\circ & \defeq & \sappe{\sembrace{\pcce}^\circ}{\sembrace{\pccepr}^\circ}{\sfont{refl}}
+  \\&& \where{{\pcce : \pcctrlufunty{\pccepr}{\pccB}}}
+  \end{array}
+\end{displaymath}
+The introduction form is modeled as a function of two arguments, which pattern
+matches on the equality proof and applies the underlying function \im{\pcce} to
+the argument \im{\pccx}.
+The elimination form simply applies the \tech{translucent function} \im{\pcce}
+to its argument \im{\pccepr} and the proof of equality \im{\sfont{refl}}.
+
+The new \(\eta\)-equivalence for \tech{closures} is the only non-standard rule
+and constructing a model of the rule requires a parametricity argument that I
+leave for future work.
+While essentially based on the \(\eta\)-principle for \tech{existential types},
+it is not exactly the same.
+It should be similar in some ways to the model for the \tech{CPS} target
+language in \fullref[]{chp:cps}.
+That is, a model should be possible using the parametricity translation into the
+extensional Calculus of Constructions.
+However, it is unclear how to formalize the relation between two
+\tech{environments} of type \im{\pccalpha}.
+Intuitively, we must allow any two \tech{environments}, with potentially
+different sets of free variables, to be related as long as the \tech{codes} are
+related after inlining the \tech{environments} into the \tech{codes}.

@@ -1,0 +1,231 @@
+\section{Main Ideas}
+\label{sec:param-cc:ideas}
+As review, recall from \fullref[]{chp:abs-cc} the problem with
+preserving \tech{dependent types} through \tech{closure conversion} using the
+\tech{existential types}.
+I reproduce the example from \fullref[]{chp:abs-cc} below.
+%
+\begin{displaymath}
+  \begin{array}{rcl}
+  \sfune{\sA}{\sstarty}{\sfune{\sx}{\sA}{\sx}} & : & \spity{\sA}{\sstarty}{\spity{\sx}{\sA}{\sA}}
+  \end{array}
+\end{displaymath}
+%
+Here we have the polymorphic identity function, where the first
+argument \im{\sA}, a \tech{type}, is free in the second function and is used in
+the type of the function.
+The standard \tech{parametric closure conversion} translation of this example
+is below, reproduced from \fullref[]{chp:abs-cc}.
+%
+\begin{displaymath}
+  \begin{stackTL}
+    \tcloe{\tnfune{(\tnone:\tunitty,\tA:\tstarty)}{
+        \tcloe{\tnfune{(\tntwo:
+            \tpairty{\tstarty}{\tunitty},\tx:\tfste{\tntwo})}{\tx}
+        }{\tnpaire{\tA,\tnpaire{}}}}}{\tnpaire{}} ~~ : ~~\\
+    ~~\begin{array}{@{\hspace{0pt}}l@{\hspace{0pt}}l@{\hspace{0pt}}l}
+      \texistty{\talphaone}{\tstarty}{&\,\tpairty{(\tnpity{&(\tnone:\talphaone,\tA:\tstarty)}{
+            \\ &&
+            \texistty{\talphatwo}{\tboxty}{\tpairty{(\tnpity{(\tntwo:\talphatwo,\tx:\tfste{\tntwo})}{\tfste{\tntwo}})}{\talphatwo}}})\,}{\talphaone}}
+    \end{array}
+    \end{stackTL}
+\end{displaymath}
+%
+Unfortunately, while the \tech{code} is well-typed, the \tech{closure} is not.
+Recall that the code of the inner \tech{closure} has
+type \im{\tnpity{(\tntwo:\talphatwo,\tx:\tfste{\tntwo})}{\tfste{\tntwo}}}.
+In the type of the \tech{closure}, this projection \im{\tfste{\tntwo}} is not
+well-typed since the type of the \tech{environment} is
+hidden---\im{\tfste{\tntwo}} is invalid when \im{\tntwo} has
+type \im{\pccalphatwo}.
+
+A similar problem presents itself in the \tech{type-preserving} \tech{closure
+conversion} of System F by~\citet{minamide1996}.
+In that work, \tech{type} variables in System F are included in the
+\tech{environment}, introducing the same problem as above of \tech{closures} not
+being well-typed.
+In subsequent work, \citet{morrisett1998:ftotal} observed that in System F
+\tech{type} variables can be considered \tech{computationally irrelevant} (and will,
+therefore, be erased before runtime).
+This justified a simple translation where \tech{closure-converted} functions
+were allowed to have free \tech{type} (though not \tech{term}) variables.
+In \tech{dependently typed} languages, this solution does not apply since
+\tech{term} variables can also appear in \tech{types}.
+
+As before in \fullref[]{chp:abs-cc}, and in the work of \citet{minamide1996}, we
+have a dilemma.
+We must close the \tech{type} of \tech{code} since \tech{code} must be closed
+after \tech{closure conversion}, but we must also leave the \tech{type} of
+the \tech{closure} open since we cannot project from the
+hidden \tech{environment}.
+The challenge is to unify the closed type of the \tech{code} and the open type of
+the \tech{closure}.
+
+In this chapter, I adapt the \tech{parametric closure conversion} of
+\citet{minamide1996} to \tech{dependent types}.
+Previously, in \fullref[]{chp:abs-cc}, I essentially axiomatize the target language
+with \tech{closures}, adapting the \tech{abstract closure conversion}
+of \citet{minamide1996} to \tech{dependent types}.
+The primitive \tech{closure} captures exactly the above needs.
+I use \tech{existential types} to encode closures, and use a form
+of \tech{singleton types}, called \tech{translucent types}, to encode an
+equality between the hidden \tech{environment} and the free variables.
+The \tech{translucent type} unifies the hidden \tech{environment} with the type
+variables, thus unifying the closed type of the \tech{closure} and the open type
+of the \tech{code}.
+
+Below is the nearly complete translation to demonstrate how this unifies the two
+seemingly different types.%
+\marginpar{Notice that this type translation relies on \tech{impredicativity},
+  since the \tech{existential type} must be in the same \tech{universe} as the
+  type variable \im{\alpha} over which it quantifies.}%
+\begin{displaymath}
+  \begin{stackTL}
+    \cctrans{(\spity{\sx}{\sA}{\sB})} =
+    \pccexistty{\pccalpha}{\pccstarty}{(\pccpairty{\pccalpha}{\pcccodety{\pccn:\pccalpha,\pccx:\sA^\plus}{\cctrans{\sB}}})}\\
+    \cctrans{(\sfune{\sx}{\sA}{\se})} = \begin{stackTL}\pccpackoe{\pccApr}{\pccpaire{\pccnpaire{\pccxi\dots}}{\begin{stackTL}\pccnfune{(\pccn:\pccApr, \pccx:\pcclete{\pccnpaire{\pccxi\dots}}{\pccn}{\cctrans{\sA}})}{
+              \\\quad\pcclete{\pccnpaire{\pccxi\dots}}{\pccn}{\cctrans{\se}}}}}
+      \end{stackTL}\\
+    \where{\begin{stackTL}
+        \pccApr = \pccnsigmaty{\pccxi:\cctrans{\sAi}\dots} \\
+        \sxi:\sAi\dots \text{ are the free variables of \im{\se} and \im{\sA}}}
+    \end{stackTL}
+  \end{stackTL}
+  \end{stackTL}
+\end{displaymath}
+%
+This translation uses the \tech{code} type as in \fullref[]{chp:abs-cc} to
+distinguish closed \tech{code} from \tech{closures}, but lacks a \(\Pi\)-type
+since \tech{closures} are encoded using existential types.
+Using this translation, we need to complete the following derivation in order to
+prove \tech{type preservation}.
+As we will see, we cannot complete the derivation for the
+standard \tech{existential type translation}.
+%
+\begin{displaymath}
+        \inferrule
+            {
+              \inferrule
+              {\text{stuck}}
+              {\pcctyjudg{\pccn:\pccApr,\pccx:\pccA}{\pcclete{\pccnpaire{\pccxi\dots}}{\pccn}{\pcce}}{\cctrans{\sB}}}}
+            {\pcctyjudg{\pcclenv}{\pccnfune{(\pccn:\pccApr,\pccx:\pccA)}{{\pcclete{\pccnpaire{\pccxi\dots}}{\pccn}{\pcce}}}}{\pcccodety{\pccn:\pccApr,\pccx:\cctrans{\sA}}{\cctrans{\sB}}}}
+\end{displaymath}
+%
+I focus on showing the \tech{code} is well-typed at the translated type, since
+that is where the problem arises.
+Notice that \im{\cctrans{\sB}} has free variables in the \tech{type}.
+To complete this derivation, we must show
+\im{{\pcclete{\pccnpaire{\pccxi\dots}}{\pccn}{\pcce}}:\cctrans{\sB}}.
+However, by the typing rule for \tech{dependent let}, we can only conclude
+\im{\pcclete{\pccnpaire{\pccxi\dots}}{\pccn}{\pcce} : \subst{\cctrans{\sB}}{\pccprje{i}{\pccn}}{\pccxi}}.
+We cannot complete the derivation and this translation is not \tech{type
+  preserving} because \tech{dependent types} allow \tech{types} to depend on
+free \tech{term} variables from the \tech{environment}.
+
+However, intuitively, it should be the case that \im{\cctrans{\sB} \equiv
+  \subst{\cctrans{\sB}}{\pccprje{i}{\pccn}}{\pccxi}}.
+By \tech{parametricity}, we know \im{\pccn} will only get replaced by
+exactly the \tech{environment} generated by our compiler.
+\marginpar{This is why we rely on \tech{parametricity}, and where the \tech{type
+    preservation} argument fails if we cannot have \tech{parametricity} in the
+  target language.}
+Since the compiler generates the \tech{environment} \im{\pccn =
+  \pccnpaire{\pccxi\dots}}, this substitution is essentially a no-op, replacing
+\im{\pccxi} by \im{\pccxi}.
+To develop a \tech{type-preserving} translation, we need to find a way to
+internalize this reasoning so that the type system can decide this equivalence.
+
+To solve this, I use a form of singleton types called \tech{translucent
+types}~\cite{harper1994,lillibridge1997} to encode this \tech{equivalence} in a
+\tech{type}.
+The \deftech*{Translucent types,translucent types,translucent type,translucent
+  function,translucent function type,translucent function types}{translucent
+  function type}\footnote{This particular presentation of translucent function
+  types is due to \citet{minamide1996}.},
+written \im{\pcctrlufunty{\pccepr}{\pccB}}, represents a function (or in our
+case, \tech{code}) that must be applied to (an expression \tech{equivalent} to)
+the term \im{\pccepr} and produces something of type \im{\pccB}.
+The \tech{translucent function} type rules are the following.
+Essentially, any function \im{\pccf} can be statically specialized to a
+particular argument \im{\pccepr}.
+This has the effect of instantiating the \tech{dependent function} type before
+the function is actually applied.
+After that, it must be dynamically applied to that argument.
+\begin{mathpar}
+  \inferrule*[right=\rulename{TrFun}]
+  {\pcctyjudg{\pcclenv}{\pccf}{\pccpity{\pccn}{\pccApr}{\pccB}}\\
+   \pcctyjudg{\pcclenv}{\pccepr}{\pccApr}}
+  {\pcctyjudg{\pcclenv}{\pccf}{\pcctrlufunty{\pccepr}{\subst{\pccB}{\pccepr}{\pccn}}}}
+
+  \inferrule*[right=\rulename{TrApp}]
+  {\pcctyjudg{\pcclenv}{\pccf}{\pcctrlufunty{\pccepr}{\pccB}}}
+  {\pcctyjudg{\pcclenv}{\pccappe{\pccf}{\pccepr}}{\pccB}}
+\end{mathpar}
+
+To encode \tech{closures}, we existentially quantify over the \emph{value} of
+the \tech{environment} \im{\pccn}, in addition to the \tech{type} of the
+\tech{environment} \im{\pccalpha}, leveraging \tech{dependent types}.
+Then we describe type of the \tech{code} \im{\pccf} using a \tech{translucent type}
+\im{(\pcctrlufunty{\pccn}{\pcccodety{\pccx:\cctrans{\sA}}{\cctrans{sB}}})}, which
+requires that the \tech{code} be applied to exactly the \tech{environment}
+\im{\pccn} and an arbitrary argument \im{\pccx} of type \im{\cctrans{\sA}}, and
+produces an output of type \im{\cctrans{\sB}}.
+The translation becomes the following.
+\begin{displaymath}
+  \begin{stackTL}
+  \cctrans{(\spity{\sx}{\sA}{\sB})} =
+\pccnexistty{(\pccalpha:\pccstarty,\pccn:\pccalpha,\pccf:(\pcctrlufunty{\pccn}{\pcccodety{\pccx:\cctrans{\sA}}{\cctrans{\sB}}}))} \\
+\cctrans{(\sfune{\sx}{\sA}{\se})} =
+\begin{stackTL}\pccnpackoe{\pccApr,\pccnpaire{\pccxi\dots},\begin{stackTL}\pccnfune{(\pccn:\pccApr,\pccx:\pcclete{\pccnpaire{\pccxi\dots}}{\pccn}{\cctrans{\sA}})}{\\\quad\pcclete{\pccnpaire{\pccxi\dots}}{\pccn}{\cctrans{\se}}}}
+\end{stackTL}\\
+\where{
+    \begin{stackTL}
+      \pccApr = \pccnsigmaty{(\pccxi:\cctrans{\sAi}\dots)} \\
+      \sxi:\sAi \dots \text{ are the free variables of \im{\se} and \im{\sA}}
+    \end{stackTL}}
+  \end{stackTL}
+  \end{stackTL}
+\end{displaymath}
+Now, the \tech{environment} is still hidden from the client of the
+\tech{closure}, but when checking that the \tech{closure} is well-typed, the
+variable \im{\pccn} is replaced by the value of the \tech{closure}.
+Then all we need is to prove \im{\cctrans{\sB} \equiv
+  \subst{\cctrans{\sB}}{\pccprje{i}{\pccnpaire{\pccxi\dots}}}{\pccxi}}, which is trivial.
+This was essentially the insight in \citet{minamide1996}, although in a simpler setting.
+
+As we descend into the \pccfonttext{pack} expression, the existentially
+quantified environment flows into the \tech{type} and the \tech{translucent
+type} yields an additional \tech{equivalence}.
+The completed derivation is the following.
+{\small
+\begin{mathpar}
+  \inferrule
+      {
+        \inferrule
+            {
+              \inferrule
+              {\vdots}
+              {\pcctyjudg{\pcclenv}{\pccnfune{(\pccn:\pccApr,\pccx:\cctrans{\sA})}{\pccepr}}{\pcccodety{\pccn:\pccApr,\pccx:\cctrans{\sA}}{\subst{\cctrans{\sB}}{\pccprje{i}{\pccn}}{\pccxi}}}}
+              \quad
+              \inferrule
+                  {
+                    \text{trivial, since } env = \pccnpaire{\pccxi\dots}}
+              {\subst{\subst{\cctrans{\sB}}{\pccprje{i}{\pccn}}{\pccxi}}{env}{\pccn} \equiv \cctrans{\sB}}}
+            {\vdots \qquad\qquad\qquad \pcctyjudg{\pcclenv}{\pccnfune{(\pccn:\pccApr,\pccx:\cctrans{\sA})}{\pcclete{\pccnpaire{\pccxi\dots}}{\pccn}{\cctrans{\se}}}}{\pcctrlufunty{env}{\pcccodety{\pccx:\cctrans{\sA}}{\cctrans{\sB}}}}}
+      }
+      {\pcctyjudg{\pcclenv}{\pccnpackoe{\pccApr,env,\pccnfune{(\pccn:\pccApr,\pccx:\cctrans{\sA})}{\pccepr}}}{\pccnexistty{\pccalpha:\pccstarty,\pccn:\pccalpha,\pccf:(\pcctrlufunty{\pccn}{\pcccodety{\pccx:\cctrans{\sA}}})}{\cctrans{\sB}}}}
+\end{mathpar}
+}
+
+While the translation is similar in essence to \citet{minamide1996}, \tech{dependent types}
+introduce additional difficulties.
+The above translation disrupts the syntactic reasoning about functions
+that the type system relies on, in particular, \(\eta\)-equivalence of functions.
+
+To preserve \(\eta\)-equivalence, as in \fullref[]{chp:abs-cc}, I develop a
+principle of \tech{equivalence} for \tech{closures}.
+Essentially, \tech{closures} are \tech{equivalent} when we compute \tech{equivalent}
+results under \tech{equivalent} \tech{environments}.
+This gives us an \(\eta\)-principle for \tech{closures} that extends
+the \(\eta\)-principle for functions to include the \tech{environment}.
+This principle also relies on \tech{parametricity} to justify.

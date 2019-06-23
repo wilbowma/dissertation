@@ -1,0 +1,3 @@
+[submodule "mttex"]
+	path = mttex
+	url = https://github.com/wilbowma/mttex.git

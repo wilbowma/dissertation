@@ -1,0 +1,39 @@
+% To support generating a plain text version, this file can contain only plaintext,
+% comments, and the following macros:
+% - \emph
+Dependently typed languages have proven useful for developing large-scale fully
+verified software, but we do not have any guarantees after compiling that
+verified software.
+A verified program written in a dependently typed language, such as Coq, can be
+type checked to ensure that the program meets its specification.
+Similarly, type checking prevents us from importing a library and
+violating the specification declared by its types.
+Unfortunately, we cannot perform either of these checks after compiling a
+dependently typed program, since all current implementations erase types before
+compiling the program.
+Instead, we must trust the compiler to not introduce errors into the
+verified code, and, after compilation, trust the programmer to never introduce
+errors by linking two incompatible program components.
+As a result, the compiled and linked program is
+\emph{not verified}---we have no guarantees about what it will do.
+
+In this dissertation, I develop a theory for preserving dependent types through
+compilation so that we can use type checking after compilation to check that no
+errors are introduced by the compiler or by linking.
+Type-preserving compilation is a well-known technique that has been used to
+design compilers for non-dependently typed languages, such as ML, that
+statically enforce safety and security guarantees in compiled code.
+But there are many open challenges in scaling type preservation to dependent
+types.
+The key problems are adapting syntactic type systems to interpret low-level
+representations of code, and breaking the complex mutually recursive structure
+of dependent type systems to make proving type preservation and compiler
+correctness feasible.
+In this dissertation, I explain the concepts required to scale type preservation
+to dependent types, present a proof architecture and language design that
+support type preservation, and prove type preservation and compiler correctness
+for four early-stage compiler translations of a realistic dependently typed
+calculus.
+These translations include an A-normal form (ANF), a continuation-passing style
+(CPS), an abstract closure conversion, and a parametric closure conversion
+translation.

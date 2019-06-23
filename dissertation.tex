@@ -1,0 +1,86 @@
+\documentclass[paper=letter, twoside, openright, titlepage, headinclude,
+  footinclude, BC0R=5mm, cleardoublepage=empty,
+  index=totoc, fontsize=11pt, abstract=on]{scrreprt}
+
+% Template:
+% https://bitbucket.org/amiede/classicthesis/src/94f83724d501be794df38121c2412db6e895c98a/ClassicThesis.tex?at=master&fileviewer=file-view-default
+
+\includeonly{config,tech,defs,
+  frontbackmatters/titlepage,
+  %frontbackmatters/signatures,
+  frontbackmatters/dedication,
+  frontbackmatters/abstract,
+  frontbackmatters/acks,
+  frontbackmatters/support,
+  frontbackmatters/conventions,
+  frontbackmatters/poem,
+  frontbackmatters/toc,
+  chapters/intro,
+  chapters/source,
+  chapters/type-pres,
+  chapters/anf,
+  chapters/abs-cc,
+  chapters/cps,
+  chapters/param-cc,
+  chapters/conclusions,
+  chapters/source-appendix,
+  chapters/anf-appendix,
+  chapters/abs-cc-appendix,
+  chapters/cps-appendix,
+  chapters/param-cc-appendix,
+  frontbackmatters/listoffigs,
+  frontbackmatters/bib,
+}
+
+\include{config}
+\include{tech}
+\include{defs}
+
+\renewcommand{\todo}[1]{}
+
+\title{Compiling with Dependent Types}
+\author{William J. Bowman}
+\date{}
+
+\begin{document}
+\include{frontbackmatters/titlepage}
+
+\cleardoublepage\include{frontbackmatters/signatures}
+
+\cleardoublepage\include{frontbackmatters/dedication}
+\cleardoublepage\include{frontbackmatters/abstract}
+\cleardoublepage\include{frontbackmatters/acks}
+\cleardoublepage\include{frontbackmatters/support}
+\cleardoublepage\include{frontbackmatters/conventions}
+\cleardoublepage\include{frontbackmatters/poem}
+\cleardoublepage\include{frontbackmatters/toc}
+
+\renewcommand{\slang}{\anfslang}
+
+\cleardoublepage\include{chapters/intro}
+\cleardoublepage\include{chapters/source}
+\cleardoublepage\include{chapters/type-pres}
+
+\cleardoublepage\include{chapters/anf}
+\cleardoublepage\include{chapters/abs-cc}
+
+\cleardoublepage\include{chapters/cps}
+\cleardoublepage\include{chapters/param-cc}
+\cleardoublepage\include{chapters/conclusions}
+
+% Now leaving last chapter.
+\bookmarksetup{startatroot}
+
+\cleardoublepage\include{frontbackmatters/listoffigs}
+%\begin{theindex}
+%\end{theindex}
+\cleardoublepage\include{frontbackmatters/bib}
+
+\appendix
+\cleardoublepage\include{chapters/source-appendix}
+\cleardoublepage\include{chapters/anf-appendix}
+\cleardoublepage\include{chapters/abs-cc-appendix}
+\cleardoublepage\include{chapters/cps-appendix}
+\cleardoublepage\include{chapters/param-cc-appendix}
+
+\end{document}

@@ -1,0 +1,187 @@
+\renewcommand{\techprefix}{refcpssrc}
+\renewcommand{\tlang}{\cpstlang}
+\renewcommand{\slang}{\cpsslang}
+
+\chapter{Reference for \cpsslang}
+\label{sec:cps:appendix}
+This appendix contains the complete definitions for \cpsslang.
+All \cpsslang figures from \fullref[]{chp:cps} are reproduced and completed with
+elided parts here, and elided figures are presented here.
+These figures contained extensions with definitions required to fully formalize
+the compiler correctness results, including booleans with non-dependent
+elimination.
+
+\begin{typographical}
+  In this appendix, I typeset \cpsslang in a \emph{\sfonttext{blue,
+      non-bold, sans-serif font}}.
+\end{typographical}
+
+\begingroup
+\let\label\discard
+
+\FigCOCSyntax[ht]
+\FigECCExplicitSyntax[ht]
+
+\FigCOCRed[ht]
+
+\endgroup
+
+\FigCOCConv[ht]
+
+\begingroup
+\let\label\discard
+
+\FigCOCEqv[ht]
+
+\FigCoCTyping[ht]
+\FigCOCWF[ht]
+
+\endgroup
+
+\begingroup
+\let\label\discard
+\renewcommand{\slang}{\cpsslang}
+
+\FigECCObs[ht]
+\FigECCProg[ht]
+\FigECCEval[ht]
+
+\endgroup
+
+\FigCOCLinking
+
+\cleardoublepage
+\renewcommand{\techprefix}{refcps}
+\chapter{Reference for \cpstlang}
+\label{sec:cps:tlang:appendix}
+This appendix contains the complete definitions for \cpstlang.
+All \cpstlang figures from \fullref[]{chp:cps} are reproduced and completed with
+elided parts here, and elided figures are presented here.
+
+\begin{typographical}
+  In this appendix, I typeset \cpstlang in a \emph{\tfonttext{bold, red, serif
+      font}}.
+\end{typographical}
+
+\FigCPSSyntax[ht]
+\FigCPSRed[ht]
+\FigCPSEqv[ht]
+\FigCPSConv[ht]
+\FigCPSTyping[ht]
+\FigCPSWf[ht]
+
+\begingroup
+\let\label\discard
+\renewcommand{\slang}{\cpstlang}
+\renewcommand{\sfont}{\tfont}
+\renewcommand{\sfontsym}{\tfontsym}
+\renewcommand{\scolor}{\tcolor}
+
+\FigECCObs[ht]
+\endgroup
+
+\begingroup
+\let\label\discard
+
+\FigCPSProg[ht]
+\FigCPSEval[ht]
+
+\endgroup
+
+\begingroup
+\let\label\discard
+\renewcommand{\cpsslang}{\cpstlang}
+\renewcommand{\sfont}{\tfont}
+\renewcommand{\sfontsym}{\tfontsym}
+\renewcommand{\scolor}{\tcolor}
+
+\FigCOCLinking
+
+\endgroup
+
+\begingroup
+\let\label\discard
+
+\FigCCConv
+\FigANF
+
+\endgroup
+
+\FloatBarrier
+
+\begin{listing}[ht]
+\inputminted{coq}{chapters/cps/cont-shuffle.v}
+\caption{Coq proof of \protect\fullref[]{lem:cps:cont-shuffle}}
+\end{listing}
+
+\cleardoublepage
+\chapter{Reference for \cbnnametext}
+\label{sec:cps:cbn:appendix}
+\renewcommand{\techprefix}{refcpsN}
+This appendix contains the complete definitions for the CBN CPS translation from
+\cpsslang to \cpstlang.
+All translation figures from \fullref[]{chp:cps} are reproduced and completed with
+elided parts here, and elided figures are presented here.
+
+\begin{typographical}
+  In this appendix, I typeset the source language, \cpsslang, in a
+  \emph{\sfonttext{blue, non-bold, sans-serif font}}, and the target language,
+  \cpstlang, in a \emph{\tfonttext{bold, red, serif font}}.
+\end{typographical}
+
+\begingroup
+\let\label\discard
+
+\FigCPSObsRel[ht]
+
+\FigCBNUnv[ht]
+\FigCBNKind[ht]
+
+\endgroup
+
+\FigCBNTypesFullOne[ht]
+\FigCBNTypesFullTwo[ht]
+\FigCBNTermsFull[ht]
+\FigCBNTermsPairs[ht]
+
+\begingroup
+\let\label\discard
+
+\FigCBNEnv[ht]
+\endgroup
+
+\cleardoublepage
+\chapter{Reference for \cbvnametext}
+\label{sec:cps:cbv:appendix}
+\renewcommand{\techprefix}{refcpsV}
+This appendix contains the complete definitions for the CBV CPS translation from
+\cpsslang to \cpstlang.
+All translation figures from \fullref[]{chp:cps} are reproduced and completed with
+elided parts here, and elided figures are presented here.
+
+\begin{typographical}
+  In this appendix, I typeset the source language, \cpsslang, in a
+  \emph{\sfonttext{blue, non-bold, sans-serif font}}, and the target language,
+  \cpstlang, in a \emph{\tfonttext{bold, red, serif font}}.
+\end{typographical}
+
+\FigCPSObsRel[ht]
+\FigCBVUnv[ht]
+
+\begingroup
+\let\label\discard
+
+\FigCBVKinds[ht]
+
+\endgroup
+
+\FigCBVTypesFull[ht]
+
+\begingroup
+\let\label\discard
+
+\FigCBVTerms[ht]
+\FigCBVTermsPairs[ht]
+\FigCBVEnv[ht]
+
+\endgroup

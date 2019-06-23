@@ -1,0 +1,95 @@
+% Config reference
+% https://bitbucket.org/amiede/classicthesis/src/94f83724d501be794df38121c2412db6e895c98a/classicthesis-config.tex?at=master&fileviewer=file-view-default
+
+\newcommand{\myTitle}{Compiling with Dependent Types\xspace}
+\newcommand{\mySubtitle}{}
+\newcommand{\myDegree}{Doctor of Philosophy\xspace}
+\newcommand{\myName}{William J. Bowman\xspace}
+\newcommand{\myProf}{Amal Ahmed\xspace}
+\newcommand{\myDepartment}{College of Computer and Information Science\xspace}
+\newcommand{\myUni}{Northeastern University\xspace}
+\newcommand{\myLocation}{Boston, Massachusetts\xspace}
+\newcommand{\myTime}{2018\xspace}
+
+\PassOptionsToPackage{pdftex,pdfpagelabels}{hyperref}
+\usepackage[numbered]{bookmark}
+\usepackage{hyperref}
+
+\usepackage{amsmath,amssymb,amsthm}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\usepackage{natbib}
+\bibliographystyle{abbrvnat}
+\renewcommand{\cite}{\citep}
+\setcitestyle{citesep={;}}
+
+% Fixing math fonts
+\usepackage{scrlfile}
+\PreventPackageFromLoading{mathpazo}
+\usepackage{upgreek}
+
+\PassOptionsToPackage{
+  eulerchapternumbers,
+  %drafting,
+  pdfspacing,dottedtoc,
+  style=arsclassica
+}{classicthesis}
+\usepackage{classicthesis}
+
+% Must happen after classicthesis, to fix up colors classicthesis uses.
+\hypersetup{%
+  pdftitle={\myTitle},%
+  pdfauthor={\textcopyright\ \myName, \myUni},%
+  linkcolor=violet,%
+  final,%
+}
+
+\PassOptionsToPackage{pdftex}{graphicx}
+\usepackage{graphicx} 
+
+\usepackage[utf8]{inputenc}
+\DeclareUnicodeCharacter{3B1}{\ensuremath{\alpha}}
+\DeclareUnicodeCharacter{2081}{\ensuremath{_1}}
+\DeclareUnicodeCharacter{2082}{\ensuremath{_2}}
+\DeclareUnicodeCharacter{21D2}{\ensuremath{\Rightarrow}}
+\DeclareUnicodeCharacter{2203}{\ensuremath{\exists}}
+\DeclareUnicodeCharacter{3A3}{\ensuremath{\Sigma}}
+\DeclareUnicodeCharacter{2192}{\ensuremath{\rightarrow}}
+\usepackage{etoolbox}
+\usepackage{refcount}
+\usepackage{totpages}
+\usepackage{environ}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{multicol}
+\usepackage{xspace}
+\usepackage{enumitem}
+\usepackage{tikz-cd}
+\usepackage{setspace}
+\usepackage{alltt}
+\usepackage{mfirstuc}
+\usepackage{url}
+\usepackage{doi}
+\usepackage[title]{appendix}
+\usepackage{placeins}
+\usepackage{chngcntr}
+\counterwithin{figure}{chapter}
+
+% Issue with mttex
+\DeclareOldFontCommand{\bf}{\normalfont\bfseries}{\mathbf}
+\usepackage[magicref]{mttex/mttex}
+
+% A little less margin, a little more text.
+\areaset[current]{410pt}{700pt}
+
+% Code stuff
+\input{outputdir}
+\usepackage[chapter]{minted}
+
+% arrows
+\usepackage{tikz}
+\usetikzlibrary{calc,shapes}
+
+% include pdf
+\usepackage{pdfpages}

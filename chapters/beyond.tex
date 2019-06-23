@@ -1,0 +1,42 @@
+\chapter{Beyond ``Just'' Dependency}
+\label{chp:beyond}
+\todo{How might this scale to recursion, relevance, universe polymorphism (both
+  explicit and implicit), univalence, effects, ???}
+Future and related work, etc
+
+\todo{Copy pasted stub:}
+{
+\paragraph{Toward a (Full-Spectrum) Dependently Typed Assembly Language}
+\label{sec:future}
+Ultimately we want to compile to a dependently typed machine-like language in which we can safely link
+and then generate machine code.
+A typical compiler for a functional language would perform CPS translation, closure-conversion, heap
+allocation, and machine-code generation.
+We have solved one of these issues, but the others introduce further challenges.
+
+Past work shows that a standard CPS translation is not type-preserving in our
+setting~\cite{barthe2002}.
+Other CPS translations have not been studied, such as using a locally polymorphic answer type~\cite{thielecke04}.
+This translation has proven useful in compiler verification work already~\cite{ahmed2011}.
+Alternatively, we may try to target a stack-based machine language such as stack-based TAL~\cite{morrisett2002}.
+This avoid the problems of CPS, but complicates the target language.
+
+We have begun investigating heap allocation.
+This pass raises theoretical and practical questions.
+On the theoretical side, we must allow cycles in the heap to support recursive functions but still
+ensure soundness and termination.
+We may be able to continue adapting the guard condition to allow this.
+Linear types have been used to allow cycles in the heap but still guarantee strong
+normalization~\cite{morrisett2005}.
+Unfortunately, linear types and dependent types are difficult to integrate~\cite{McBride2016}.
+On the practical side, we must figure out how to efficiently allocate inductive data structures.
+Past work shows how to avoid allocating computationally irrelevant indices from inductive
+types~\cite{brady2003}, which we believe we can adapt to CIC.
+
+The design of a dependently typed assembly language will be challenging for similar reasons that CPS
+is not type-preserving.
+\citet{herbelin2005} show that the ability to express \verb|call/cc| with $\Sigma$ types results in an
+inconsistent logic.
+That work also shows how to recover soundness by restricting the type of \verb|call/cc|.
+We may need to use this design to build a sound dependently typed assembly.
+}

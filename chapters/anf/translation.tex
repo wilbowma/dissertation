@@ -1,0 +1,753 @@
+\newcommand{\FigTrans}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\anf{\se}{\tK} = \tM}
+    \begin{displaymath}
+      \begin{array}{rcl}
+        \anfh{\se} & \defeq & \anf{\se}{\hole}
+        \\
+
+        \anf{\sx}{\tK} &\defeq& \tK\hw{\tx}
+        \\
+
+        \anf{\spropty}{\tK} &\defeq& \tK\hw{\tpropty}
+        \\
+
+        \anf{\stypety{i}}{\tK} &\defeq& \tK\hw{\ttypety{i}}
+        \\
+
+        \anf{\spity{\sx}{\sA}{\sB}}{\tK} & \defeq & \tK\hw{\tpity{\tx}{\anfh{\sA}}{\anfh{\sB}}}
+        \\
+
+        \anf{\sfune{\sx}{\sA}{\se}}{\tK} & \defeq & \tK\hw{\tfune{\tx}{\anfh{\sA}}{\anfh{\se}}}
+        \\
+
+        \anf{\sappe{\seone}{\setwo}}{\tK} & \defeq & \anf{\seone}{\tlete{\txone}{\hole}{(\anf{\setwo}{\tlete{\txtwo}{\hole}{\tK\hw{\tappe{\txone}{\txtwo}}}})}}
+        \\
+
+        \anf{\ssigmaty{\sx}{\sA}{\sB}}{\tK} & \defeq & \tK\hw{\tsigmaty{\tx}{\anfh{\sA}}{\anfh{\sB}}}
+        \\
+
+        \anf{\sdpaire{\seone}{\setwo}{\sA}}{\tK} & \defeq & \anf{\seone}{\tlete{\txone}{\hole}{\anf{\setwo}{(\tlete{\txtwo}{\hole}{\tK\hw{(\tdpaire{\txone}{\txtwo}{\anfh{\sA}})}})}}}
+        \\
+
+        \anf{\sfste{\se}}{\tK} & \defeq & \anf{\se}{\tlete{\tx}{\hole}{\tK\hw{\tfste{\tx}}}}
+        \\
+
+        \anf{\ssnde{\se}}{\tK} & \defeq & \anf{\se}{\tlete{\tx}{\hole}{\tK\hw{\tsnde{\tx}}}}
+        \\
+
+        \anf{\slete{\sx}{\se}{\sepr}}{\tK} & \defeq & \anf{\se}{\tlete{\tx}{\hole}{\anf{\sepr}{\tK}}}
+      \end{array}
+    \end{displaymath}
+    \caption{ANF Translation from \slang to \tlang}
+    \label{fig:anf:trans}
+  \end{figure}
+}
+
+\section{{{ANF}} Translation}
+\label{sec:anf:trans}
+
+\FigTrans
+
+The \tech{ANF} translation is presented in \fullref[]{fig:anf:trans}.
+The translation is defined inductively on the syntax of the source term, and is
+indexed by a current \tech{continuation}.
+The translation is essentially standard.
+When translating a \tech{value} such as \im{\sx}, \im{\sfune{\sx}{\sA}{\se}},
+and \im{\stypety{i}}, we essentially plug the \tech{value} into the current
+\tech{continuation}, recursively translating the sub-expressions of the
+\tech{value} if applicable.
+For non-values such as application, we make sequencing explicit by recursively
+translating each sub-expression with a \tech{continuation} that binds the result
+of the sub-expression and will perform the rest of the \tech{computation}.
+
+Note that if the translation must produce type annotations for input to a
+continuation, then defining the translation and typing preservation proof are
+somewhat more complicated.
+For instance, if we required the \tfonttext{let}-bindings in the target
+language to have type annotations for bound expressions, then we would need to
+modify the translation to produce those annotations.
+This requires defining the translation over typing derivations, so the compiler
+has access to the type of the expression and not only its syntax.
+I discuss the implications of this in \fullref[]{sec:anf:discuss}.
+
+Next, I show \tech{type preservation} following essentially the standard
+architecture presented \fullref[]{chp:type-pres}.
+A few additional lemmas are required, and some lemma statements are non-standard,
+as I discuss next.
+
+After proving type preservation, I prove correctness of separate compilation for
+the ANF machine semantics.
+I use the same notion of linking and observations as defined in \fullref[]{chp:source}.
+This proof is straightforward from the meta-theory about the machine semantics
+proved in \fullref[]{sec:anf:target}, and from equivalence preservation.
+
+\subsection{Type Preservation}
+To prove \tech{type preservation}, I follow the same recipe as presented in
+\fullref[]{chp:type-pres}.
+First, I show \tech{compositionality}, which states that the translation
+commutes with substitution, \ie, that substituting first and then translating is
+equivalent to translating first and then substituting.
+This proof is somewhat non-standard for ANF since the notion of composition in
+ANF is not the usual substitution.
+Next, I show that \tech{reduction and} \tech{conversion} are preserved up to
+\tech{equivalence}, as is standard.
+Note that for this theorem, we are interested in the \tech{conversion} semantics used
+for definitional \tech{equivalence}, not in the machine semantics.
+Then, I show \tech{equivalence preservation}: if two terms are definitionally
+\tech{equivalent} in the source, then their translations are definitionally
+\tech{equivalent}.
+Finally, I can show \tech{type preservation} of the \tech{ANF} translation,
+using \tech{continuation} typing to express the inductive invariant required for
+\tech{ANF}.
+The lemma for \tech{type preservation} is non-standard compared to the generic
+statement given in \fullref[]{chp:type-pres}.
+The \tech{continuation} typing allows us to formally state \tech{type
+  preservation} in terms of the intuitive reason it should be true: because the
+definitions expressed by the \tech{continuation} typing suffice to prove
+equivalence between a \tech{computation} variable and the original
+\tech*{depended upon}{depended-upon} expression.
+
+\begin{typographical}
+Recall from \fullref[]{sec:anf:target}, I shift from the \tfonttext{target
+  language font} to the \sfonttext{source language font} whenever the term is no
+longer in \tech{ANF}, such as when performing standard substitution or
+conversion.
+\end{typographical}
+
+Before I proceed, I state a property about the syntax produced by the \tech{ANF}
+translation, in particular, that the \tech{ANF} translation does produce syntax
+in \tech{ANF}.
+The proof is straightforward so I elide it.
+
+\begin{theorem}[Normal Form]
+  \label{cor:anf:form}
+  \im{\anf{\se}{\tKpr} = \tlete{\txone}{\tNone}{\dots\tlete{\txin{n}}{\tNin{n}}{\tKpr\hw{\tNin{n+1}}}}}
+\end{theorem}
+
+{
+\allowdisplaybreaks % Let latex break proofs on a page boundary
+As discussed in \fullref[]{sec:anf:target}, composition in ANF is somewhat non-standard.
+Normally, we compose via substitution and compositionality
+is \im{\anfh{\subst{\se}{\sepr}{\sx}} \equiv
+  \subst{\anfh{\se}}{\anfh{\sepr}}{\tx}}, which says we can either compose
+then translate or translate then compose.
+However most composition in \tech{ANF} goes through \tech{continuations}, not
+through substitution, since only \tech*{anf:value}{values} can be substituted in
+\tech{ANF}.
+The primary \tech{compositionality} lemma (\fullref[]{lem:anf:comp-stack}) tells
+us that we can either first translate a program \im{\se} under
+\tech{continuation} \im{\tK} and then compose it with a \tech{continuation}
+\im{\tKpr}, or we can first compose the \techs{continuation} \im{\tK} and
+\im{\tKpr} and then translate \im{\se} under the composed \tech{continuation}.
+Note that this proof is entirely within \tlang; there are no language boundaries.
+\begin{lemma}[Compositionality]
+  \label{lem:anf:comp-stack}
+  \im{\tKpr\hhw{\anf{\se}{\tK}} = \anf{\se}{\tKpr\hhw{\tK}}}
+\end{lemma}
+\begin{proof}
+  By induction on the structure of \im{\se}.
+  All \tech{value} cases are trivial.
+  The cases for non-values are all essentially similar, by definition of
+  composition for \tech{continuations} or \tech*{anf:config}{configurations}.
+  I give some representative cases.
+  \begin{proofcases}
+    \item \im{\se = \sx}
+
+      Must show \im{\tKpr\hhw{\tK\hw{\tx}} = \tKpr\hhw{\tK\hw{\tx}}}, which is trivial.
+    \item \im{\se = \spity{\sx}{\sA}{\sB}}
+
+      Must show that \im{\tKpr\hhw{\tK\hw{\tpity{\tx}{\anfh{\sA}}{\anfh{\sB}}}} =
+        \tKpr\hhw{\tK{\hw{\tpity{\tx}{\anfh{\sA}}{\anfh{\sB}}}}}}, which is trivial.
+      Note that we need not appeal to induction, since the recursive
+      translation does not use the current continuation for values.
+    \item \im{\se = \sappe{\seone}{\setwo}}
+      Must show that
+      \begin{align}
+        & \tKpr\hhw{(\anf{\seone}{(\tlete{\txone}{\hole}{(\anf{\setwo}{\tlete{\txtwo}{\hole}{\tK\hw{\tappe{\txone}{\txtwo}}}})})})} \nonumber \\
+        =~& (\anf{\seone}{(\tlete{\txone}{\hole}{(\anf{\setwo}{\tlete{\txtwo}{\hole}{\tKpr\hhw\tK\hw{\tappe{\txone}{\txtwo}}}})})}) \nonumber
+      \end{align}
+
+      The proof follows essentially from the definition of continuation composition.
+      \begin{align}
+        & \tKpr\hhw{(\anf{\seone}{(\tlete{\txone}{\hole}{(\anf{\setwo}{\tlete{\txtwo}{\hole}{\tK\hw{\tappe{\txone}{\txtwo}}}})})})} \nonumber \\
+        =~& (\anf{\seone}{\tKpr\hhw{(\tlete{\txone}{\hole}{(\anf{\setwo}{\tlete{\txtwo}{\hole}{\tK\hw{\tappe{\txone}{\txtwo}}}})})}}) \\
+        & \text{by the induction hypothesis applied to \im{\seone}} \nonumber \\
+        =~& (\anf{\seone}{(\tlete{\txone}{\hole}{\tKpr\hhw{(\anf{\setwo}{\tlete{\txtwo}{\hole}{\tK\hw{\tappe{\txone}{\txtwo}}}})}})}) \\
+        & \text{by definition of continuation composition} \nonumber \\
+        =~ & (\anf{\seone}{(\tlete{\txone}{\hole}{(\anf{\setwo}{\tKpr\hhw{\tlete{\txtwo}{\hole}{\tK\hw{\tappe{\txone}{\txtwo}}}}})})}) \\
+        & \text{by the induction hypothesis applied to \im{\setwo}} \nonumber \\
+        =~ & (\anf{\seone}{(\tlete{\txone}{\hole}{(\anf{\setwo}{\tlete{\txtwo}{\hole}{\tKpr\hhw\tK\hw{\tappe{\txone}{\txtwo}}}})})}) \\
+        & \text{by definition of continuation composition} \nonumber \qedhere
+      \end{align}
+  \end{proofcases}
+\end{proof}
+
+Next I show \tech{compositionality} of the translation with respect to
+substitution.
+While the proof relies on the previous lemma, this lemma is different in that
+substitution is the primary means of composition within the type system.
+We must essentially show that substitution is equivalent to composing via
+\tech{continuations}.
+Since standard substitution does not preserve \tech{ANF}, this lemma does not
+equate \tlang terms, but \slang terms that have been transformed via \tech{ANF}
+translation.
+We will again use language boundaries to indicate a shift from \tech{ANF} to
+non-\tech{ANF} terms.
+Note that this lemma relies on uniqueness of names.
+\begin{lemma}[Substitution]
+  \label{lem:anf:subst}
+  \im{\anf{\subst{\se}{\sepr}{\sx}}{\tK} \equiv \sbound{\subst{(\anf{\se}{\tK})}{\anfh{\sepr}}{\tx}}}
+\end{lemma}
+\begin{proof}
+  By induction on the structure of \im{\se}
+  I give the key cases.
+  \begin{proofcases}
+    \item \im{\se = \sx}
+
+      Must show that \im{\anf{\sepr}{\tK} \equiv \sbound{\subst{(\anf{\sx}{\tK})}{\anfh{\sepr}}{\tx}}}
+      \begin{align}
+        & \sbound{\subst{\anf{\sx}{\tK}}{\anfh{\sepr}}{\tx}} \nonumber \\
+        =~& \sbound{\subst{\tK\hw{\tx}}{\anfh{\sepr}}{\tx}} \\
+        =~& \sbound{\tK\hw{\anfh{\sepr}}} \\
+        \equiv~& \tK\hhw{\anfh{\sepr}} & \text{by \fullref[]{lem:anf:tgt:het-sound}} \\
+        \equiv~& \anf{\sepr}{\tK} & \text{by \fullref[]{lem:anf:comp-stack}}
+      \end{align}
+
+    \item \im{\se = \spropty}
+      Trivial.
+
+    \item \im{\se = \spity{\sxpr}{\sA}{\sB}}
+
+      Must show that
+      \im{\anf{\subst{\spity{\sxpr}{\sA}{\sB}}{\sepr}{\sx}}{\tK}
+        \equiv
+        \sbound{\subst{(\anf{\spity{\sxpr}{\sA}{\sB}}{\tK})}{\anfh{\sepr}}{\sx}}}
+      \begin{align}
+        & \anf{\subst{\spity{\sxpr}{\sA}{\sB}}{\sepr}{\sx}}{\tK} \nonumber \\
+        =~& \anf{\spity{\sxpr}{\subst{\sA}{\sepr}{\sx}}{\subst{\sB}{\sepr}{\sx}}}{\tK} \\
+        =~& \tK\hw{\tpity{\txpr}{\anfh{\subst{\sA}{\sepr}{\sx}}}{\anfh{\subst{\sB}{\sepr}{\sx}}}} \\
+        \equiv~& \tK\hw{\tpity{\txpr}{\sbound{\subst{\anfh{\sA}}{\anfh{\sepr}}{\tx}}}{\sbound{\subst{\anfh{\sB}}{\anfh{\sepr}}{\tx}}}} \\
+        & \text{by the induction hypothesis} \nonumber \\
+        =~& \sbound{\subst{\tK\hw{\tpity{\txpr}{\anfh{\sA}}{\anfh{\sB}}}}{\anfh{\sepr}}{\tx}} \\
+        & \text{by definition of substitution} \nonumber \\
+        =~& \sbound{\subst{(\anf{\spity{\sxpr}{\sA}{\sB}}{\tK})}{\anfh{\sepr}}{\tx}} \\
+        & \text{by definition} \nonumber
+      \end{align}
+
+    \item \im{\se = \sappe{\seone}{\setwo}}
+
+      Must show that
+      \im{\anf{\subst{(\sappe{\seone}{\setwo})}{\sepr}{\tx}}{\tK} \equiv \sbound{\subst{(\anf{\sappe{\seone}{\setwo}}{\tK})}{\anfh{\sepr}}{\tx}}}
+      \begin{align}
+        & \anf{\subst{(\sappe{\seone}{\setwo})}{\sepr}{\sx}}{\tK} \nonumber \\
+        =~& \anf{\sappe{\subst{\seone}{\sepr}{\sx}}{\subst{\setwo}{\sepr}{\sx}}}{\tK} \\
+        & \text{by substitution} \nonumber \\
+        =~& \anf{\subst{\seone}{\sepr}{\sx}}{\tlete{\txone}{\hole}{\anf{\subst{\setwo}{\sepr}{\sx}}{\tlete{\txtwo}{\hole}{\tK\hw{\tappe{\txone}{\txtwo}}}}}} \\
+        & \text{by translation} \nonumber \\
+        \equiv~& \anf{\subst{\seone}{\sepr}{\sx}}{\tlete{\txone}{\hole}{\sbound{\subst{(\anf{\setwo}{\tlete{\txtwo}{\hole}{\tK\hw{\tappe{\txone}{\txtwo}}}})}{\anfh{\sepr}}{\tx}}}} \\
+        & \text{by IH applied to \im{\seone}} \nonumber \\
+        \equiv~& \subst{\anf{\seone}{\tlete{\txone}{\hole}{\subst{\anf{\setwo}{\tlete{\txtwo}{\hole}{\tK\hw{\tappe{\txone}{\txtwo}}}}}{\anfh{\sepr}}{\sx}}}}{\anfh{\sepr}}{\tx} \\
+        & \text{by IH applied to \im{\setwo}} \nonumber \\
+        =~& \sbound{\subst{(\anf{\seone}{\tlete{\txone}{\hole}{\anf{\setwo}{\tlete{\txtwo}{\hole}{\tK\hw{\tappe{\txone}{\txtwo}}}}}})}{\anfh{\sepr}}{\tx}} \\
+        & \text{by substitution} \nonumber \\
+        =~& \sbound{\subst{(\anf{\sappe{\seone}{\setwo}}{\tK})}{\anfh{\sepr}}{\tx}} \\
+        & \text{by substitution} \nonumber
+      \end{align}
+  \end{proofcases}
+\end{proof}
+
+Since \tech{equivalence} is part of the type system, to show \tech{type preservation},
+we must show that \tech{equivalence} is preserved.
+I first show that reduction is preserved up to \tech{equivalence},
+then \tech{conversion}, and finally that \tech{equivalence} is preserved.
+The proofs are straightforward; intuitively, \tech{ANF} is just adding a bunch
+of \(\zeta\)-reductions.
+\begin{lemma}[Preservation of Reduction]
+  \label{lem:anf:step}
+  If \im{\sstepjudg[\step]{\slenv}{\se}{\sepr}} then \im{\sequivjudg{\anfh{\slenv}}{\anfh{\se}}{\anfh{\sepr}}}.
+\end{lemma}
+\begin{proof}
+  By cases on \im{\sstepjudg[\step]{\slenv}{\se}{\sepr}}.
+  I give the key cases.
+  \begin{proofcases}
+    \item \im{\sstepjudg[\step_{\delta}]{\slenv}{\sx}{\sepr}}
+
+      We must show that \im{\sequivjudg{\anfh{\slenv}}{\anfh{\sx}}{\anfh{\sepr}}}
+
+      We know that \im{\sx = \sepr \in \slenv}, and by definition \im{\tx =
+        \anfh{\sepr} \in \anfh{\slenv}}, so the goal follows by definition.
+
+    \item \im{\sstepjudg[\step_{\beta}]{\slenv}{\sappe{\sfune{\sx}{\sA}{\seone}}{\setwo}}{\subst{\seone}{\setwo}{\sx}}}
+
+      We must show \im{\sequivjudg{\anfh{\slenv}}{\anfh{\sappe{\sfune{\sx}{\sA}{\seone}}{\setwo}}}{\anfh{\subst{\seone}{\setwo}{\sx}}}}
+      \begin{align}
+        & \anfh{\sappe{\sfune{\sx}{\sA}{\seone}}{\setwo}} \nonumber \\
+        =~& \anf{\sfune{\sx}{\sA}{\seone}}{\tlete{\txone}{\hole}{\anf{\setwo}{\tlete{\txtwo}{\hole}{\tappe{\txone}{\txtwo}}}}} \\
+        =~&
+        \tlete{\txone}{(\tfune{\tx}{\anfh{\sA}}{\anfh{\seone}})}{\anf{\setwo}{\tlete{\txtwo}{\hole}{\tappe{\txone}{\txtwo}}}}
+        \\
+        \stepstar~& \anf{\setwo}{\tlete{\txtwo}{\hole}{\tappe{\tfune{\tx}{\anfh{\sA}}{\anfh{\seone}}}{\txtwo}}} \\
+        =~& \tlete{\txtwo}{\hole}{\tappe{(\tfune{\tx}{\anfh{\sA}}{\anfh{\seone}})}{\txtwo}}\hhw{\anfh{\setwo}}
+        & \text{(\fullref[]{lem:anf:comp-stack})} \\
+        \equiv~& \slete{\sxtwo}{\anfh{\setwo}}{\sappe{(\tfune{\tx}{\anfh{\sA}}{\anfh{\seone}})}{\sxtwo}}
+        & \text{(\fullref[]{lem:anf:tgt:het-sound})} \\
+        \step_{\zeta}~& \tappe{(\tfune{\tx}{\anfh{\sA}}{\anfh{\seone}})}{\anfh{\setwo}} \\
+        \step_{\beta}~& \sbound{\subst{\anfh{\seone}}{\anfh{\setwo}}{\tx}} \\
+        \equiv~& \anfh{\subst{\seone}{\setwo}{\sx}} & \text{(\fullref[]{lem:anf:subst})}
+      \end{align}
+  \end{proofcases}
+\end{proof}
+
+Next I show that \tech{conversion} is preserved up to \tech{equivalence}.
+\begin{lemma}[Preservation of Conversion]
+  \label{lem:anf:red}
+  If \im{\sstepjudg[\stepstar]{\slenv}{\se}{\sepr}} then \im{\sequivjudg{\anfh{\slenv}}{\anfh{\se}}{\anfh{\sepr}}}
+\end{lemma}
+\begin{proof}
+  By induction on the structure of \im{\sstepjudg[\stepstar]{\slenv}{\se}{\sepr}}.
+  \begin{proofcases}
+  \item \refrule[src]{Red-Refl}, trivial.
+  \item \refrule[src]{Red-Trans}, by \fullref[]{lem:anf:step} and the induction hypothesis.
+  \item \refrule[src]{Red-Cong-Let}
+
+    We have that \im{\sstepjudg[\stepstar]{\slenv}{\slete{\sx}{\seone}{\se}}{\slete{\sx}{\seone}{\sepr}}}
+    and \im{\sstepjudg[\stepstar]{\slenv}{\se}{\sepr}}.
+
+    We must show that
+    \im{\sequivjudg{\anfh{\slenv}}{\anfh{\slete{\sx}{\seone}{\se}}}{\anfh{\slete{\sx}{\seone}{\sepr}}}}
+    \begin{align}
+      & \anfh{\slete{\sx}{\seone}{\se}} \nonumber \\
+      =~& \anfh{\subst{\slete{\sx}{\seone}{\sy}}{\se}{\sy}} \\
+      \equiv~& \sbound{\subst{\anfh{\slete{\sx}{\seone}{\sy}}}{\anfh{\se}}{\ty}} \nonumber \\
+      & \text{by \fullref{lem:anf:subst}} \\
+      \equiv~& \sbound{\subst{\anfh{\slete{\sx}{\seone}{\sy}}}{\anfh{\sepr}}{\ty}} \nonumber \\
+      & \text{by the induction hypothesis applied to \im{\se \stepstar \sepr}} \\
+      \equiv~& \anfh{\subst{\slete{\sx}{\seone}{\sy}}{\sepr}{\sy}} \nonumber \\
+      & \text{by \fullref[]{lem:anf:subst}} \\
+      =~& \anfh{\slete{\sx}{\seone}{\sepr}}
+    \end{align}
+
+  \end{proofcases}
+\end{proof}
+
+The previous two lemmas imply equivalence preservation.
+Including \(\eta\)-equivalence makes this non-trivial, but not hard.
+\begin{lemma}[Preservation of Equivalence]
+  \label{lem:anf:eqv-pres}
+  If \im{\sequivjudg{\slenv}{\se}{\sepr}} then \im{\sequivjudg{\anfh{\slenv}}{\anfh{\se}}{\anfh{\sepr}}}
+\end{lemma}
+\begin{proof}
+  By induction on the derivation of \im{\sequivjudg{\slenv}{\se}{\sepr}}.
+  \begin{proofcases}
+    \item \refrule*[src]{eqv}{\im{\equiv}}
+      Follows by \fullref[]{lem:anf:red}.
+    \item \refrule*[src]{eqv-eta1}{\im{\equiv}-\im{\eta_1}}
+
+      By \fullref[]{lem:anf:red}, we know \im{\anfh{\se} \equiv \anfh{\sfune{\sx}{\sA}{\seone}}}.
+      By transitivity, it suffices to show
+      \im{\anfh{\sfune{\sx}{\sA}{\seone}} \equiv \anfh{\sepr}}.
+
+      By \refrule*[anfapp]{eqv-eta1}{\im{\equiv}-\im{\eta_1}}, since
+      \im{\anfh{\sfune{\sx}{\sA}{\seone}} =
+        \tfune{\tx}{\anfh{\sA}}{\anfh{\seone}}}, it suffices to show that
+      \im{\anfh{\seone} \equiv
+        \sappe{\anfh{\sepr}}{\sxtwo}}
+      \begin{align}
+        & \anfh{\seone} \nonumber \\
+        \equiv~& \anfh{\sappe{\sepr}{\sxtwo}} & \text{by the induction hypothesis} \\
+        =~& \anf{\sepr}{\tlete{\txone}{\hole}{\tappe{\txone}{\txtwo}}} \\
+        =~& (\tlete{\txone}{\hole}{\tappe{\txone}{\txtwo}})\hhw{\anfh{\sepr}} & \text{by \fullref[]{lem:anf:comp-stack}} \\
+        \equiv~& \slete{\sxone}{\anfh{\sepr}}{\tappe{\sxone}{\sxtwo}} & \text{by \fullref[]{lem:anf:tgt:het-sound}} \\
+        \step_{\zeta}~& \sappe{{\anfh{\sepr}}}{\sxtwo}
+      \end{align}
+
+    \item \refrule*[src]{eqv-eta2}{\im{\equiv}-\im{\eta_2}} Essentially similar to the previous case. \qedhere
+  \end{proofcases}
+\end{proof}
+
+Since I implement \tech{cumulative} \tech{universes} through subtyping, we must
+also show subtyping is preserved.
+The proof is completely uninteresting, except insofar as it is simple, while it
+seems to be impossible for CPS translation \cite{bowman2018:cps-sigma}.
+I discuss this further in \fullref[]{sec:anf:discuss}.
+\begin{lemma}[Preservation of Subtyping]
+  \label{lem:anf:subtype-pres}
+  If \im{\ssubtyjudg{\slenv}{\se}{\sepr}} then \im{\ssubtyjudg{\anfh{\slenv}}{\anfh{\se}}{\anfh{\sepr}}}
+\end{lemma}
+\begin{proof}
+  By induction on the structure of \im{\ssubtyjudg{\slenv}{\se}{\sepr}}.
+  \begin{proofcases}
+    \item \refrule*[src]{sub-eqv}{\im{\subtypesym}-\im{\equiv}}. Follows by \fullref[]{lem:anf:eqv-pres}.
+    \item \refrule*[src]{sub-trans}{\im{\subtypesym}-Trans}. Follows the induction hypothesis.
+    \item \refrule*[src]{sub-prop}{\im{\subtypesym}-Prop}. Trivial, since \im{\anfh{\spropty} = \tpropty} and \im{\anfh{\stypety{0}} = \ttypety{0}}.
+    \item \refrule*[src]{sub-cum}{\im{\subtypesym}-Cum}. Trivial, since \im{\anfh{\stypety{i}} = \ttypety{i}} and \im{\anfh{\stypety{i+1}} = \ttypety{i+1}}.
+    \item \refrule*[src]{sub-pi}{\im{\subtypesym}-Pi}.
+
+      We must show that
+      \im{\ssubtyjudg{\anfh{\slenv}}{\anfh{\spity{\sxone}{\sAone}{\sBone}}}{\anfh{\spity{\sxtwo}{\sAtwo}{\sBtwo}}}}
+
+      By definition of the translation, we must show \im{\ssubtyjudg{\anfh{\slenv}}{\tpity{\txone}{\anfh{\sAone}}{\anfh{\sBone}}}{\tpity{\txtwo}{\anfh{\sAtwo}}{\anfh{\sBtwo}}}}.
+
+      Note that if we lifted the continuations in type annotations \im{\sAone} and
+      \im{\sAtwo} outside the \tfonttext{\im{\Pi}}, as CBPV suggests we should, we
+      would need a new subtyping rule that allows subtyping \tfonttext{let}
+      expressions.
+      As it is, we proceed by \refrule*[anfapp]{sub-pi}{\im{\subtypesym}-Pi}.
+
+      It suffices to show that
+      \begin{enumerate}
+        \item \im{\sequivjudg{\anfh{\slenv}}{\anfh{\sAone}}{\anfh{\sAtwo}}}, which follows by the induction hypothesis.
+        \item \im{\ssubtyjudg{\anfh{\slenv},\txone:\anfh{\sAtwo}}{\anfh{\sBone}}{\subst{\anfh{\sBtwo}}{\txone}{\txtwo}}}, which follows by the induction hypothesis.
+      \end{enumerate}
+    \item \refrule*[src]{sub-sig}{\im{\subtypesym}-Sig}. Similar to previous case.
+  \end{proofcases}
+\end{proof}
+
+I now prove \tech{type preservation}, with a suitably strengthened induction
+hypothesis.
+I prove that, given a well-typed source term \im{\se} of type \im{\sA}, and a
+continuation \im{\tK} that expects the definitions \im{\edefs{\se}}, expects the
+term \im{\ehole{\se}}, and has result type \im{\tB}, the
+translation \im{\anf{\se}{\tK}} is well typed.
+
+The structure of the lemma and its proof are a little surprising.
+Intuitively, we would expect to show something like ``if \im{\se : \sA} then
+\im{\anfh{\se} : \anfh{\sA}}''.
+I will ultimately prove this, \fullref{thm:anf:type-pres}, but we need a
+stronger lemma first.
+Since the translation is pushing \tech{computation} inside-out (since
+\tech{continuations} compose inside-out), the \tech{type-preservation} lemma and proof
+are essentially inside-out.
+Instead of the expected statement, we must show that if we have a
+\tech{continuation} \im{\tK} that expects \im{\anfh{\se} : \anfh{\sA}}, then we get a
+term \im{\anf{\se}{\tK}} of some arbitrary type \im{\tB}.
+Of course, in order to show that, we will have to show that
+\im{\anfh{\se} : \anfh{\sA}} and then appeal to \fullref{lem:anf:ecca:cut}.
+Furthermore, each appeal to the inductive hypothesis will have to establish that
+we can in fact create well-typed \tech{continuations} from the assumption that \im{\anfh{\se}
+  : \anfh{\sA}}.
+
+Wielding our propositions-as-types hat, we can view this theorem as in
+accumulator-passing style, where the well-typed \tech{continuation} is an accumulator
+expressing the inductive invariant for \tech{type preservation}.
+
+I begin with a minor technical lemma that will come in useful in the proof of
+type preservation.
+This lemma allows us to establish that a \tech{continuation} is well typed when it
+expects an inductively smaller translated term in its hole.
+It also tells us, formally, that the inductive hypothesis implies the \tech{type
+  preservation} theorem we expect.
+\begin{lemma}
+  \label{lem:anf:ih-empty}
+  If for all \im{\styjudg{{\slenv}}{{\se}}{{\sA}}} and
+  \im{\styjudg{\anfh{\slenv},\edefs{\se}}{\tK}{(\ehole{\se} :
+      \anfh{\sA}) \Rightarrow \tB}} we know that
+  \im{\styjudg{\anfh{\slenv}}{\anf{\se}{\tK}}{\tB}}, then
+  \im{\styjudg{\anfh{\slenv},\edefs{\se}}{\ehole{\se}}{\anfh{\sA}}}
+  (and, incidentally, \im{\styjudg{\anfh{\slenv}}{\anfh{\se}}{\anfh{\sA}}})
+\end{lemma}
+\begin{proof}
+  Note that by \fullref{cor:anf:form} and the definitions of \im{\edefs{\se}} and \im{\ehole{\se}},
+  \im{\styjudg{\anfh{\slenv},\edefs{\se}}{\ehole{\se}}{\anfh{\sA}}} is a sub-derivation of
+  \im{\styjudg{\anfh{\slenv}}{\anfh{\se}}{\anfh{\sA}}}, so
+  it suffices to show that \im{\styjudg{\anfh{\slenv}}{\anfh{\se}}{\anfh{\sA}}}.
+  By the premise \im{\styjudg{\anfh{\slenv}}{\anf{\se}{\tK}}{\tB}}, it suffices
+  to show that \im{\hole : (\_ : \anfh{\sA}) \Rightarrow \anfh{\sA}}, which is
+  true by \refrule{K-Empty}.
+\end{proof}
+
+\begin{lemma}[Type and Well-formedness Preservation]
+  \label{lem:anf:type-pres}
+  \begin{lemmacases}
+    \item If \im{\swf{\slenv}} then \im{\swf{\anfh{\slenv}}}
+    \item If \im{\styjudg{{\slenv}}{{\se}}{{\sA}}}, and
+      \im{\styjudg{\anfh{\slenv},\edefs{\se}}{\tK}{(\ehole{\se} : \anfh{\sA}) \Rightarrow \tB}} then
+      \im{\styjudg{\anfh{\slenv}}{\anf{\se}{\tK}}{\tB}}
+  \end{lemmacases}
+\end{lemma}
+\begin{proof}
+  The proof is by induction on the mutually defined judgments \im{\swf{\slenv}} and \im{\styjudg{\slenv}{\se}{\sA}}.
+  The key cases are the typing rules that use dependency, that is,
+  \refrule[srcapp]{Snd}, \refrule[srcapp]{App}, and \refrule[src]{Let}.
+  I give these cases, although they are essentially similar, and a couple of other
+  representative cases, which are uninteresting.
+  I strongly recommend that the reader read the proof case for
+  \refrule[srcapp]{Snd}, in which I take care to spell out the interesting aspects
+  of the proof.
+  \begin{proofcases}
+  \item \refrule[src]{Prop}
+
+    We must show that
+    \im{\styjudg{\anfh{\slenv}}{\anf{\spropty}{\tK}}{\tB}}.
+
+    By definition of the translation, it suffices to show that
+    \im{\styjudg{\anfh{\slenv}}{\tK\hw{\tpropty}}{\tB}}.
+
+    Note that \im{\edefs{\spropty} = \cdot}; this property holds for all values.
+
+    By \fullref{lem:anf:ecca:cut}, it suffices to show that
+    \begin{enumerate}[leftmargin=*]
+    \item \im{\ehole{\spropty} = \tpropty}, which is true by definition of the translation, and
+    \item \im{\tpropty : \anfh{\stypety{1}}}, which is true by \refrule[anfapp]{Prop}, since \im{\anfh{\stypety{1}} = \ttypety{1}}.
+    \end{enumerate}
+
+  \item \refrule[srcapp]{Lam}
+
+    We must show that
+    \im{\styjudg{\anfh{\slenv}}{\anf{\sfune{\sx}{\sApr}{\sepr}}{\tK}}{\tB}}.
+
+    That is, by definition of the translation,
+    \im{\styjudg{\anfh{\slenv}}{\tK\hw{\tfune{\tx}{\anfh{\sApr}}{\anfh{\sepr}}}}{\tB}}.
+
+    Recall that \im{\edefs{\sfune{\sx}{\sApr}{\sepr}} = \cdot}, since values export no definitions.
+
+    By \fullref[]{lem:anf:ecca:cut}, it suffices to show that
+    \im{\styjudg{\anfh{\slenv}}{\tfune{\tx}{\anfh{\sApr}}{\anfh{\sepr}}}{\anfh{\spity{\sx}{\sApr}{\sBpr}}}}.
+
+    By definition, \im{\anfh{\spity{\sx}{\sApr}{\sBpr}} =
+      \tpity{\tx}{\anfh{\sApr}}{\anfh{\sBpr}}}, we must show
+    \im{\styjudg{\anfh{\slenv}}{\tfune{\tx}{\anfh{\sApr}}{\anfh{\sepr}}}{\tpity{\tx}{\anfh{\sApr}}{\anfh{\sBpr}}}}.
+
+    By \refrule[anfapp]{Lam}, it suffices to show
+
+    \im{\styjudg{\anfh{\slenv},\tx:\anfh{\sApr}}{\anfh{\sepr}}{\anfh{\sBpr}}}.
+
+    Note that \im{\styjudg{\anfh{\slenv}}{\hole}{(\_ : \anfh{\sBpr}) \Rightarrow \anfh{\sBpr}}}.
+
+    So, the goal follows by the induction hypothesis applied to \im{\styjudg{\slenv,\sx:\sApr}{\sepr}{\sBpr}} with \im{\tK = \hole}
+
+    \item \refrule[srcapp]{Snd}
+
+      We must show \im{\styjudg{\anfh{\slenv}}{\anf{\ssnde{\se}}{\tK}}{\tB}},
+      where
+      \im{\styjudg{\anfh{\slenv},\edefs{\ssnde{\se}}}{\tK}{(\ehole{\ssnde{\se}} : \anfh{\subst{\sBpr}{\sfste{\se}}{\sx}}) \Rightarrow\tB}}
+      and \im{\styjudg{\slenv}{\se}{\ssigmaty{\sx}{\sApr}{\sBpr}}}.
+
+      That is, by definition of the translation, we must show,
+
+      \im{\styjudg{\anfh{\slenv}}{\anf{\se}{\tlete{\txpr}{\hole}{\tK\hw{\tsnde{\txpr}}}}}{\tB}}.
+
+      Let \im{\tKpr = {\tlete{\txpr}{\hole}{\tK\hw{\tsnde{\txpr}}}}}.
+
+      Note that we know nothing further about the structure of the term
+      we're trying to type check, \im{\anfh{\se}{\tKpr}}.
+      Therefore, we cannot appeal to any typing rules directly.
+      This happens because \im{\se} is a \tech{computation}, and the translation of
+      \techs{computation} composes \tech{continuations}, which occurs ``inside-out''.
+      Instead, my proof proceeds ``inside out'': we build up typing invariants
+      in a well-typed \tech{continuation} \im{\tKpr} (that is, I build up
+      definitions in an accumulator) and then appeal to the induction hypothesis
+      for \im{\se} with \im{\tKpr}.
+      Intuitively, some later case of the proof that knows more about the
+      structure of \im{\se} will be able to use this well-typed
+      \tech{continuation} to proceed.
+
+      So, by the induction hypothesis, applied to
+      \im{\styjudg{\slenv}{\se}{\ssigmaty{\sx}{\sApr}{\sBpr}}} with \im{\tKpr},
+      to complete this proof case, it suffices to show that:
+      \im{\styjudg{\anfh{\slenv},\edefs{\se}}{\tlete{\txpr}{\hole}{\tK\hw{\tsnde{\txpr}}}}{(\ehole{\se} : \anfh{\ssigmaty{\sx}{\sApr}{\sBpr}}) \Rightarrow \tB}}
+
+      By \refrule{K-Bind}, it suffices to show that
+      \begin{enumerate}[leftmargin=*]
+      \item \label{prf:anf:type-pres:snd-0}
+        \im{\styjudg{\anfh{\slenv},\edefs{\se}}{\ehole{\se}}{\anfh{\ssigmaty{\sx}{\sApr}{\sBpr}}}},
+           which follows by \fullref[]{lem:anf:ih-empty} applied to the
+           induction hypothesis for
+           \im{\styjudg{\slenv}{\se}{\ssigmaty{\sx}{\sApr}{\sBpr}}}
+      \item \label{prf:anf:type-pres:snd-1} \im{\styjudg{\anfh{\slenv},\edefs{\se},\txpr = \ehole{\se}}{\tK\hw{\tsnde{\txpr}}}{\tB}}.
+      \end{enumerate}
+
+      To complete this case of the proof, it suffices to show
+      \hyperref[prf:anf:type-pres:snd-1]{Item (b)}.
+
+      Note \im{\edefs{\ssnde{\se}} = (\edefs{\se},\txpr=\ehole{\se})} and \im{\ehole{\ssnde{\se}} = \tsnde{\txpr}}.
+
+      So, by \fullref{lem:anf:ecca:cut}, given the type of \im{\tK}, it suffices to
+      show that
+
+      \im{\styjudg{\anfh{\slenv},\edefs{\se},\txpr=\ehole{\se}}{\tsnde{\txpr}}{\anfh{\subst{\sBpr}{\sfste{\se}}{\sx}}}}.
+
+      By \fullref[]{lem:anf:subst}, \im{\anfh{\subst{\sBpr}{\sfste{\se}}{\tx}} \equiv
+      \subst{\anfh{\sBpr}}{\anfh{\sfste{\se}}}{\tx}}.
+
+      By \refrule[anfapp]{Conv}, it suffices to show that
+      \im{\styjudg{\anfh{\slenv},\edefs{\se},\txpr=\ehole{\se}}{\tsnde{\txpr}}{\subst{\anfh{\sBpr}}{\anfh{\sfste{\se}}}{\tx}}}.
+
+      Note that we cannot show this by the typing rule
+      \refrule[anfapp]{Snd}, since the substitution
+      \im{\subst{\anfh{\sBpr}}{\anfh{\sfste{\se}}}{\tx}} copies an apparently
+      arbitrary expression \im{\anfh{\sfste{\se}}} into the type, instead of the
+      expected sub-expression \im{\tfste{\txpr}}.
+      That is, by the typing rules, all we can show is that
+      \im{\tsnde{\txpr} : \subst{\anfh{\sBpr}}{\tfste{\txpr}}{\tx}}, but we must show
+      \im{\tsnde{\txpr} : \subst{\anfh{\sBpr}}{\anfh{\sfste{\se}}}{\tx}}.
+      The translation has disrupted the \tech{dependency} on \im{\se}, changing the
+      type that depended on the specific value \im{\se} into a type that
+      depends on an apparently arbitrary value \im{\txpr}.
+      This is the problem discussed in \fullref[]{sec:anf:ideas}.
+      It is also where the definitions we have accumulated in our
+      \tech{continuation} typing save us.
+      We can show that \im{\anfh{\sfste{\se}} \equiv \tfste{\txpr}}, under
+      the definitions we have accumulated from \tech{continuation} typing.
+      This follows by \fullref[]{lem:anf:export-equal}.
+
+      Therefore, by \refrule[anfapp]{Conv}, it suffices to show that
+      \im{\styjudg{\anfh{\slenv},\edefs{\se},\txpr=\ehole{\se}}{\tsnde{\txpr}}{\subst{\anfh{\sBpr}}{\tfste{\txpr}}{\tx}}}.
+
+      By \refrule[anfapp]{Snd}, it suffices to show
+      \im{\styjudg{\anfh{\slenv},\edefs{\se},\txpr=\ehole{\se}}{\txpr}{\tsigmaty{\tx}{\anfh{\sApr}}{\anfh{\sBpr}}}},
+      which follows since, as we showed in
+      \hyperref[prf:anf:type-pres:snd-0]{Item (a)}, \im{\anfh{\se} :
+        \tsigmaty{\tx}{\anfh{\sApr}}{\anfh{\sBpr}}}.
+
+    \item \refrule[srcapp]{App}
+
+      We must show that \im{\styjudg{\anfh{\slenv}}{\anf{\sappe{\seone}{\setwo}}{\tK}}{\tB}}.
+
+      That is, by definition, \im{\styjudg{\anfh{\slenv}}{\anf{\seone}{\tlete{\txone}{\hole}{\anf{\setwo}{\tlete{\txtwo}{\hole}{\tK\hw{\tappe{\txone}{\txtwo}}}}}}}{\tB}}.
+
+      Again, we know nothing about the structure of \im{\anf{\seone}{\tKpr}}, so we must proceed inside-out.
+
+      By the inductive hypothesis applied to \im{\styjudg{\slenv}{\seone}{\subst{\sBpr}{\seone}{\sx}}}, it suffices to show that
+
+      \im{\styjudg{\anfh{\slenv},\edefs{\seone}}{\begin{stackTL}\tlete{\txone}{\hole}{\\\,\,\anf{\setwo}{\tlete{\txtwo}{\hole}{\tK\hw{\tappe{\txone}{\txtwo}}}}}}{(\ehole{\seone} : \anfh{\spity{\sx}{\sApr}{\sBpr}}) \Rightarrow \tB}\end{stackTL}}
+
+      To show this, by \refrule{K-Bind}, it suffices to show
+
+      \begin{enumerate}[leftmargin=*]
+      \item
+        \im{\styjudg{\anfh{\slenv},\edefs{\seone}}{\ehole{\seone}}{\anfh{\spity{\sx}{\sApr}{\sBpr}}}},
+        which follows by \fullref[]{lem:anf:ih-empty}
+        applied to the induction hypothesis for
+        \im{\styjudg{\slenv}{\seone}{\spity{\sx}{\sApr}{\sBpr}}}
+      \item \im{\styjudg{\anfh{\slenv},\edefs{\seone},\txone=\ehole{\seone}}{\anf{\setwo}{\tlete{\txtwo}{\hole}{\tK\hw{\tappe{\txone}{\txtwo}}}}}{\tB}}
+      \end{enumerate}
+
+      By the inductive hypothesis applied to \im{\styjudg{\slenv}{\setwo}{\sApr}}, it suffices to show that
+
+      \im{\styjudg{\anfh{\slenv},\edefs{\seone},\txone=\ehole{\seone},\edefs{\setwo}}{\tlete{\txtwo}{\hole}{\tK\hw{\tappe{\txone}{\txtwo}}}}{\tB}}.
+
+      By \refrule{K-Bind}, it suffices to show
+
+      \im{\styjudg{\anfh{\slenv},\edefs{\seone},\txone=\ehole{\seone},\edefs{\setwo},\txtwo=\ehole{\setwo}}{\tK\hw{\tappe{\txone}{\txtwo}}}{\tB}}.
+
+      Let \im{\tlenvpr = {\anfh{\slenv},\edefs{\seone},\txone=\ehole{\seone},\edefs{\setwo},\txtwo=\ehole{\setwo}}}, for brevity.
+
+      By \fullref{lem:anf:ecca:cut}, we must show
+      \im{\styjudg{\tlenvpr}{\tappe{\txone}{\txtwo}}{\anfh{\subst{\sBpr}{\setwo}{\sx}}}}.
+
+      By \fullref[]{lem:anf:subst} and \refrule[anfapp]{Conv}, it suffices to show
+      \im{\styjudg{\tlenvpr}{\tappe{\txone}{\txtwo}}{\subst{\anfh{\sBpr}}{\anfh{\setwo}}{\sx}}}.
+
+      As in the proof case for \refrule[srcapp]{Snd}, we cannot proceed directly by
+      \refrule[anfapp]{App}, since we see a disrupted \tech{dependency}.
+      This dependent application whose type depends on the argument being the
+      specific value \im{\anfh{\setwo}} now finds the argument \im{\txtwo}.
+      (This issue comes up in type-preservation for call-by-value \tech{CPS}
+      (\fullref[]{chp:cps}).)
+      But, again, we know by \fullref[]{lem:anf:export-equal} that under these
+      exported definitions, \im{\anfh{\setwo} \equiv \txtwo}.
+      So by \refrule[anfapp]{Conv}, it suffices to show \im{\styjudg{\tlenvpr}{\tappe{\txone}{\txtwo}}{\subst{\anfh{\sBpr}}{\txtwo}{\sx}}}.
+      By \refrule[anfapp]{App} it suffices to show
+      \begin{enumerate}[leftmargin=*]
+      \item
+        \im{\styjudg{\tlenvpr}{\txone}{\tpity{\tx}{\anfh{\sApr}}{\anfh{\sBpr}}}},
+        which follows by \fullref[]{lem:anf:ih-empty} applied to the induction
+        hypothesis for \im{\styjudg{\slenv}{\seone}{\spity{\sx}{\sApr}{\sBpr}}}
+      \item \im{\styjudg{\tlenvpr}{\txtwo}{\anfh{\sApr}}},
+        which follows by \fullref[]{lem:anf:ih-empty} applied to the induction
+        hypothesis for \im{\styjudg{\slenv}{\setwo}{\sApr}}.
+      \end{enumerate}
+
+    \item \refrule[src]{Let}
+
+      We must show that \im{\styjudg{\anfh{\slenv}}{\anf{\slete{\sx}{\seone}{\setwo}}{\tK}}{\tB}}.
+
+      That is, by definition, \im{\styjudg{\anfh{\slenv}}{\anf{\seone}{\tlete{\txone}{\hole}{\anf{\setwo}{\tK}}}}{\tB}}.
+
+      By the induction hypothesis applied to \im{\styjudg{\slenv}{\seone}{\sA}}, it suffices to show that
+
+      \im{\styjudg{\anfh{\slenv},\edefs{\seone}}{\tlete{\txone}{\hole}{\anf{\setwo}{\tK}}}{(\ehole{\seone} : \anfh{\sA}) \Rightarrow \tB}}.
+
+      By \refrule{K-Bind}, it suffices to show
+      \begin{enumerate}[leftmargin=*]
+      \item
+        \im{\styjudg{\anfh{\slenv},\edefs{\seone}}{\ehole{\seone}}{\anfh{\anfh{\sA}}}},
+        which follows by \fullref[]{lem:anf:ih-empty} applied to the induction
+        hypothesis for \im{\styjudg{\slenv}{\seone}{\sA}},
+      \item \label{prf:anf:type-pres:let-1} \im{\styjudg{\anfh{\slenv},\edefs{\seone},\txone=\ehole{\seone}}{\anf{\setwo}{\tK}}{\tB}}.
+      \end{enumerate}
+
+      \hyperref[prf:anf:type-pres:let-1]{Item (b)} follows from the
+      induction hypothesis applied to
+      \im{\styjudg{\slenv,\sx=\seone}{\setwo}{\sBpr}} with \im{\tK} (the \emph{same}
+      well-typed \im{\tK} that we have from our current premise), if we can show
+      that \im{\tK} is well typed as follows:
+
+      \im{\styjudg{\anfh{\slenv},\edefs{\seone},\txone=\ehole{\seone},\edefs{\setwo}}{\tK}{(\ehole{\setwo} : \anfh{\subst{\sBpr}{\seone}{\sxone}}) \Rightarrow \tB}}
+
+      Currently, we know by our premises that
+
+      \im{\styjudg{\anfh{\slenv},\edefs{\slete{\sxone}{\seone}{\setwo}}}{\tK}{(\ehole{\slete{\sxone}{\seone}{\setwo}} : \anfh{\subst{\sBpr}{\seone}{\sxone}}) \Rightarrow \tB}}
+
+      So it suffices to show that
+      \begin{enumerate}[leftmargin=*]
+      \item \im{\edefs{\slete{\sxone}{\seone}{\setwo}} =
+        (\edefs{\seone},\txone=\ehole{\seone},\edefs{\setwo})}
+      \item \im{\ehole{\slete{\sxone}{\seone}{\setwo}} = \ehole{\setwo}}
+      \end{enumerate}
+
+      both of which are straightforward by definition.
+  \end{proofcases}
+\end{proof}
+
+\begin{theorem}[Type Preservation]
+  \label{thm:anf:type-pres}
+  If \im{\styjudg{\slenv}{\se}{\sA}} then \im{\styjudg{\anfh{\slenv}}{\anfh{\se}}{\anfh{\sA}}}
+\end{theorem}
+\begin{proof}
+  By \fullref[]{lem:anf:type-pres}, it suffices to show that
+  \im{\styjudg{\anfh{\slenv}}{\hole}{(\_ : \anfh{\sA}) \Rightarrow \anfh{\sA}}}, which is trivial.
+\end{proof}
+
+\subsection{Compiler Correctness}
+I prove correctness of separate compilation with respect to the \tech{ANF}
+machine semantics.
+I use the same definitions of linking and \tech{observations} as in
+\fullref[]{chp:source} for \slang.
+It is simple to lift the \tech{ANF} translation to closing substitutions.
+
+Correctness of separate compilation is non-standard compared to
+\fullref[]{chp:type-pres}, in that I define \tech{ANF} semantics separate from
+\tech{conversion}.
+This theorem states that we can either link then run a program in the source language
+semantics, \ie, using the \tech{conversion} relation, or separately compile the
+term and its closing substitution then run in the \tech{ANF} machine semantics.
+Either way, we get related \tech{observations}.
+\begin{theorem}[Separate Compilation Correctness]
+  \label{thm:anf:sep-comp}
+  If \im{\wf{\slenv}{\se}} and
+  \im{\wf{\slenv}{\ssubst}}, then
+  \im{\seval{\ssubst(\se)} \approx \teval{\anfh{\ssubst}(\anfh{\se})}}.
+\end{theorem}
+\begin{proof}
+  Because \im{\equiv} corresponds to \im{\approx} on \tech{observations}, it suffices
+  to show that the following diagram commutes, which it does because
+  \im{\seval{\ssubst(\se)} \equiv \ssubst(\se)} (by definiton),
+  \im{\ssubst(\se) \equiv \anfh{\ssubst(\se)}} (by \fullref[]{lem:anf:eqv-pres}),
+  \im{\anfh{\ssubst}(\anfh{\se}) \equiv \anfh{\ssubst(\se)}} (by \fullref[]{lem:anf:subst}),
+  and \im{\teval{\anfh{\ssubst}(\anfh{\se})} \equiv {\anfh{\ssubst}(\anfh{\se})}} (by \fullref{thm:anf:tgt:eval-sound}).
+
+  \begin{nop}
+    \begin{tikzcd}
+      \seval{\ssubst(\se)} \arrow[r, "\equiv"] \arrow[d, "\equiv"] & {\anfh{\ssubst(\se)}} \arrow[d, "\equiv"] \\
+      \teval{\anfh{\ssubst(\anfh{\se})}} \arrow[r, "\equiv"] & \anfh{\ssubst(\anfh{\se})}
+    \end{tikzcd}
+  \end{nop}
+\end{proof}
+}
+
+\begin{corollary}[Whole-Program Correctness]
+  If \im{\wf{\cdot}{\se}} then \im{\seval{\se} \approx \anfh{\teval{\se}}}.
+\end{corollary}

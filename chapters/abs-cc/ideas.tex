@@ -1,0 +1,417 @@
+\section{Main Ideas}
+\label{sec:abs-cc:ideas}
+\tech{Closure conversion} makes the implicit \tech{closures} from a functional
+language explicit to facilitate statically allocating \tech{code} in memory.
+The idea is to translate each first-class function into an explicit
+\tech{closure}, \ie, a pair of closed \tech{code} and an \deftech{environment}
+data structure containing the values of the free variables.
+\deftech*{codes,code,Code}{Code} refers to functions with no free variables, as in a
+closure-converted language.
+The \tech{environment} is created dynamically, but the closed \tech{code} can be
+lifted to the top-level and statically allocated.
+Consider the following example translation.
+%
+\begin{displaymath}
+  \begin{array}{@{\hspace{0pt}}r@{\hspace{1ex}}c@{\hspace{1ex}}l}
+  \cctrans{(\lambda x.y)} &=& \left<(\lambda
+                      n\,x.\,\kwopen{\text{let}}y\mathrel{=}(\kwopen{\pi_1}n)\mathrel{\text{in}}
+                      y), \left<y\right>\right> \\
+  \cctrans{((\lambda x.y)~\text{true})} &=& \begin{stackTL}
+                           \kwopen{\text{let}}\left<f, n\right>\mathrel{=}\left<(\lambda
+                               n\,x.\,\kwopen{\text{let}}y\mathrel{=}(\kwopen{\pi_1}n)\mathrel{\text{in}}y),
+                            \left<y\right>\right>\mathrel{\text{in}}
+                           \\\quad f~n~\text{true}
+                          \end{stackTL}
+    \end{array}
+\end{displaymath}
+%
+I write \im{\cctrans{e}} to indicate the translation of an expression \im{e}.
+We translate each function into a pair of \tech{code} and its
+\tech{environment}.
+The \tech{code} accepts its free variables in an \tech{environment} argument,
+\im{n} (since \im{n} sounds similar to \emph{env}).
+In the body of the \tech{code}, we bind the names of all free variables by
+projecting from this \tech{environment} \im{n}.
+To call a \tech{closure}, we apply the code to its \tech{environment} and its
+argument.
+
+This translation is not \tech{type preserving} since the structure of the
+\tech{environment} shows up in the \tech{type}.
+For example, the following two functions have the same \tech{type} in the
+source language.
+They are both functions on booleans, and \im{y} is a free variable of type \im{\gboolty}.
+\begin{displaymath}
+  \begin{array}{rcl}
+  \lambda x.y &:&  (\gboolty \to \gboolty)
+  \\
+  \lambda x.x &:&  (\gboolty \to \gboolty)
+  \end{array}
+\end{displaymath}
+But after closure conversion when we encode closures as pairs, the two
+functions have different \techs{type} in the target language.
+%
+\begin{displaymath}
+  \begin{array}{rcl}
+  \cctrans{(\lambda x.y)} &:&  ((\gboolty \times \gunitty) \to \gboolty \to \gboolty)  \times (\gboolty \times \gunitty)
+  \\
+  \cctrans{(\lambda x.x)} &:&  (\gunitty \to \gboolty \to \gboolty) \times \gunitty
+  \end{array}
+\end{displaymath}
+
+This is a well-known problem with typed \tech{closure conversion}, so we could
+try the well-known solution, called \emph{parametric closure
+  conversion}~[\citealp{minamide1996}, \citealp{morrisett1998:reccc},
+  \citealp{morrisett1998:ftotal}, \citealp{ahmed2008}, \citealp{perconti2014},
+  \citealp{new2016}], which represents \techs{closure} as an existential package
+of a pair of the \tech{code} and its \tech{environment}, whose \tech{type} is
+hidden.
+The existential type hides the structure of the \tech{environment} in the
+\tech{type}.
+(Spoiler alert: it doesn't work for \slang.)
+%
+\begin{displaymath}
+  \begin{array}{rcl}
+    \cctrans{(\lambda x.y)} &:& \exists \alpha. (\alpha \to \gboolty \to \gboolty) \times \alpha
+    \\
+    \cctrans{(\lambda x.x)} &:& \exists \alpha. (\alpha \to \gboolty \to \gboolty) \times \alpha
+  \end{array}
+\end{displaymath}
+
+This translation works well for simply typed and polymorphic languages, but when
+we move to a \tech{dependently typed} language, we have new challenges.
+First, the \tech{environment} must now be ordered since the \tech{type} of each
+new variable can depend on all prior variables.
+Second, \techs{type} can now refer to variables in the \tech{closure}'s
+\tech{environment}.
+Consider the polymorphic identity function below.
+%
+\begin{displaymath}
+  \begin{array}{rcl}
+  \sfune{\sA}{\spropty}{\sfune{\sx}{\sA}{\sx}} & : & \spity{\sA}{\spropty}{\spity{\sx}{\sA}{\sA}}
+  \end{array}
+\end{displaymath}
+%
+This function takes a type variable, \im{\sA}, whose type is \im{\spropty}.
+It returns a function that accepts an argument \im{\sx} of type \im{\sA} and returns it.
+There are two \tech{closures} in this example: the outer \tech{closure} has no
+free variables, and thus will have an empty \tech{environment}, while the inner
+\tech{closure} \im{\sfune{\sx}{\sA}{\sx}} has \im{\sA} free, and thus \im{\sA}
+will appear in its \tech{environment}.
+
+Below, I present the translation of this example using the existing parametric
+\tech{closure conversion} translation.
+The translation produces two \tech{closures}, one nested in the other.
+Note that we translate source variables \im{\sx} to \im{\tx}.
+In the outer \tech{closure}, the \tech{environment} is empty \im{\tnpaire{}},
+and the code simply returns the inner \tech{closure}.
+The inner \tech{closure} has the argument \im{\tA} from the outer \tech{code} in
+its \tech{environment}.
+Since the inner \tech{code} takes an argument of type \im{\tA}, we project
+\im{\tA} from the \tech{environment} \emph{in the type annotation} for \im{\tx}.
+That is, the inner \tech{code} takes an \tech{environment} \im{\tntwo} that
+contains \im{\tA}, and the type annotation for \im{\tx} is \im{\tx :
+  \tfste{\tntwo}}.
+The type \im{\tfste{\tntwo}} is unusual, but is no problem since \tech{dependent
+  types} allow \techs{term} in \techs{type}.
+%
+\begin{displaymath}
+  \begin{stackTL}
+    \tcloe{\tnfune{(\tnone:\tunitty,\tA:\tpropty)}{
+        \tcloe{\tnfune{(\tntwo:
+            \tpairty{\tpropty}{\tunitty},\tx:\tfste{\tntwo})}{\tx}
+        }{\tnpaire{\tA,\tnpaire{}}}}}{\tnpaire{}} ~~ : ~~\\
+    ~~\begin{array}{@{\hspace{0pt}}l@{\hspace{0pt}}l@{\hspace{0pt}}l}
+      \texistty{\talphaone}{\tpropty}{&\,\tpairty{(\tnpity{&(\tnone:\talphaone,\tA:\tpropty)}{
+            \\ &&
+            \texistty{\talphatwo}{\ttypety{i}}{\tpairty{(\tnpity{(\tntwo:\talphatwo,\tx:\tfste{\tntwo})}{\tfste{\tntwo}})}{\talphatwo}}})\,}{\talphaone}}
+    \end{array}
+    \end{stackTL}
+\end{displaymath}
+%
+We see that the inner \tech{code} on its own is well typed with the closed type
+\im{\tnpity{(\tntwo:\tpairty{\tpropty}{\tunitty},\tx:\tfste{\tntwo})}{\tfste{\tntwo}}}.
+That is, the \tech{code} takes two arguments: the first argument \im{\tntwo} is
+the \tech{environment}, and the second argument \im{\tx} is a value of type
+\im{\tfste{\tntwo}}.
+The result type of the \tech{code} is also \im{\tfste{\tntwo}}.
+As discussed above, we must hide the type of the \tech{environment} to ensure
+\tech{type preservation}.
+That is, when we build the \tech{closure}
+\im{\tcloe{\tnfune{(\tntwo:
+      \tpairty{\tpropty}{\tunitty},\tx:\tfste{\tntwo})}{\tx}
+    }{\tnpaire{\tA,\tnpaire{}}}}, we must hide the type of the
+\tech{environment} \im{\tnpaire{\tA,\tnpaire{}}}.
+We use an existential type to quantify over the type \im{\talphatwo} of the
+environment, and we produce the type
+\im{\tnpity{(\tntwo:\talphatwo,\tx:\tfste{\tntwo})}{\tfste{\tntwo}}} for the
+\tech{code} in the inner \tech{closure}.
+But this type is trying to take the \emph{first projection} of something of type
+\im{\talphatwo}.
+We can only project from pairs, and something of type \im{\talphatwo} isn't a
+pair!
+In hiding the type of the \tech{environment} to recover \tech{type
+  preservation}, we've broken \tech{type preservation} for \tech{dependent
+  types}.
+
+A similar problem also arises when \tech{closure converting} System F, since
+System F also features type variables~\cite{minamide1996,morrisett1998:ftotal}.
+To understand my solution, it is important to understand why the solutions that
+have historically worked for System F do not scale to \tech{dependent types}.
+I briefly present these past results and why they do not scale before moving on
+to the key idea behind my translation.
+Essentially, past work using existential types relies on assumptions about
+\tech{computational relevance}, \tech{parametricity}, and \tech{impredicativity}
+that do not necessarily hold in \tech{full-spectrum} \tech{dependent type} systems.
+
+\subsection{Why the well-known solution doesn't work}
+\citet{minamide1996} give a translation that encodes \tech{closure} types using
+\tech{existential types}, a standard type-theoretic feature that they use to
+make environment hiding explicit in the types.
+In essence, they encode \techs{closure} as objects; the \tech{environment} can
+be thought of as the private field of an object.
+Since then, existential types have been the standard way to encode
+\tech{closure} types has been all work on typed \tech{closure conversion}.
+
+However, the use of existential types to encode \techs{closure} in a dependently
+typed setting is problematic.
+First, let us just consider \tech{closure conversion} for System F.
+As \citet{minamide1996} observed, there is a problem when code must be closed
+with respect to both \tech{term} and \emph{\tech{type}} variables.
+This problem is similar to the one discussed above: when \tech{closure}
+\techs{environment} contain \tech{type} variables, since those \tech{type}
+variables can also appear in the \tech{closure}'s type, the \tech{closure}'s
+type needs to project from the \tech{closure}'s (hidden) \tech{environment}
+which has type \im{\alpha}.
+To fix the problem, \citet{minamide1996} extend their target language with
+\deftech{translucency} (essentially, a kind of \tech{type}-level equivalence
+that we now call singleton types), \tech{type}-level pairs, and kinds.
+All of these features can be encoded in \slang and most \tech{dependent type}
+systems, so we could extend their translation essentially as follows.
+(In fact, I present the extended translation in \fullref[]{chp:param-cc}.)
+%
+\begin{displaymath}
+  \begin{array}{rcl}
+    \!\!\!\cctrans{(\spity{\sx}{\sA}{\sB})} \defeq
+    \texistty{\talpha}{\tU}{\texistty{\tn}{\talpha}{\tcodety{\tnpr{\,:\,}\talpha, \ty{\,:\,}\tnpr = \tn,\tx{\,:\,}\cctrans{\sA}}{\cctrans{\sB}}}}
+  \end{array}
+\end{displaymath}
+
+In this translation, we existentially quantify over the \tech{type} of the
+\tech{environment} \im{\talpha}, the \emph{\tech{term}} representing the
+\tech{environment} \im{\tn}, and generate \tech{code} that requires an
+\tech{environment} \im{\tnpr} plus a proof that the code is only ever given the
+environment \im{\tn} as the argument \im{\tnpr}.
+The typing rule for an existential package copies the existentially quantified
+\techs{term} into the \tech{type}.
+That is, for a \tech{closure} \im{\tnpackoe{\tApr,\tv,\te}} of type
+\im{\texistty{\talpha}{\tU}{\texistty{\tn}{\talpha}{\tcodety{\tnpr{\,:\,}\talpha,
+        \ty{\,:\,}\tnpr = \tn,\tx{\,:\,}\cctrans{\sA}}{\cctrans{\sB}}}}}, the typing rule for
+\im{\tfont{pack}} requires that we show \im{\te : \tcodety{\tnpr{\,:\,}\tApr,
+        \ty{\,:\,}\tnpr = \tv,\tx{\,:\,}\cctrans{\sA}}{\cctrans{\sB}}}; notice that the variable \im{\tn}
+has been replaced by the \tech{term} representing the environment \im{\tv}.
+The equality \im{\tnpr = \tv} essentially unifies projections from \im{\tnpr}
+with projections from \im{\tv}, the list of free variables representing the
+\tech{environment}.
+
+The problem with this translation is that it relies on
+\emph{\tech{impredicativity}}.
+That is, if \im{(\spity{\sx}{\sA}{\sB}) : \spropty}, then we require that
+\im{\cctrans{(\spity{\sx}{\sA}{\sB})} : \tpropty}.
+Since the existential type quantifies over a type in an arbitrary
+\tech{universe} \im{\tU} but must be in the base \tech{universe} \im{\tpropty},
+the existential type must be \tech{impredicative}.
+\tech{Impredicative} existential types (weak \techs{dependent pair}) are
+consistent on their own, but \tech{impredicativity} causes inconsistency when
+combined with other features, including \tech{computational relevance} and
+\tech{higher universes}.
+For example, in Coq by default, the base \tech{computationally relevant} \tech{universe}
+\texttt{Set} is \tech{predicative}, so this translation would not work.
+There is a flag to enable \tech{impredicative} \texttt{Set}, but this can
+introduce inconsistency with some axioms, such as a combination of the law of
+excluded middle plus the axiom of choice, or ad-hoc
+polymorphism~\cite{boulier2017}.
+Even with \tech{impredicative} \texttt{Set}, there are \tech{computationally relevant}
+\tech{higher universes} in Coq's universe hierarchy, and it would be unsound to
+allow \tech{impredicativity} at more than one \tech{universe}.
+Furthermore, some \tech{dependently typed} languages, such as Agda, do not allow
+\tech{impredicativity} at all.
+
+A second problem arises in developing an \(\eta\) principle, because the
+existential type encoding relies on \emph{\tech{parametricity}} to hide the
+\tech{environment}.
+So, any \(\eta\) principle would need to be justified by a parametric relation
+on \tech{environments}.
+Internalizing \tech{parametricity} for dependent type theory is an active area
+of research~\cite{krishnaswami2013,bernardy2012,keller2012,nuyts2017} and not
+all \tech{dependent type} theories admit \tech{parametricity}~\cite{boulier2017}.
+
+Later, \citet{morrisett1998:ftotal} improved the existential-type translation
+for System F, avoiding \tech{translucency} and kinds by relying on \emph{type
+  erasure} before runtime, which meant that their \tech{code} didn't have to
+close over type variables.
+This translation does not apply in a \tech{dependently typed} setting, since
+\tech{dependent types} can contain \tech{term} variables, not just ``type
+erasable'' \tech{type} variables.
+
+\subsection{Abstract Closure Conversion}
+To solve \tech{type-preserving} \tech{closure conversion} for \slang, I avoid
+existential types altogether and instead take inspiration from the so-called
+\tech{abstract closure conversion} of \citet{minamide1996}.
+They add new forms to the target language to represent \tech{code} and
+\techs{closure} for a simply typed source language.
+In this chapter, I scale their design to \techs{dependent type}.
+
+I extend \slang with primitive types for \tech{code} and \techs{closure}.
+I represent \tech{code} as \im{\tnfune{(\tn:\tApr,\tx:\tA)}{\teone}} of
+the \deftech{code type} \im{\tcodety{\tn:\tApr,\tx:\tA}{\tB}}.
+These are still \techs{dependent type}, so \im{\tn} may appear in both \im{\tA}
+and \im{\tB}, and \im{\tx} may appear in \im{\tB}.
+\tech{Code} must be well-typed in an empty \tech{environment}, \ie, when it is
+closed.
+For simplicity, \tech{code} only takes two arguments.
+\begin{mathpar}
+  \inferrule*[right=\rulename{Code}]
+  {\ttyjudg{\cdot,\tn:\tApr,\tx:\tA}{\te}{\tB}}
+  {\ttyjudg{\tlenv}{\tnfune{\tn:\tApr,\tx:\tA}{\te}}{\tcodety{\tn:\tApr,\tx:\tA}{\tB}}}
+\end{mathpar}
+
+I represent \tech{closures} as \im{\tcloe{\te}{\tepr}} of type
+\im{\tpity{\tx}{\subst{\tA}{\tepr}{\tn}}{\subst{\tB}{\tepr}{\tn}}}, where
+\im{\te} is code and \im{\tepr} is its \tech{environment}.
+We \emph{continue} to use \im{\tfontsym{\Pi}} types to describe \tech{closures};
+note that ``functions'' in \slang are implicit \tech{closures}.
+The typing rule for \tech{closures} is the following.
+%
+\begin{mathpar}
+  \inferrule*[right=\rulename{Clo}]
+  {\ttyjudg{\tlenv}{\te}{\tcodety{\tn:\tApr,\tx:\tA}{\tB}} \\
+  \ttyjudg{\tlenv}{\tepr}{\tApr}}
+  {\ttyjudg{\tlenv}{\tcloe{\te}{\tepr}}{\tpity{\tx}{\subst{\tA}{\tepr}{\tn}}{\subst{\tB}{\tepr}{\tn}}}}
+\end{mathpar}
+%
+We should think of a \tech{closure} \im{\tcloe{\te}{\tepr}} not as a pair, but
+as a delayed partial application of the \tech{code} \im{\te} to its
+\tech{environment} \im{\tepr}.
+This intuition is formalized in the typing rule since the \tech{environment} is
+substituted into the \tech{type}, just as in \tech{dependent-function}
+application in \slang.
+
+To understand the translation, let us start with the translation of functions;
+this is the key translation rule.
+%
+\begin{displaymath}
+  \begin{array}{@{\hspace{0pt}}r@{\hspace{1ex}}c@{\hspace{1ex}}l}
+    \cctrans{(\sfune{\sx}{\sA}{\se})} &\defeq&
+                                     \tcloe{(\tnfune{\begin{stackTL}(\tn:\tsigmaty{(\txi}{\cctrans{\sAi}\dots)}{\tunitty},\tx:\tlete{\tnpaire{\txi\dots}}{\tn}{\cctrans{\sA}})}{
+                                           \\
+                                           \tlete{\tnpaire{\txi\dots}}{\tn}{\cctrans{\se}}})}{\tnpaire{\txi\dots}}
+                                     \end{stackTL} \\
+                              && \text{ where \im{\sxi:\sAi\dots} are the free variables of \im{\se} and \im{\sA}}
+  \end{array}
+\end{displaymath}
+%
+The translation of functions is simple to construct.
+We know we want to produce a \tech{closure} containing \tech{code} and its
+\tech{environment}.
+We know the \tech{environment} should be constructed from the free variables of
+the body of the function, namely \im{\se}, and, due to \tech{dependent types},
+the type annotation \im{\sA}.
+The type of the environment,
+\im{\tsigmaty{(\txi}{\cctrans{\sAi}\dots)}{\tunitty}}, is the type of a dependent
+list describing the free variables, with a final element of the unit type.
+This encodes the fact that type of each variable in the environment can
+depend on the value of previous variables.
+(The syntax \im{\tlete{\tnpaire{\txi\dots}}{\tn}{\te}} is syntactic sugar for
+nested projections from a list implemented with pairs, \ie, for
+\im{\tlete{\txone}{\tfste{\tn}}{(\tlete{\txtwo}{\tfste{\tsnde{\tn}}}{(...\tlete{\txin{n}}{(\tfste{\tsnde{...\tsnde{\tn}}}}{\te})})}}.)
+
+The question is what the translation of \im{\sfontsym{\Pi}} \tech{types}
+should look like.
+Let's return to the earlier example of the polymorphic identity function.
+If we apply the above translation, we produce the following for the inner
+\tech{closure}.
+We know its \tech{type} by following the typing rules \rulename{Clo} and
+\rulename{Code} above.
+%
+\begin{displaymath}
+  \begin{array}{l}
+    \tcloe{\tnfune{(\tntwo:\tpairty{\tpropty}{\tunitty},\tx:\tfste{\tntwo})}{\tx}}
+    {\tnpaire{\tA,\tnpaire{}}} :
+    \\ \tpity{(\tx}{\subst{(\tfste{\tntwo})}{\tnpaire{\tA,\tunite}}{\tntwo})}{\subst{(\tfste{\tntwo})}{\tnpaire{\tA,\tunite}}{\tntwo}}
+  \end{array}
+\end{displaymath}
+%
+We know that the \tech{code}
+\im{\tnfune{(\tntwo:\tpairty{\tpropty}{\tunitty},\tx:\tfste{\tntwo})}{\tx}} has type
+\im{\tcodety{\tpairty{\tpropty}{\tunitty},\tx:\tfste{\tntwo}}{\tfste{\tntwo}}}.
+Following \rulename{Clo}, we substitute the \tech{environment} into this type, so we get the following.
+%
+\begin{displaymath}
+\tpity{(\tx}{\subst{(\tfste{\tntwo})}{\tnpaire{\tA,\tunite}}{\tntwo})}{\subst{(\tfste{\tntwo})}{\tnpaire{\tA,\tunite}}{\tntwo}}
+\end{displaymath}
+%
+So how do we translate the function type \im{\spity{\sx}{\sA}{\sA}} into the
+\tech{closure} type
+\im{\tpity{(\tx}{\subst{(\tfste{\tntwo})}{\tnpaire{\tA,\tunite}}{\tntwo})}{\subst{(\tfste{\tntwo})}{\tnpaire{\tA,\tunite}}{\tntwo}}}?
+Note that this type reduces to \im{\tpity{\tx}{\tA}{\tA}}.
+So by the rule \rulename{Conv}, we simply need to translate
+\im{\spity{\sx}{\sA}{\sA}} to \im{\tpity{\tx}{\tA}{\tA}}!
+
+The key translation rules are given below.
+%
+\begin{displaymath}
+  \begin{array}{@{\hspace{0pt}}r@{\hspace{1ex}}c@{\hspace{1ex}}l}
+    \cctrans{(\spity{\sx}{\sA}{\sB})} &\defeq &\tpity{\tx}{\cctrans{\sA}}{\cctrans{\sB}}\\
+    \cctrans{(\sfune{\sx}{\sA}{\se})} &\defeq&
+                                     \tcloe{(\tnfune{\begin{stackTL}(\tn:\tnsigmaty{(\txi:\cctrans{\sAi}\dots)},\tx:\tlete{\tnpaire{\txi\dots}}{\tn}{\cctrans{\sA}})}{
+                                           \\
+                                           \tlete{\tnpaire{\txi\dots}}{\tn}{\cctrans{\se}}})}{\tnpaire{\txi\dots}}
+                                     \end{stackTL} \\
+                              && \text{ where \im{\sxi:\sAi\dots} are the free variables of \im{\se} and \im{\sA}}
+  \end{array}
+\end{displaymath}
+
+Observe that, when the source is in \tech{ANF}, this translation maintains \tech{ANF}.
+A \tech{closure} ought to be a \tech*{anf:value}{value}, and therefore its
+sub-expressions should be \tech*{anf:value}{values}, and the translation
+guarantees this.
+The body of the \tech{code} should be a \tech*{anf:config}{configuration}, which
+is also true, since for any \tech*{anf:config}{configuration} \im{\tM},
+\im{\tlete{\tx}{\tN}{\tM}} is a \tech*{anf:config}{configuration}.
+I show this in detail in \fullref[]{sec:abs-cc:cc:anf}.
+
+A final challenge remains in the design of our target language: we need to know
+when two \tech{closures} are equivalent.
+As we just saw, \slang partially evaluates terms while type checking.
+If two \tech{closures} get evaluated while resolving type equivalence, we may
+inline a \tech{term} into the \tech{environment} for one \tech{closure} but not
+the other.
+When this happens, two \tech{closures} that were syntactically identical and
+thus equivalent become inequivalent.
+I discuss this problem in detail in \fullref[]{sec:abs-cc:cc}, but essentially
+we need to know when two syntactically distinct \tech{closures} are equivalent.
+The solution is simple: get rid of the \tech{closures} and keep inlining things!
+%Our solution, given below, is simple: closures be damned, keep inlining things!
+%
+\begin{mathpar}
+  \inferrule
+  {\tequivjudg{\tlenv,\tx:\tA}{\subst{\teone}{\teonepr}{\tn}}{\subst{\tetwo}{\tetwopr}{\tn}}}
+  {\tequivjudg{\tlenv}{\tcloe{(\tnfune{(\tn:\tApr,\tx:\tA)}{\teone})}{\teonepr}}{\tcloe{(\tnfune{(\tn:\tApr,\tx:\tA)}{\tetwo})}{\tetwopr}}}
+\end{mathpar}
+
+Two \techs{closure} are equivalent when we inline the \tech{environment}, free
+variables or not, and run the body of the \tech{code}.
+We leave the argument free, too.
+We run the bodies of the \tech{code} to normal forms, then compare the normal forms.
+Recall that equivalence runs \techs{term} while \emph{type checking} and does
+not change the program, so the free variables do no harm.
+
+This equivalence essentially corresponds to an \(\eta\)-principle for \techs{closure}.
+From it, we can derive a normal form for \techs{closure} \im{\tcloe{\te}{\tepr}}
+that says the \tech{environment} \im{\tepr} contains only free variables, \ie,
+\im{\tepr = \tnpaire{\txi\dots}}.
+
+The above is an intuitive, declarative presentation, but is incomplete without
+additional rules.
+I use an algorithmic presentation that is similar to the \(\eta\)-equivalence
+rules for functions in \slang, which I give in \fullref[]{sec:abs-cc:target}.

@@ -1,0 +1,1070 @@
+\renewcommand{\techprefix}{intro}
+
+\newcommand{\FigCompileDiagram}[1][t]{
+  \begin{figure}[#1]
+    \begin{minipage}{.4\linewidth}
+    \begin{tikzcd}[ampersand replacement=\&]
+      \text{Coq} \arrow[d, "\text{Compile}"'] \&  \\
+      \text{OCaml} \arrow[d, "\text{Compile}"'] \&  \text{Driver} \arrow[l, "\text{Link}", harpoon'] \\
+      \text{x86} \&  \text{FFI} \arrow[l, "\text{Link}"', harpoon']
+    \end{tikzcd}
+    \end{minipage}
+    \begin{minipage}{.59\linewidth}
+      \begin{tikzcd}[ampersand replacement=\&]
+      \text{Coq} \arrow[d, "\text{Miscompilation Errors}"'] \&  \&  \\
+      \text{OCaml} \arrow[d, "\text{Miscompilation Errors}"'] \&  \& \text{Driver} \arrow[ll, "\text{Linking Errors}", harpoon'] \\
+      \text{x86} \& \& \text{FFI} \arrow[ll, "\text{Linking Errors}"', harpoon']
+    \end{tikzcd}
+    \end{minipage}
+    \caption{Transforming a Verified Coq Program into an Unverified Executable}
+    \label{fig:intro:compile-diagram}
+  \end{figure}
+}
+
+\newcommand{\FigCertiCoqDiagram}[1][t]{
+  \begin{figure}[#1]
+    \begin{tikzcd}[ampersand replacement=\&]
+      \text{Coq} \arrow[d, "\text{Compile w/ CertiCoq}"'] \&  \&  \\
+      \text{Clight} \arrow[d, "\text{Compile w/ CompCert}"'] \&  \&  \text{Driver} \arrow[ll, "\text{Linking Errors}", harpoon'] \\
+      \text{x86} \&  \&  \text{FFI} \arrow[ll, "\text{Linking Errors}"', harpoon']
+    \end{tikzcd}
+    \caption{Verified Compilation of a Verified Coq Program into an Unverified Executable}
+    \label{fig:intro:certicoq-diagram}
+  \end{figure}
+}
+
+\newcommand{\FigSepCompDiagram}[1][t]{
+  \begin{figure}[#1]
+    \begin{tikzcd}[ampersand replacement=\&]
+      \text{Coq} \arrow[d, "\text{Compile w/ CertiCoq}"'] \&  \& \text{Coq} \arrow[d] \&  \\
+      \text{Clight} \arrow[d, "\text{Compile w/ SepCompCert}"'] \&  \& \text{Clight} \arrow[ll, "\text{Safe Linking}", harpoon'] \arrow[d] \& \text{Driver} \arrow[lll, "\text{Linking Errors}" description, harpoon', bend right=21] \\
+      \text{x86} \&  \& \text{x86} \arrow[ll, "\text{Safe Linking}", harpoon'] \& \text{FFI} \arrow[lll, "\text{Linking Errors}", harpoon', bend left]
+    \end{tikzcd}
+    \caption{Verified Separate Compilation of Verified Coq Programs into an Unverified Executable}
+    \label{fig:intro:sepcomp-diagram}
+  \end{figure}
+}
+
+\newcommand{\FigCompCompDiagram}[1][t]{
+  \begin{figure}
+    \begin{tikzcd}[ampersand replacement=\&]
+      \text{Clight} \arrow[d, "\text{Compile w/ CompCompCert}"'] \&  \& \text{Clight} \arrow[ll, "\text{Safe Linking}", harpoon'] \arrow[d] \& \text{Clight} \arrow[lll, "\text{Linking Semantics}", dotted, bend right] \&  \\
+      \text{x86} \&  \& \text{x86} \arrow[ll, "\text{Safe Linking}", harpoon'] \& \text{Safe FFI} \arrow[u, "\text{Interaction Semantics}"', dotted] \arrow[lll, "\text{Safe Linking}", harpoon', bend left] \& \text{FFI} \arrow[llll, "\text{Linking Errors}", harpoon', bend left=49]
+    \end{tikzcd}
+    \caption{Verified Compositional Compilation into an Unverified Executable}
+    \label{fig:intro:compcomp-diagram}
+  \end{figure}
+}
+
+\newcommand{\FigMythDiagram}[1][t]{
+  \begin{figure}
+    \begin{tikzcd}[ampersand replacement=\&]
+      \text{Coq} \arrow[dd, "\text{MythicalComp}"'] \&  \&  \&  \\
+      \&  \&  \&  \\
+      \text{Annotated x86} \arrow[d, "\text{Erase Annotations}"'] \&  \& \text{Annotated x86} \arrow[ll, "\text{Safe Linking}", harpoon'] \& \text{x86} \arrow[lll, "\text{Disallowed: possible linking error}" description, harpoon', dotted, bend left] \\
+      \text{x86} \& \& \&
+    \end{tikzcd}
+    \caption{Verified Compilation into a Verified Executable}
+    \label{fig:intro:myth-diagram}
+  \end{figure}
+}
+
+\newcommand{\FigThisCompiler}[1][t]{
+  \begin{figure}[#1]
+    \begin{center}
+    \begin{tikzcd}[ampersand replacement=\&]
+      ECC^D \arrow[d, "\text{\fullref[ANF]{chp:anf}}"'] \&  \&  \& CoC^D \arrow[d, "\text{\fullref[CPS]{chp:cps}}"'] \arrow[dd, "\text{\fullref[Parametric CC]{chp:param-cc}}", bend left=60] \\
+      ECC^A \arrow[d, "\text{\fullref[Abstract CC]{chp:abs-cc}}"'] \&  \& \& CoC^k  \\
+      ECC^{CC} \&  \& \& CoC^{CC}% \\
+    \end{tikzcd}
+    \end{center}
+    \caption{Compilers in this Dissertation}
+    \label{fig:intro:thiscompiler}
+  \end{figure}
+}
+
+\chapter{Executing a Verified Program}
+\label{chp:intro}
+
+% Max tells me I should start at the beginning.
+\marginpar{I begin this dissertation with a story; I will get technically
+  precise starting in the next section.}
+In the beginning, computer programs were created.
+This was fine and was useful for doing math, and many programmers wrote many
+interesting programs.
+Sometime after, computers were created and began to execute computer programs.
+\emph{This has made a lot of people very angry and been widely regarded as a bad
+  move}.\footnote{From \citet{adams1980}.}
+
+After computers were created, they became the primary readers and writers of
+computer programs.
+Some programs are written and read by humans, but most are written by
+\deftech*{compile,Compiler,compiler,Compilers,compilers,compilation}{compilers}
+and read only by the computer.
+Hopefully, the \tech{compiler} translates an input \deftech{source program}
+that is simple for a human to read and write into an \deftech{executable}---a,
+possibly optimized, program suitable for execution.
+
+A computer will, faithfully and without question, execute the program it is
+given to execute.
+This is unfortunate because the program that the computer reads is almost never
+the one that the programmer intended to be executed.
+The resulting execution will surprise the programmer and enrage the user.
+
+If we are very lucky, a bad execution will happen \emph{despite} the best
+efforts of the programmer.
+Ideally, the programmer will have spent substantial effort trying to avoid
+letting a computer execute the wrong program.
+The programmer will have designed their program and reasoned about that design
+before ever writing a single line of code.
+Then, each line of code will have been written \emph{carefully}.
+Surprisingly, we do occasionally get this lucky in practice.
+
+Despite our luck, inevitably, the programmer will have been wrong.
+Probably, the design will have been flawed.
+Likely, the code will have had errors.
+So the computer will have faithfully executed an erroneous implementation of a
+flawed design.
+
+Programming is fundamentally an act of communication and, as such, is
+susceptible to \emph{miscommunication}.
+The programmer communicates, via their program, some process, or task, or other
+information.
+The program communicates this \emph{very} precisely.
+So precisely, in fact, that it can be understood not only by other programmers,
+but by a ``rock we tricked into thinking''.\footnote{@daisyowl.
+  \url{https://twitter.com/daisyowl/status/841802094361235456}. March 14 2017.}
+But, humans and rocks think very differently.
+The programmer often fails to understand how literally rocks think, and the rock
+fails to understand that the programmer doesn't always say what they \emph{mean}
+what to say.
+
+To avoid miscommunication, we can teach computers to \emph{verify} their
+understanding of a program with the programmer through
+\marginpar{Technically, \tech{verification} only checks that the program does
+  what we \emph{said} we meant for it to do, so miscommunication is still
+  possible.
+  For this dissertation, I assume this is good enough.}%
+\deftech*{program verification,Program verification,verification}{program
+  verification}---separately specifying what the programmer meant for the
+program to do, and then, before executing the program, making the computer
+verify that the program does what the programmer meant for it do.
+A \deftech*{verified,verified program,verified programs}{verified program} is a
+program \tech{implementation} with a \tech{specification} and a \tech{proof}
+that the \tech{implementation} meets the \tech{specification}.
+By \tech*{verified program}{verifying} a program, we reduce miscommunication and
+thus reduce program errors, by providing high assurance that the programmer and
+the computer are ``on the same page''---the programmer has written what they
+expect to happen, then written the program, and the computer has agreed that the
+program will indeed do what is expected.
+
+\tech{Program verification} is useful for reducing program errors but, thanks to
+\tech{compilers}, essentially no \tech{verified program} has ever been executed.
+I make this statement more precise later in \fullref[]{sec:intro:pres-verif},
+but for now, here is what I mean.
+Recall that \tech{compilers}, not programmers, write most programs, and this is
+particularly true of \tech{executables}.
+To produce a \tech{verified program}, a \tech{compiler} would have to transform
+the program \tech{implementation}, its \tech{specification}, and its
+\tech{proof}, which is beyond the scope of current \tech{compiler} design.
+Even if the \tech{compiler} were proven to satisfy some \tech{compiler}
+correctness \tech{specification} and could compile a \tech*{verified
+  program}{verified source program}, the \tech{compiler} would not produce a
+\tech*{verified program}{verified target program}.
+That is, we could not get an \tech{executable} \tech{implementation} complete with an
+\tech{executable}-level \tech{specification} that corresponds to the original
+\tech{specification} and an independently checkable \tech{proof} that the
+\tech{executable} meets its \tech{specification}.
+Contemporary \tech{verified} \tech{compilers} only transform the
+\tech{implementation}.
+We may think that composing the \tech{proof} of correctness for the
+\tech{compiler} with the \tech{proof} of correctness for the program yields a
+\tech{proof} that the generated \tech{executable} is \tech{verified}, but this
+(typically) only tells us that the \tech{executable} reduces to the same value
+as the original \tech{verified program}, not that the \tech{executable} meets
+the original \tech{specification}.
+Evaluation to the same value is a weak specification: it requires the compiler
+only operates on \emph{whole programs} and does not capture (for example)
+security properties that guarantee secret values aren't leaked to attackers.
+Thus even when a programmer has gone through the trouble of \tech{verifying} a
+program, the program that actually executes is an \emph{unverified}
+\tech{executable}.
+\marginpar{Although, if it was compiled with a \tech{verified} \tech{compiler},
+  it is probably a correct unverified \tech{executable}.}
+
+% Theorize: create a theoretical premise or framework for (something).
+In this dissertation, I theorize a solution to the problem of \tech{compilers}
+transforming \tech{verified programs} into unverified \tech{executables}.
+Before I can precisely describe this theory, I must precisely describe
+\tech{program verification} and the problems that arise when attempting to
+\tech{compile} programs, \tech{verified} or not.
+
+\section{Program Verification and Dependent Types}
+The key elements of \tech{program verification} are:
+\begin{enumerate}
+  \item a \deftech{specification}, which describes the intended behavior or
+    properties of a program and is independent of the program's \tech{implementation},
+  \item an \deftech{implementation}, which describes in code how to accomplish
+    the goal of the program (this is what we typically think of as a \deftech{program}),
+  \item a \deftech{proof}, which witnesses the fact that the
+    \tech{implementation} meets its \tech{specification}.
+\end{enumerate}
+There are many ways to instantiate the above elements into a system for
+\tech{program verification}, and additional criteria we wish to consider for a
+given instantiation.
+For example, we want \tech{specifications} to be simple to understand and write,
+and expressive enough to capture full functional, safety, and security
+properties.
+We also want \tech{proofs} to be easy to check, and ideally for the \tech{proof}
+system to be \deftech*{inconsistent,inconsistency,consistency,logical
+  consistency,logically consistent}{logically consistent}---\ie, the existence
+of a
+\tech{proof} should imply that the \tech{implementation} does actually meet the
+\tech{specification}.
+
+A particularly common and useful (as discussed shortly) way to implement
+\tech{program verification} is by using \emph{\tech{dependent types}} (in
+particular, \emph{\tech{full-spectrum}} \tech{dependent types})\footnote{These
+  were once called \emph{fully dependent types}~\cite{xi1998}, but contemporary
+  work uses term \emph{full-spectrum}~\cite{weirich2017}.}.
+In the terminology of typed programming, \deftech*{dependent type,dependent
+  types,dependently typed,Dependent type,Dependent types,Dependently
+  typed}{dependent types} allow for
+\deftech*{type,Type,types,Types}{types}, the language for statically describing
+program behaviors, to \deftech[src]{depend on} (\ie, to include as part of the
+language of \tech{types}) some or all \deftech*{term,Term,terms,Terms}{terms},
+the language for dynamically implementing programs.
+This is in contrast to traditional typed programming language, such as Java or
+ML, in which there is a \deftech*{phase distinction,phase-distinction}{phase distinction} between \tech{types} and
+\tech{terms}, meaning \tech{types} exist at compile-time and \emph{cannot} refer
+to \tech{terms}, which exist later at run-time.
+This restricts what \tech{specifications} can be expressed in \tech{types}.
+\marginpar{Henceforth, I use the unqualified \tech{dependent types} to mean
+  \tech{full-spectrum} \tech{dependent types}.}%
+\deftech*{full-spectrum,Full-spectrum}{Full-spectrum} \tech{dependent
+  types}
+refers to the ability of \tech{types} to \tech[src]{depend on} \emph{arbitrary}
+\tech{terms}, instead of only part of the language of \tech{terms}.
+In that case, there is no syntactic distinction between \tech{types} and
+\tech{terms}---together, they make up a single language of
+\deftech*{Expression,Expressions,expression,expressions}{expressions}.
+
+As an example of \tech{program verification} with \tech{dependent types},
+consider attempting to verified the following operations on lists from a
+standard typed language such as ML.
+\begin{minted}[xleftmargin=1em]{agda}
+length : List A -> Nat
+length = ...
+
+append : List A -> List A -> List A
+append = ...
+\end{minted}
+In this example, we declare that the \tech{term} \mintinline{agda}{length} has
+the \tech{type} \mintinline{agda}{List A -> Nat}, meaning that it is a function
+that takes a \mintinline{agda}{List A} as input and produces a
+\mintinline{agda}{Nat} as output.
+In a type system with \tech{phase distinction}, \mintinline{agda}{List A},
+\mintinline{agda}{->}, and \mintinline{agda}{Nat} are all drawn from the
+language of \tech{types}, while \mintinline{agda}{length} and
+\mintinline{agda}{append} are in the language of \tech{terms}.
+
+In a \tech{full-spectrum} \tech{dependently typed} language, we could write the
+above example with the more precise type below thus using type checking to
+verified a correctness property.
+\begin{minted}[xleftmargin=1em]{agda}
+length : List A -> Nat
+length = ...
+
+append : (l1 : List A)
+           -> (l2 : List A)
+           -> {l : List A | length l == length l1 + length l2}
+append = ...
+\end{minted}
+In this example, we name each argument to \mintinline{agda}{append} when
+describing its \tech{type}.
+The first argument is named \mintinline{agda}{l1}, and the second is \mintinline{agda}{l2}.
+Then, we can refer to that argument, the \tech{term}, in the \tech{type}.
+We can also write other arbitrary \tech{terms} in the types.
+We use this to declare that the output of \mintinline{agda}{append} is a
+\mintinline{agda}{List A}, named \mintinline{agda}{l}, such that the
+\mintinline{agda}{length} of \mintinline{agda}{l} is equal to the sum of the
+\mintinline{agda}{length}s of \mintinline{agda}{l1} and \mintinline{agda}{l2}.
+This means that not only does \mintinline{agda}{append} return a
+\mintinline{agda}{List A}, but a \mintinline{agda}{List A} of a particular
+\mintinline{agda}{length}, capturing a correctness \tech{specification} in the
+types.
+
+Using \tech{dependent types}, we can build a \tech{program verification} system
+that satisfies all desired criteria listed earlier.
+We write \tech{specifications} using \tech{types} (in particular,
+\tech{dependent types}), and write \tech{implementations} in the \tech{terms} of
+the \tech{dependently typed} language.
+The \tech{proofs} are represented by the annotations and additional \tech{terms}
+in the \tech{implementation} itself and are checked via type checking; for example,
+the \tech{implementation} of a function may include an additional argument whose
+\tech{type} represents a precondition, and the \tech{term} passed in for that
+argument represents a \tech{proof} that the precondition holds if the
+\tech{term} is well-typed.
+
+\subsection{The Virtues of Dependent Types}
+
+\paragraph{Dependent Types Simplify Specification by Avoiding Specification Puns}
+\tech{Dependent types} simplify reading and writing \techs{specification} and
+increase assurance that the \tech{specification} describes the actual
+\tech{implementation} by avoiding \emph{\tech{specification puns}}.
+
+In languages without \tech{full-spectrum} \tech{dependent types}, such as those
+with indexed types or refinement types, \tech{types} cannot directly refine all
+\tech{terms}.
+Instead, \tech{types} can only \tech[src]{depend on} a subset of \tech{terms} or a
+separate language of \tech{type}-level computations.
+This prevents \tech{types} from directly refining the behavior of some
+\tech{terms} and introduces a gap between the \tech{specification} and the
+\tech{implementation}.
+Instead, either the rest of the behavior is unspecified or a separate
+\tech{specification}-level model of the \tech{implementation} must be
+constructed and the \tech{implementation} proven to correspond to this model.
+This gap can introduce \deftech*{specification pun,specification
+  puns}{specification puns}, meaning a \tech{specification} refers to something
+that is \emph{like} the \tech{implementation} but is technically defined
+differently---\ie, a \tech{specification} that exploits two possible meanings of
+what looks like the same \tech{expression}.
+
+For example, in a language with refinement types and \tech{phase distinction}
+in which \techs{type} may \tech[src]{depend on} (and only on) first-order data, we
+cannot directly prove the same correctness property for
+\mintinline{agda}{append} that we saw earlier.
+Instead, we write the example from earlier as follows.
+\begin{minted}[xleftmargin=1em]{agda}
+length : (l : List A) -> Nat
+length = ...
+
+length' := ...
+
+append : (l1 : List A)
+           -> (l2 : List A)
+           -> {l : List A | length' l == (length' l1) + (length' l2)}
+append = ...
+\end{minted}
+Unlike before, we cannot refer to \mintinline{agda}{length}, a \tech{term},
+directly in the \tech{type} of \mintinline{agda}{append}.
+Instead, we must write a separate, \tech{type}-level, version of
+\mintinline{agda}{length}---called \mintinline{agda}{length'} in this example,
+for clarity---and use a separate, \tech{type}-level, version of
+\mintinline{agda}{+}.
+This is a \tech{pun}; really, \mintinline{agda}{length'} has a different
+definition than \mintinline{agda}{length}, even though a sufficiently clever
+language might let us name them both \mintinline{agda}{length} by maintaining the
+names in two different namespaces.
+Similarly, the \mintinline{agda}{+} used in the \tech{type} is not the run-time
+addition function, although anyone who reads the \tech{specification} might
+reasonably assume it is.
+
+Pragmatically speaking, \tech{specification puns} create two problems.
+First, a programmer must write any definition that is used in a
+\tech{specification} twice, and pass these two representations around
+\emph{everywhere} that specification is used.
+Instead of simply using the \tech{term} \mintinline{agda}{length} to specify the
+behavior of \mintinline{agda}{append}, we must duplicate
+\mintinline{agda}{length} in the \techs{type}.
+Second, without doing additional work, we are less confident that the run-time
+program is correct, since we can only prove correctness of \tech{type}-level
+copies.
+For example, we do not know that the run-time function \mintinline{agda}{length}
+corresponds to the \tech{type}-level version \mintinline{agda}{length'}, and so
+it is unclear that \mintinline{agda}{append} actually returns a list whose
+\mintinline{agda}{length} is the expected value, as opposed to one whose
+\mintinline{agda}{length'} is the expected value.
+We would first have to prove that \mintinline{agda}{length} and
+\mintinline{agda}{length'} coincide, which is difficult in the general case.
+
+This problem of \tech{specification puns} arises in \tech{program verification}
+using \emph{program logics} and \emph{logical frameworks}.
+In \tech{program verification} based on these frameworks, the
+\tech{specification} and \tech{proof} languages are separate from the
+\tech{implementation} language.
+This is an advantage in one sense---there is more freedom in how programs can be
+implemented vs how they are specified and proven---but a disadvantage since it
+introduces \tech{puns}.
+
+For example, Proof-Carrying Code (\deftech{PCC})~\cite{necula1997} has been used
+to address the problem of generating \tech{verified} \tech{executables}
+discussed earlier, but relies on a logical framework and runs into the
+problems of \tech{puns}.
+\citet{necula1997} uses the Edinburgh Logical Framework (\deftech{LF}) to encode
+\techs{specification} and \techs{proof} about assembly code, and develops a
+\tech{compiler} that can produce \techs{verified program} for \techs{program}
+whose \techs{specification} are expressed and provable in first-order logic.
+However, \tech{LF} used this way requires a \tech{phase distinction},
+so \techs{specification} and \techs{proof} cannot refer to assembly directly,
+and there are \tech{puns}.
+For example, addition either refers to assembly addition instruction \code{ADD}
+or the \tech{LF} constant \code{+}.
+To prove that the assembly code \code{ADD r1,r2,r1}---which shuffles bits in
+registers---produces the value \code{l} in \code{r1}, the logic actually asks
+that we prove \code{r1 + r2 = l}---which represents mathematical addition on
+integers.
+For this proof about \code{r1 + r2 = l} to represent anything about the assembly
+instruction \code{ADD}, we must ensure some correspondence between the \tech{LF}
+constants and the assembly code, thus creating additional work and making it
+less clear that \techs{specification} correspond to \techs{implementation}.
+In the case of our \mintinline{agda}{append} example, to verify our
+\tech{implementation} of \mintinline{agda}{append} from above, we first add the
+\tech{LF} constant \mintinline{agda}{length'}, then demonstrate that
+\mintinline{agda}{length'} in the logic corresponds to
+\mintinline{agda}{length}, then prove that \mintinline{agda}{append} is correct.
+
+With \tech{full-spectrum} \techs{dependent type}, we avoid the problem of
+\tech{puns} by directly using any \tech{term} in any \tech{type}, decreasing
+programmer effort and increasing confidence.
+As seen earlier, the type of \mintinline{agda}{append} can be written using
+\tech{full-spectrum} \techs{dependent type} as follows.
+\begin{minted}[xleftmargin=1em]{agda}
+append : (l1 : List A)
+           -> (l2 : List A)
+           -> {l : List A | length l = (length l1) + (length l2)}
+\end{minted}
+This requires no separate \tech{type}-level definition
+\mintinline{agda}{length'}, and instead use the run-time function
+\mintinline{agda}{length} directly in the \tech{specification} of
+\mintinline{agda}{append}.
+
+\paragraph{Dependent Types Simplify Proof Through Abstraction}
+\Techs{Dependent type} are extremely expressive as a \tech{specification} and
+\tech{proof} system.
+\marginpar{The expressivity of \tech{dependent types} depends on
+  which axioms are admitted in the particular language, which I discuss further
+  in the next chapter.}%
+The earlier example was a simple programming example, but \tech{dependent type}
+systems are also able to express sophisticated mathematical theorems and
+frameworks, such as category theory~\cite{gross2014,timany2015}.
+This means \tech{program verification} using \tech{dependent types} can easily
+leverage abstract mathematical concepts and proofs.
+They have also been used to encode program
+logics~\cite{nanevski2008,krebbers2017}, thus allowing the programmer to embed
+alternative \tech{program verification} systems if they so desire.
+In short, \tech{dependent types} can express whatever \tech{specifications} and
+\tech{proofs} we want, and by starting from \tech{dependent types} we capture a
+range of \tech{program verification} systems instead of just one.
+
+Usually, this gain in expressivity of the logic comes at a cost of expressivity
+as a programming language.
+For example, \tech{dependently typed} languages such as Coq and Agda disallow
+expressing arbitrary loops---every term must be provably terminating, so they
+cannot express arbitrary general recursive functions.
+This is because non-termination can easily introduce \tech{inconsistency}, since the
+usual typing rules for recursive functions will give an infinite loop any type
+and thus introduce a \tech{proof} of any \tech{specification},
+or break decidability of type checking, since checking a \tech{type} that
+contains a \tech{term} may require partially evaluating that \tech{term} causing
+the type checker itself to diverge on infinite loops.
+However, it is possible to regain non-termination while maintaining
+\tech{logical consistency} or decidability by separating possibly diverging
+programs from \tech{proofs} via a
+modality~\cite{jia2010,casinghino2014,nanevski2006:htt,nanevski2005:htt,swamy2013:f*-jfp}.
+
+The extra expressivity can also come at the cost of automation.
+For example, \citet{necula1997} restricts \techs{specification} to those
+expressed in first-order logic.
+This is a loss for expressivity, but a gain for automation and simplifies the
+design of the compiler: the compiler can generate proofs automatically, rather
+than requiring the user to write them and designing the compiler to transform
+and preserve them.
+
+\section{Executing a Dependently Typed Program}
+A \tech{dependently typed} program has never been executed.
+Only machine code is ever executed, and so far there is no \tech{dependently
+  typed} machine code.
+
+Instead, \tech{dependently typed} programs are first type checked, then compiled
+(sometimes called \deftech{extracted}) to some \tech{executable}.
+For example, Coq\footnote{\url{https://coq.inria.fr/}} \techs{program} are
+typically compiled to OCaml, or Haskell, or sometimes Scheme.
+During this process, all \tech{types} are erased, even when the target is OCaml
+or Haskell, which are typically considered typed languages.
+This means that after compiling \tech{dependently typed} programs, we no longer
+have the \tech{specification} or a machine-checkable \tech{proof} of
+correctness for the \tech{executable}.
+
+In Coq, we could prove some data invariant, use that to safely write optimized
+functions, then compile to OCaml.
+For example, we could write a Coq function that returns the head of a list
+without checking whether the list is empty or not, as long as the
+\mintinline{coq}{length} is statically guaranteed to be non-zero.
+%
+\inputminted[xleftmargin=1em,firstline=4,lastline=14,firstnumber=1]{coq}{chapters/intro/head-eg.v}%
+%
+\noindent This declares \mintinline{coq}{List} to be an inductively defined datatype,
+parameterized by some element type \mintinline{coq}{A} and indexed by a
+\mintinline{coq}{Nat}, which statically represents the length of the
+\mintinline{coq}{List} in the \tech{type}.
+There are two constructors for \mintinline{coq}{List}s: \mintinline{coq}{nil},
+which produces a \mintinline{coq}{List} of \mintinline{coq}{A}s of length
+\mintinline{coq}{0}, and \mintinline{coq}{cons}, which expects an element
+\mintinline{coq}{h} and a list of length \mintinline{coq}{n} and produces a
+\mintinline{coq}{List} of length \mintinline{coq}{1 + n}.
+We then define \mintinline{coq}{head} to take a non-empty
+\mintinline{coq}{List}, \ie, a term \mintinline{coq}{v} of type
+\mintinline{coq}{List A (1 + n)}, and simply return the \mintinline{coq}{h}
+field of the \mintinline{coq}{cons}. Note that we don't need to consider the
+case for when \mintinline{coq}{v} is \mintinline{coq}{nil}, since the
+\tech{type} guarantees that can never happen.
+We can create and type check a simple example by calling \mintinline{coq}{head}
+on a \mintinline{coq}{List} of length \mintinline{coq}{1} containing the
+function \mintinline{coq}{fun x => x}.
+
+After compiling \mintinline{coq}{head} to OCaml, we have the following function.
+\inputminted[xleftmargin=1em,firstline=16,lastline=23,firstnumber=1]{ocaml}{chapters/intro/head.ml}
+
+\noindent First, notice that the code is littered with
+\mintinline{ocaml}{Obj.magic}, an unsafe cast operation, and has none of the
+original \techs{type}.
+Essentially all static checking from OCaml's type system is turned off.
+What was originally a well-typed \tech{verified program} is now an unverified,
+and in fact, unsafe program.
+Next, notice that this OCaml \tech{implementation} behaves differently than the
+\tech{implementation} in Coq.
+In Coq, we could prove that \mintinline{coq}{head} only received non-empty
+lists, and could omit the null check.
+In OCaml, this is no longer true and the \tech{compiler} inserts a case for
+\mintinline{ocaml}{Nil} whose behavior is mysterious.
+
+\FigCompileDiagram
+In a typical Coq workflow, we would next link this OCaml program with other
+unverified components, such as some program driver---a top-level function to
+initialize the main loop or a user interface---then compile the program to
+assembly using OCaml's \tech{compiler}, and possibly link with low-level code
+such as cryptography libraries or run-time systems.
+The left side of \fullref[]{fig:intro:compile-diagram} shows a diagram of this
+workflow.
+Unfortunately, as seen on the right side of
+\fullref[]{fig:intro:compile-diagram}, this workflow leads to producing an
+unverified \tech{executable} from the \tech{verified} Coq program by introducing
+\tech{miscompilation errors} and \tech{linking errors}.
+In this diagram, the arrows represent compilation, while the harpoons represent
+linking.
+
+\deftech*{miscompilation,miscompilation errors,miscompilation
+  error,Miscompilation error,Miscompilation errors}{Miscompilation errors} are
+errors introduced into a \tech{program} as a result of a program error in the
+\tech{compiler}.
+For example, suppose a \tech{compiler} is designed to perform the following
+optimization, reordering conditional branches to maximize straight-line code.
+\begin{minted}[escapeinside=||,xleftmargin=1em]{agda}
+if e then e₁ else e₂ |\ensuremath{\rightarrow}| if (not e) then e₂ else e₁
+\end{minted}
+However, if the \tech{compiler} is implemented incorrectly, it may instead
+perform the following incorrect transformation, introducing a
+\tech{miscompilation error}.
+\begin{minted}[escapeinside=||,xleftmargin=1em]{agda}
+if e then e₁ else e₂ |\ensuremath{\rightarrow}| if (not e) then e₁ else e₂
+\end{minted}
+The conditional is negated, but the branches are not switched.
+Now, when \code{e₁} should have executed, \code{e₂} will, and vice versa, even
+if the original program was \tech{verified}.
+
+Real \tech{miscompilation errors} are unlikely to be so simple to understand,
+and there are lots of them~\cite{yang2011:csmith}.
+For example, at the time of writing, there is 1 open compilation error in the
+Coq to OCaml compiler\footnote{\url{https://github.com/coq/coq/issues/7017}.
+  Accessed Aug 3 2018.}, and at least 3 open miscompilation errors in the OCaml
+compiler\footnote{\url{https://caml.inria.fr/mantis/view_all_bug_page.php}.
+  Accessed Dec 3 2018. Filtered for major, crash, or blocking unresolved open
+  issues, and manually inspected for miscompilation bugs.}.
+
+\Techs{miscompilation error} can be greatly reduced by \deftech*{compiler
+  verification,verified compiler}{compiler verification}---applying
+\tech{program verification} to the \tech{compiler} itself by proving that the
+\tech{compiler} always produces \techs{program} that equate, in some way, to the
+input \tech{program}.
+This is the approach taken by projects like the CompCert C
+compilers~\cite{leroy2009:compcert-jfp}, the Cake ML compiler~\cite{kumar2014},
+and the CertiCoq compiler~\cite{anand2017}.
+Of course, the \tech{compiler} itself is written and verified in a
+high-level language and then compiled.
+At the very least, this means we can never execute the \tech{verified}
+\tech{compiler}, and at worst, leaves us vulnerable to ``trusting trust''
+attacks~\cite{thompson1984}.
+But, this has been shown effective at reducing \tech{miscompilation errors} in
+practice; only two \tech{miscompilation errors} have been found in the
+\tech{verified} CompCert C \tech{compiler}, compared to the hundreds in other
+compilers~\cite{yang2011:csmith}.
+And these two errors were caused by the unverified driver linked into the
+\tech{verified} code.
+
+Standard \tech{compiler verification} does not rule out a more insidious
+problem---\emph{\tech{linking errors}}---as demonstrated by the two errors in
+the \tech{verified} CompCert \tech{compiler}.
+\deftech*{linking error,linking errors,Linking error,Linking errors}{Linking
+  errors} are errors introduced when linking two components of a
+\tech{program} when one component violates some \tech{specification} of the
+other or of the over all \tech{program}.
+This can happen when linking two \tech{verified} components if we never check
+that the \tech{specifications} are compatible, or when linking an unverified
+component with a \tech{verified} one.
+Trying to describe errors in CompCert as an example is too complex, so instead,
+consider the function \mintinline{coq}{head}, introduced earlier, which has a
+precondition expressed in its \tech{type} that it is only called with a
+non-empty \mintinline{coq}{List}.
+If we ever link it with a component that calls \mintinline{coq}{head} with an
+empty list, this would be a \tech{linking error}: the resulting execution would
+be undefined.
+
+In a strongly typed source language, \techs{linking error} should not be
+possible, but linking typically happens \emph{after} compiling and
+\tech{compiler} target languages are not strongly typed.
+As we saw in the above example, after compiling from Coq to OCaml, the compiled
+version of the function \mintinline{ocaml}{head} is essentially untyped.
+This is also true of the assembly produced by the OCaml \tech{compiler}.
+
+As a result, it is easy to introduce \techs{linking error} in
+\tech{executables}, even when produced from \tech{verified programs}.
+Recall from \fullref[]{fig:intro:compile-diagram} that it is standard practice
+to compile Coq code to OCaml, then link with some program driver.
+We can introduce a \tech{linking error} by linking with one line of code in
+OCaml using the \tech{verified} \mintinline{coq}{List} functions from Coq.
+First we add another verified Coq function, \mintinline{coq}{applyer}, which
+applies the first element of a \mintinline{coq}{List} of functions to the first
+element of another \mintinline{coq}{List}.
+%
+\inputminted[xleftmargin=1em,firstline=17,lastline=19,firstnumber=1]{coq}{chapters/intro/head-eg.v}%
+%
+\noindent This is compiled to the following OCaml code.
+As in the Coq program, this simply applies the first element of the list of
+functions to the first element of the list of natural numbers.
+Notice that it uses \mintinline{ocaml}{Obj.magic} to essentially disable type
+checking, since extracted code may not be well-typed in general.
+%
+\inputminted[xleftmargin=1em,firstline=25,lastline=29,firstnumber=1]{ocaml}{chapters/intro/head.ml}%
+%
+Next, we link with the following line of code in OCaml.
+This line exists in a separate module from \mintinline{ocaml}{applyer} and
+simply tries to call \mintinline{ocaml}{applyer} on two non-empty lists.
+The programmer who wrote this module may be relying on the type checker to
+detect errors, and may not know that the module they are using has used
+\mintinline{ocaml}{Obj.magic}.
+\inputminted[xleftmargin=1em,firstnumber=1]{ocaml}{chapters/intro/caller.ml}%
+%
+\marginpar{If the reader cares for a brief diversion, there are three other type
+  errors; I give the answers at the end of the next section.}%
+%
+\noindent This line could almost be mistaken for a well-typed use of
+\mintinline{ocaml}{applyer}.
+It calls the function with a \mintinline{ocaml}{list} of numbers and a
+\mintinline{ocaml}{list} of functions on numbers.
+Unfortunately, the arguments are in the wrong order, so OCaml attempts to call
+the number \mintinline{ocaml}{0} as a function, and crashes.
+
+This simple error does not even take advantage of OCaml's inability to check
+\tech{dependent types}.
+We could, in principle, ascribe OCaml types to \mintinline{ocaml}{applyer}, and
+rule this \tech{linking error} out.
+However, in general, it is easy to construct examples that rely on
+\tech{dependent types}, higher-order invariants, or freedom from state and
+non-termination (since Coq is purely functional).
+Even a fully annotated OCaml program with no uses of
+\mintinline{ocaml}{Obj.magic} cannot check these, and it is easy to violate each
+when linking in OCaml.
+Furthermore, eventually we compile the program to assembly, which has no type
+system, and it is likely that when we link in assembly (with low-level
+libraries, run-time environments, drivers, etc) we can easily cause
+\tech{linking errors} there too.
+
+The simple example we've just seen shows that, after all the trouble of
+verifying a program, the state-of-the-art gives the programmer few
+guarantees.
+They have thrown away the help of the type checker, must manually reason about
+all the invariants when linking, and have no systematic way to check that the
+\tech{compiler} has correctly implemented the \tech{verified program}.
+This example function is a relatively simple program; C compilers, operating
+systems, cryptographic primitives and protocols, and other high-assurance
+software developed in \tech{dependently typed} languages are not simple, and we
+cannot expect a programmer to manually check all the invariants after compiling
+and linking these programs.
+This is a problem: the end result of \tech{program verification}, after the
+compilation and linking, is an \emph{unverified program}.
+What good is the effort spent on \tech{program verification} under these
+conditions?!
+
+\section{Preserving the Verified-ness of a Program}
+\label{sec:intro:pres-verif}
+Admittedly, there is much work on developing \tech{verified compilers} and this
+work is being extended to \tech{dependently typed} languages.
+A \tech{verified compiler} is proven to be free of \tech{miscompilation errors},
+typically stated as a refinement: if the source program evaluates in the source
+semantics to a value, then the compiled program executes to a related value in
+the target semantics.
+For example, the CompCert C \tech{compiler} mentioned earlier is a
+\tech{verified compiler} for a subset of C called
+\deftech{Clight}~\cite{leroy2009:compcert-jfp}.
+The CakeML \tech{compiler} is a \tech{verified compiler} for ML~\cite{kumar2014}.
+Work is ongoing to develop CertiCoq, a \tech{verified compiler} for Coq~\cite{anand2017}.
+By combining the \tech{compiler} correctness theorem with the correctness of the
+original Coq program, CertiCoq supports preserving the verified-ness of the
+source program---as long as we never link with anything.
+We end up with the guarantees described in \fullref[]{fig:intro:certicoq-diagram}.
+We use \tech{verified compilers} to assembly to rule out \tech{miscompilation errors}.
+However, this still leaves the possibility of \tech{linking errors}.
+
+\FigCertiCoqDiagram
+
+\FigSepCompDiagram
+A \tech{compiler} that guarantees correctness of separate compilation, what I'll
+call a \deftech*{separate compilation,separate compiler}{separate compiler}, is
+\tech{verified} to be free of
+\tech{linking errors} as long as all components being linked are compiled with
+the same \tech{verified compiler}.
+\tech{Separate compilers} exist for non-dependently typed languages, such as
+SepCompCert, an extension of the CompCert to support \tech{separate
+  compilation}~\cite{kang2016}.
+CertiCoq has support for \tech{separate compilation}, so it can provide the
+guarantees in \fullref[]{fig:intro:sepcomp-diagram}.
+As long as all components are compiled, separately, linking between those
+components is guaranteed to be safe, and the resulting program is still
+\tech{verified} in the following sense: by composing the original \tech{proof}
+of correctness and \tech{proof} of correctness of \tech{separate compilation},
+we have a \tech{proof} that the \tech{executable} will behave according to the
+original \tech{specification} when linked with other \tech{verified} components
+that have been compiled with the \tech{verified} \tech{separate compiler}.
+Unfortunately, there is no way to \emph{automatically check} that linking will
+be safe, although we will know it will be true.
+There may still be unverified drivers or low-level libraries we need to link
+with, so \tech{linking errors} are still possible, and we have no way for the
+\emph{automatically check} for them, \ie, for the machine to detect and report
+potential \tech{linking errors} prior to linking.
+
+\FigCompCompDiagram
+A \deftech*{compositional compilers,compositional compiler,compositional compilation}{compositional
+  compiler} excludes further \tech{linking errors} by
+specifying what target language components are safe to link with independently
+of the \tech{compiler} used to produce those components, if any.
+For example, CompCompCert allows linking between Clight programs and x86
+programs, as long as there is a safe \emph{interaction semantics} specifying
+their interoperability~\cite{stewart2015}.
+Pilsner allows safe interoperability between an ML-like language component and
+an assembly component as long as there exists a \emph{PILS relation} between the
+assembly and some ML component, and the interoperability between the two
+components at the ML-level is safe~\cite{neis2015:pilsner}.
+The details of these cross-language relations is not important; the point is the
+kinds of linking they support.
+These both lead to the guarantees like those in
+\fullref[]{fig:intro:compcomp-diagram}, in which it is possibly to safely
+interact with components that were not \tech{verified and} then compiled with a
+\tech{verified compiler}.
+In this diagram, the dotted arrows represent the relation specifying
+interaction between assembly components and Clight components so that the
+programmer can reason about linking with assembly in terms of some Clight
+behaviors.
+However, because there is no general way to \emph{automatically check} the
+safety of the assembly components---\ie, to check for the existence of a
+\emph{PILS relation} or \emph{interaction semantics} specification---these too
+still admit some \tech{linking errors}.
+There is no existing work on a \tech{compositional compiler} for
+\tech{dependently typed} languages.
+
+They key problem with the above \tech*{separate compiler}{separate} and
+\tech{compositional compilers} is not in their guarantees---it's fine to
+restrict what we can safely link with---but in \emph{automatically detecting}
+possible \tech{linking errors}.
+All information about what is it safe to link with is in the
+\emph{theorems} about the \tech{compilers}, and none of that information is in
+the program or components generated by the \tech{compiler}, \ie, in the
+\tech{executable}.
+This requires the programmers to strictly follow the workflow and check the
+provenance of all components before linking in order to consider the resulting
+\tech{executable} \tech{verified}.
+That is, part of the \tech{proof} that the \tech{executable} is \tech{verified}
+cannot be checked by a machine---it must be checked and enforce by the
+programmer.
+\marginpar{This is the technical sense in which I meant ``essentially no
+  \tech{verified program} has ever been executed''}%
+In my view, calling the resulting \tech{executable} \tech{verified} is only true
+with a trivial definition of the word---the program is \tech{verified} if the
+programmer can, after spending enough effort and without any quickly checkable
+artifact, convince themselves that they have taken a \tech{verified program} and
+not introduced any \tech{miscompilation} or \tech{linking errors}.
+
+To call an \tech{executable} \tech{verified}, we need a way to describe in the
+language of the \tech{executable} what linking is permitted, what is not, and
+give a procedure by which a machine can automatically verify that no
+\tech{miscompilation} or \tech{linking errors} have been introduced during
+compilation and linking.
+Only then have we preserved the \tech{verified}-ness in a meaningful way, and
+only then could we ever execute a \tech{verified program}.
+Diagrammatically, this mythical compiler would support the guarantees seen in
+\fullref[]{fig:intro:myth-diagram}.
+This would allow compiling and linking with arbitrary correctly annotated
+assembly without giving a specification of that assembly in terms of some other
+languages.
+The annotations would be used to prove the absence of \tech{linking errors}.
+We could compile into an annotated assembly, check that the assembly still meets
+its \tech{specification}, then use that \tech{specification} to automatically
+detect safe linking and possible \tech{linking errors}.
+After linking, then, and only then, could we erase the annotations to generate
+machine code, and use a standard \tech{verified compiler} to prove that the
+machine code is still \tech{verified}.
+Since there is no more linking, there is no more risk of \tech{linking errors}
+at the machine-code-level.
+
+\FigMythDiagram
+We can preserve the verified-ness of a \tech{verified program} developed in a
+\tech{dependently typed} language by designing a \deftech{type-preserving}
+\tech{compiler} for \tech{dependently typed} languages, \ie, by preserving
+\techs{dependent type} and well-typedness through compilation.
+I discuss \tech{type preservation} further in \fullref[]{chp:type-pres}, but for
+now the idea is this:
+by preserving all the \tech{dependent types} through compilation into the target
+language of the \tech{compiler}, all \techs{specification} are preserved and can
+be used at link time to rule out linking with code that violates the
+\tech{specification}.
+Since well-typed programs also represent \techs{proof}, the \tech{compiler} also
+preserves the \tech{proof} through compilation.
+We can then check that the \tech{proof} is still \tech{valid} according to the
+preserved \tech{specification}, verifying that no \tech{miscompilation errors}
+were introduced that violate the \tech{specification}.
+Since the \tech{specification} is still around at the low-level, we can use type
+checking to enforce that \tech{specification} on external components before linking.
+The end result of compiling a \tech{verified program} in a \tech{dependently
+  typed} language with a \tech{type-preserving} \tech{compiler} is still a
+\tech{verified program}, in a meaningful sense of the word \tech{verified}---the
+machine can automatically check the whole \tech{proof}, and detect and rule out
+\tech{linking errors}.
+
+And all we have to do is develop a \tech{compiler} that can automatically
+translate \tech{dependent types} into equivalent \tech{dependent types}
+describing low-level code (eventually, assembly code), transform
+\techs{program} in such a way that the \tech{program} can be executed on a
+low-level machine (eventually, on hardware), and transform \tech{proofs} about
+high-level functional code into \tech{proofs} about low-level assembly code that
+can be automatically and decidably checked.
+
+To see how preserving types detects and prevents errors, consider the
+\tech{miscompilation error} from earlier.
+Suppose we start with the following conditional expression, but this time, we
+give it a \tech{specification} using \techs{dependent type}.
+\begin{minted}[xleftmargin=1em]{agda}
+e : if x then A else B
+e = if x then e1 else e2
+\end{minted}
+Now the expression \mintinline{agda}{e} has a \tech{dependent type}: when
+\mintinline{agda}{x} is \mintinline{agda}{true}, then the \tech{type} is
+\mintinline{agda}{A}, otherwise the \tech{type} is \mintinline{agda}{B}.
+If a \tech{miscompilation error} occurs as before, then we get the following
+expression.
+\begin{minted}[xleftmargin=1em]{agda}
+e+ = if (not x) then e1 else e2
+\end{minted}
+But now, we can detect the \tech*{miscompilation error}{miscompilation} via type
+checking.
+We expect that \mintinline{agda}{e+ : if x then A else B}, but instead find that
+\mintinline{agda}{e+ : if (not x) then A else B}.
+As these \techs{type} are not equal, type checking reveals something has gone
+wrong with compilation.
+
+Note that if the source \tech{specification} is weak, then this does not
+necessarily guarantee freedom from \tech{miscompilation errors}, so we must
+still \tech{verify} the \tech{compiler} to rule out all \tech{miscompilation
+  errors}.
+But it turns out that merely by preserving \tech{dependent types}, we are
+almost forced to build a proven \emph{correct} \tech{compiler}, \ie, a
+\tech{compiler} that guarantees that programs run to the equivalent values
+before and after compilation; I discuss this in \fullref[]{chp:type-pres}.
+
+The big benefit of \tech{type preservation} is that \tech{linking errors} are
+easily ruled out via type checking.
+In the earlier example, linking with the following line of code caused our
+\tech{verified program} to crash.
+%
+\inputminted[xleftmargin=1em]{ocaml}{chapters/intro/caller.ml}
+%
+\noindent By preserving types into the target language and, importantly, ensuring the
+target type system expresses the same invariants as the source, we would be
+forced to show that this is well-typed with respect to the original type:
+\begin{minted}[xleftmargin=1em]{coq}
+applyer : forall n : Nat, List (Nat -> Nat) (1 + n) ->
+                          List Nat (1 + N) -> Nat
+\end{minted}
+Just as we would see in Coq, the type system would automatically report the
+various type errors: that \mintinline{ocaml}{1} and \mintinline{ocaml}{0}
+are OCaml \mintinline{ocaml}{int}s, not the compiled form of Coq
+\mintinline{coq}{Nat}s; the first \mintinline{coq}{List} contain functions not
+\mintinline{coq}{Nat}s; and vice versa for the second \mintinline{coq}{List}.
+
+With \tech{dependent types}, \tech{type preservation} offers us a final
+benefit: proof-carrying code is possible for essentially arbitrarily expressive
+\tech{specifications}.
+\tech{Types} (\ie, \tech{specifications}) are preserved through the
+\tech{compiler} into the \tech{executable}.
+With \tech{dependent types}, the \tech{types} can express essentially
+\tech{specifications}---full-functional correctness, safety, and security
+properties.
+Well-typedness (\ie, \tech{proofs} that \tech{implementations} satisfy
+\tech{specifications}) is also preserved.
+At the end of a \tech{type preserving} \tech{compiler}, we have the
+\tech{implementation} with its \tech{specification} and can independently check
+the \tech{proof}.
+
+With a \tech{verified} dependent-type-preserving \tech{compiler} from Coq to
+\tech{dependently typed} assembly, we could live the dream---we could use type
+checking to rule out \tech{linking errors}, link the components into a whole
+program, type check the program to have a machine-check \tech{proof} that the
+\tech{specification} still hold independent of any trust in a \tech{compiler},
+\tech{linker}, or \tech{implementation}, and---as a final step---erase
+\tech{types} and run the program.
+\marginpar{Barring incorrect or under specification, hardware bugs, gamma rays,
+  errors in physics, or a vindictive deity.}%
+The program that executes would be \emph{guaranteed} to be the
+one the programmer intended to execute!
+
+\section{Thesis}
+In this dissertation, I demonstrate that, in theory, we can design the mythical
+\tech{compiler} just described for a \tech{dependently typed} language such as
+Coq, and I describe that theory.
+My thesis is:
+\begin{quote}
+  \tech{Type-preserving} compilation of \tech{dependent types} is a
+  theoretically viable technique for eliminating \tech{miscompilation errors}
+  and \tech{linking errors}.
+\end{quote}
+This thesis is only a first step toward the grand story described earlier in
+this chapter.
+
+I demonstrate this thesis by studying four translations which model the
+front-end of a type-preserving compiler for a realistic dependently typed
+calculus.
+These translations are the A-normal form (ANF) translation, continuation-passing
+style (CPS) translation, and two variants of closure conversion.
+The aim is to support all the core features of dependency found in Coq and
+preserve them through these standard compiler translations.
+I pick Coq as the ``ideal'' \tech{dependently typed} language due to the
+significant number of contemporary \tech{verified programs} developed using Coq,
+the accessibility of examples of \tech{linking errors}, and the availability of
+a simple core calculus (the Calculus of Inductive Constructions, \deftech{CIC})
+corresponding to its core language.
+In the final chapter, \fullref[]{chp:conclusions}, I review these translations,
+summarize the lessons, and explain some of the remaining open questions.
+
+In this dissertation, I do not go beyond demonstrating that type preservation is
+\emph{theoretically} viable.
+I leave many practical questions unaddressed to focus on the theory of
+preserving dependent types.
+By the end of this dissertation, I will not be able to compile all of Coq, but I
+will be able to support all the core \tech{dependent-type} features found in
+\tech{CIC}.
+I will also not be able to target assembly, but I will show a design that scales
+to realistic \tech{dependently typed} functional languages, such as Coq, and
+show this design works with common compiler transformations for functional
+languages.
+
+\section{Contributions of this Dissertation}
+\FigThisCompiler
+The \tech{compiler} translations I develop are described in
+\fullref[]{fig:intro:thiscompiler}.
+On the left are translations that scale to all the core features of dependency
+found in Coq.
+I present these first as they should scale to Coq in their current form, and
+they are simpler to understand, although I developed these last based on lessons
+learned and problems exposed when developing the translations on the right.
+The core calculi used for these translations are based of the Extended Calculus
+of Constructions (ECC)~\cite{luo1989}.
+On the right are extensions of the translations that, historically, have been
+studied and used for type preservation.
+The core calculi for these translation are based on the Calculus of
+Constructions~\cite{coquand1988}.
+In their current form, these translations do not scale to some features of
+dependency.
+
+Below, I summarize the contributions in this dissertation and explain how this
+dissertation is organized.
+I also include an appendix for each language and translation with complete
+definitions.
+
+\paragraph{Essence of Dependent Types}
+In \fullref[]{chp:source}, I introduce \tech{dependent types} formally.
+I start by discussing the key features of \tech{dependency}, \ie, what makes
+\tech{dependent types} \emph{dependent}.
+Then I present a calculus, \slang, that is used as the source language for
+the translations in \fullref[]{chp:anf} and \fullref[]{chp:abs-cc}.
+\slang includes the core features of \tech{dependency} found in Coq, although
+it omits features inessential to dependency, such as recursive functions.
+
+\paragraph{Type-Preserving Compilation}
+In \fullref[]{chp:type-pres}, I introduce \tech{type-preserving} compilation and
+\tech{compiler correctness} formally.
+I start with a brief history of \tech{type-preserving} compilation.
+I then discuss the key difficulties in developing a \tech{type-preserving}
+\tech{compiler} for a \tech{dependently typed} language, and present the proof
+architecture used throughout this paper.
+I also discuss \tech{type-preserving} compilation as a technique for semantics
+modeling, which I use to prove \tech{logical consistency} of my
+\tech{dependently typed} target languages.
+
+\paragraph{A-normal Form}
+In \fullref[]{chp:anf}, I give a \tech{type-preserving} A-normal form
+(\deftech{ANF}) translation from \slang to \anftlang, an ANF-restricted variant
+of \slang with a machine-like evaluation semantics.
+The \tech{ANF} translation is used to make control flow explicit by naming
+intermediate computations.
+I show how \tech{ANF} can fail to be type preserving with dependent types, and
+how to recover type preservation.
+I discuss the relation to the well-known failure of type preservation for
+\tech{CPS}.
+
+\paragraph{Abstract Closure Conversion}
+In \fullref[]{chp:abs-cc}, I give a \tech{type-preserving}
+\tech{abstract closure conversion} from \slang to \abscctlang.
+Since \anftlang is a restriction of \slang, the translation also applies to
+\anftlang, and I show that the closure conversion preserves ANF.
+\tech{Closure conversion} (\deftech{CC}) is commonly used in functional
+languages to make first-class functions simple to allocate in memory, but this
+variant of \tech{type-preserving} \tech{closure conversion} is not commonly
+used.
+I show why the commonly used \tech{closure conversion} translations do not scale
+to some features of \tech{dependency}, whereas \tech{abstract closure
+  conversion} does.
+
+This chapter was previously published as \citet{bowman2018:cccc}.
+Compared to the published version, this chapter is extended to include
+\tech{dependent conditionals} (discussed in \fullref[]{chp:source}), and a proof
+that \tech{ANF} is preserved through the \tech{abstract closure conversion}.
+It also includes a correction to the structure of the proof of one lemma; the
+theorems are unaffected.
+
+\paragraph{Continuation-Passing Style}
+In \fullref[]{chp:cps}, I give a \tech{type-preserving} Continuation-Passing
+Style (\deftech{CPS}) translation from \cpsslang to \cpstlang.
+I start by restricting \slang to \cpsslang, which excludes a key feature of
+contemporary dependently typed languages (\tech{higher universes}).
+I discuss historical problems preserving \tech{dependent types} through
+\tech{CPS} translation, and how we can overcome these problems in some settings.
+I develop a \tech{type-preserving} \tech{CPS} translation for \cpsslang and
+prove \tech{compiler correctness}, but also show that translation is not
+\tech{type preserving} for \slang.
+In \fullref[]{chp:conclusions}, I conjecture how this translation could be
+extended to translate all of \slang.
+
+This chapter was previously published as \citet{bowman2018:cps-sigma}.
+The chapter is essentially the same as the published version, but includes a
+correction to the structure of the proof of one lemma; the theorems are
+unaffected.
+
+\paragraph{Parametric Closure Conversion}
+In \fullref[]{chp:param-cc}, I give a \tech{type-preserving} \tech{parametric
+  closure conversion} translation from \pccslang to \pcctlang.
+I extend commonly used \tech{closure conversion} translations based on
+\emph{\tech{existential types}} to \tech{dependent types}.
+I show that this translation is \tech{type preserving} and prove \tech{compiler
+  correctness} for \cpsslang, but demonstrate that this translation is not
+\tech{type preserving} for \slang.
+In \fullref[]{chp:conclusions}, I conjecture how this translation could be
+extended to translate all of \slang.
+
+\paragraph{Conclusions}
+In \fullref[]{chp:conclusions}, I summarize the lessons of the four translations
+presented in this dissertation.
+I conjecture how these lessons extend to the final two compiler translations
+necessary for a prototype type-preserving compiler to assembly, and how the CPS
+and parametric closure conversion target languages might be extended to support
+the missing features of dependency.
+I end by speculating about future work---problems that will need to be addressed
+to make that compiler not merely theoretically viable, but practical.

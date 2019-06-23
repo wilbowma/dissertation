@@ -1,0 +1,919 @@
+\newcommand{\FigCCTermShort}[1][t]{
+  \begin{figure}[#1]
+    \judgshape[~where~{\im{\styjudg{\slenv}{\se}{\st}}}]{\cctrans{\se} = \te}
+    \begin{displaymath}
+      \begin{array}{rcl}
+        \cctrans{\sx} & \defeq & \tx
+        \\
+
+        \cctrans{\spropty} & \defeq & \tpropty
+        \\
+
+        \cctrans{\stypety{i}} & \defeq & \ttypety{i}
+        \\
+
+        \cctrans{\spity{\sx}{\sA}{\sB}} & \defeq & \tpity{\tx}{\cctrans{\sA}}{\cctrans{\sB}}
+        \\
+
+        \cctrans{\sfune{\sx}{\sA}{\se}} & \defeq &
+        \tcloe{
+            \begin{stackTL}
+              (\tnfune{\begin{stackTL}(\tn:\tnsigmaty{(\txi:\cctrans{\sAi}\dots)},\tx:\tlete{\tnpaire{\txi\dots}}{\tn}{\cctrans{\sA}})}{
+                  \\
+                  \tlete{\tnpaire{\txi\dots}}{\tn}{\cctrans{\se}}})}{
+              \end{stackTL}
+              \\\tdnpaire{\txi\dots}{\tnsigmaty{(\txi:\cctrans{\sAi}\dots)}}}
+        \end{stackTL}
+        \\&& \sxi:\sAi\dots{}=\DFV{\slenv}{\sfune{\sx}{\sA}{\se},\spity{\sx}{\sA}{\sB}} \\
+
+        \cctrans{\sappe{\seone}{\setwo}} & \defeq & \tappe{\cctrans{\seone}}{\cctrans{\setwo}}
+        \\
+
+        & \vdots &
+        \\
+
+        \cctrans{\slete{\sx}{\se}{\sepr}} & \defeq & \tlete{\tx}{\cctrans{\se}}{\cctrans{\sepr}}
+      \end{array}
+    \end{displaymath}
+    \caption{Abstract Closure Conversion from \slang to \tlang (excerpts)}
+    \label{fig:abs-cc:cc:short}
+  \end{figure}
+}
+
+\newcommand{\FigCCTermFullOne}[1][t]{
+  \begin{figure}[#1]
+    \judgshape[~where~{\im{\styjudg{\slenv}{\se}{\st}}}]{\ccjudg{\slenv}{\se}{\st}{\te}}
+    \begin{mathpar}
+      \inferrule*[right=\defrule{CC-Pi-Prop}]
+      {\ccjudg{\slenv}{\sA}{\sU}{\tA} \\
+       \ccjudg{\slenv,\sx:\sA}{\sB}{\spropty}{\tB}}
+      {\ccjudg{\slenv}{\spity{\sx}{\sA}{\sB}}{\spropty}{\tpity{\tx}{\tA}{\tB}}}
+
+      \inferrule*[right=\defrule{CC-Pi-Type}]
+      {\ccjudg{\slenv}{\sA}{\sU}{\tA} \\
+       \ccjudg{\slenv,\sx:\sA}{\sB}{\stypety{i}}{\tB}}
+      {\ccjudg{\slenv}{\spity{\sx}{\sA}{\sB}}{\stypety{i}}{\tpity{\tx}{\tA}{\tB}}}
+
+      \inferrule*[right=\defrule{CC-Lam}]
+      {\ccjudg{\slenv,\sx:\sA}{\se}{\sB}{\te} \\
+        \ccjudg{\slenv}{\sA}{\sU}{\tA} \\
+        \ccjudg{\slenv,\sx:\sA}{\sB}{\sU}{\tB} \\
+        \sxi:\sAi\dots{}=\DFV{\slenv}{\sfune{\sx}{\sA}{\se},\spity{\sx}{\sA}{\sB}} \\
+        \ccjudg{\slenv}{\sAi}{\sU}{\tAi} \dots}
+      {\ccjudg{\slenv}{\sfune{\sx}{\sA}{\se}}{\spity{\sx}{\sA}{\sB}}{
+          \tcloe{
+            \begin{stackTL}
+              (\tnfune{\begin{stackTL}(\tn:\tnsigmaty{(\txi:\tAi\dots)},\tx:\tlete{\tnpaire{\txi\dots}}{\tn}{\tA})}{
+                  \\
+                  \tlete{\tnpaire{\txi\dots}}{\tn}{\te}})}{
+              \end{stackTL}
+              \\\tdnpaire{\txi\dots}{\tnsigmaty{(\txi:\tAi\dots)}}}}
+        \end{stackTL}}
+
+      \inferrule*[right=\defrule{CC-App}]
+      {\ccjudg{\slenv}{\seone}{\spity{\sx}{\sA}{\sB}}{\teone} \\
+       \ccjudg{\slenv}{\setwo}{\sA}{\tetwo}}
+      {\ccjudg{\slenv}{\sappe{\seone}{\setwo}}{\subst{\sB}{\setwo}{\sx}}{\tappe{\teone}{\tetwo}}}
+    \end{mathpar}
+    \caption{Abstract Closure Conversion from \slang to \tlang (1/2)}
+    \label{fig:abs-cc:cc:full1}
+  \end{figure}
+}
+
+\newcommand{\FigCCTermFullTwo}[1][t]{
+  \begin{figure}[#1]
+    \judgshape[~where~{\im{\styjudg{\slenv}{\se}{\st}}}]{\ccjudg{\slenv}{\se}{\st}{\te}}
+    \begin{mathpar}
+      \inferrule*[right=\defrule{CC-Var}]
+      {~}
+      {\ccjudg{\slenv}{\sx}{\sA}{\tx}}
+
+      \inferrule*[right=\defrule{CC-Prop}]
+      {~}
+      {\ccjudg{\slenv}{\spropty}{\stypety{1}}{\tpropty}}
+
+      \inferrule*[right=\defrule{CC-Type}]
+      {~}
+      {\ccjudg{\slenv}{\stypety{i}}{\stypety{i+1}}{\ttypety{i+1}}}
+
+      \inferrule*[right=\defrule{CC-Sig}]
+      {\ccjudg{\slenv}{\sA}{\stypety{i}}{\tA} \\
+       \ccjudg{\slenv,\sx:\sA}{\sB}{\stypety{i}}{\tB}}
+      {\ccjudg{\slenv}{\ssigmaty{\sx}{\sA}{\sB}}{\stypety{i}}{\tsigmaty{\tx}{\tA}{\tB}}}
+
+      \inferrule*[right=\defrule{CC-Pair}]
+      {\ccjudg{\slenv}{\seone}{\sA}{\teone} \\
+       \ccjudg{\slenv}{\setwo}{\subst{\sB}{\seone}{\sx}}{\tetwo} \\
+       \ccjudg{\slenv}{\sA}{\stypety{i}}{\tA} \\
+       \ccjudg{\slenv,\sx:\sA}{\sB}{\stypety{i}}{\tB}}
+      {\ccjudg{\slenv}{\sdpaire{\seone}{\setwo}{\ssigmaty{\sx}{\sA}{\sB}}}{\ssigmaty{\sx}{\sA}{\sB}}{\tdpaire{\teone}{\tetwo}{\tsigmaty{\tx}{\tA}{\tB}}}}
+
+      \inferrule*[right=\defrule{CC-Fst}]
+      {\ccjudg{\slenv}{\se}{\ssigmaty{\sx}{\sA}{\sB}}{\te}}
+      {\ccjudg{\slenv}{\sfste{\se}}{\sA}{\tfste{\te}}}
+
+      \inferrule*[right=\defrule{CC-Snd}]
+      {\ccjudg{\slenv}{\se}{\ssigmaty{\sx}{\sA}{\sB}}{\te}}
+      {\ccjudg{\slenv}{\ssnde{\se}}{\subst{\sB}{\sfste{\se}}{\sx}}{\tsnde{\te}}}
+
+      \inferrule*[right=\defrule{CC-True}]
+      {~}
+      {\ccjudg{\slenv}{\struee}{\sboolty}{\ttruee}}
+
+      \inferrule*[right=\defrule{CC-False}]
+      {~}
+      {\ccjudg{\slenv}{\sfalsee}{\sboolty}{\tfalsee}}
+
+      \inferrule*[right=\defrule{CC-If}]
+      {\ccjudg{\slenv}{\se}{\sboolty}{\te}\\
+       \ccjudg{\slenv}{\seone}{\subst{\sB}{\struee}{\sy}}{\teone}\\
+       \ccjudg{\slenv}{\setwo}{\subst{\sB}{\sfalsee}{\sy}}{\tetwo}}
+      {\ccjudg{\slenv}{\sife{\se}{\seone}{\setwo}}{\subst{\sB}{\se}{\sy}}{\tife{\te}{\teone}{\tetwo}}}
+
+      \inferrule*[right=\defrule{CC-Let}]
+      {\ccjudg{\slenv}{\se}{\sA}{\te} \\
+       \ccjudg{\slenv,\sx:\sA}{\sepr}{\sB}{\tepr}}
+      {\ccjudg{\slenv}{\slete{\sx}{\se}{\sepr}}{\subst{\sB}{\se}{\sx}}{\tlete{\tx}{\te}{\tepr}}}
+
+      \inferrule*[right=\defrule{CC-Conv}]
+      {\ccjudg{\slenv}{\se}{\sA}{\te}}
+      {\ccjudg{\slenv}{\se}{\sB}{\te}}
+    \end{mathpar}
+    \judgshape[~where~{\im{\swf{\slenv}}}]{\ccenvjudg{\slenv}{\tlenv}}
+    \begin{mathpar}
+      \inferrule*[right=\defrule{CC-Empty}]
+      {~}
+      {\ccenvjudg{\cdot}{\cdot}}
+
+      \inferrule*[right=\defrule{CC-Assum}]
+      {\ccenvjudg{\slenv}{\tlenv} \\
+       \ccjudg{\slenv}{\sA}{\sU}{\tA}}
+      {\ccenvjudg{\slenv,\sx:\sA}{\tlenv,\tx:\tA}}
+
+      \inferrule*[right=\defrule{CC-Def}]
+      {\ccenvjudg{\slenv}{\tlenv} \\
+       \ccjudg{\slenv}{\se}{\sA}{\te}}
+      {\ccenvjudg{\slenv,\sx = \se}{\tlenv,\tx = \te}}
+    \end{mathpar}
+    \caption{Abstract Closure Conversion from \slang to \tlang (2/2)}
+    \label{fig:abs-cc:cc:full2}
+  \end{figure}
+}
+
+\newcommand{\FigCCTermNotation}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\sembrace{\se} = \te}
+    \begin{displaymath}
+      \begin{array}{rcll}
+        \sembrace{\se} & = & \te & \text{where \im{\styjudg{\slenv}{\se}{\sA}} and \im{\ccjudg{\slenv}{\se}{\sA}{\te}}} \\
+      \end{array}
+    \end{displaymath}
+    \judgshape{\sembrace{\slenv} = \tlenv}
+    \begin{displaymath}
+      \begin{array}{rcll}
+        \sembrace{\slenv} & = & \tlenv & \text{where \im{\swf{\slenv}} and \im{\ccenvjudg{\slenv}{\tlenv}}}
+      \end{array}
+    \end{displaymath}
+    \caption{Closure Conversion Syntactic Sugar}
+    \label{fig:abs-cc:cc:notation}
+  \end{figure}
+}
+
+\newcommand{\FigDFVs}[1][t]{
+  \begin{figure}[#1]
+    \begin{displaymath}
+      \begin{array}{rcl}
+        \DFV{\slenv}{\se,\sB} &\defeq
+        &\slenvin{0},\dots,\slenvin{n},(\sxin{0}:\sAin{0},\dots,\sxin{n}:\sAin{n}) \\
+        &where & \sxin{0},\dots,{}\sxin{n} = \FV{(\se,\sB)} \\
+        && \styjudg{\slenv}{\sxin{0}}{\sAin{0}}\\
+        && \quad\! \vdots \\
+        && \styjudg{\slenv}{\sxin{n}}{\sAin{n}}\\
+        && \slenvin{0} = \DFV{\slenv}{\sAin{0},\_} \\
+        && \qquad\!\!\! \vdots \\
+        && \slenvin{n} = \DFV{\slenv}{\sAin{n},\_}
+      \end{array}
+    \end{displaymath}
+    \caption{Dependent Free Variable Sequences}
+    \label{fig:abs-cc:cc:dfvs}
+  \end{figure}
+}
+
+
+\newcommand{\FigCCANF}[1][t]{
+  \begin{figure}[#1]
+    \begin{bnfgrammar}
+      \bnflabel{Values} &
+      \tV & \bnfdef & \tx \bnfalt .... \bnfalt \tcodety{\tn:\tApr,\tx:\tA}{\tB}
+      \bnfalt \tcloe{\tV}{\tV}
+      \\ && \bnfalt & \tpity{\tx}{\tA}{\tB} \bnfalt
+      \tnfune{\tn:\tApr,\tx:\tA}{\tM}
+      \bnfnewline
+
+      \bnflabel{Computations} &
+      \tN & \bnfdef & \tV \bnfalt .... \bnfalt \tappe{\tV}{\tV}
+      \bnfnewline
+
+      \bnflabel{Configurations} &
+      \tM,\tA,\tB & \bnfdef & \tN \bnfalt \tlete{\tx}{\tN}{\tM}
+    \end{bnfgrammar}
+    \caption{\tlang ANF (excerpts)}
+    \label{fig:abs-cc:cc:anf}
+  \end{figure}
+}
+
+\newcommand{\FigCCANFFull}[1][t]{
+  \begin{figure}[#1]
+    \begin{bnfgrammar}
+      \bnflabel{Values} &
+      \tV & \bnfdef & \tx \bnfalt \tU \bnfalt \tcodety{\tn:\tM,\tx:\tM}{\tM}
+      \bnfalt \tcloe{\tV}{\tV}
+      \\ && \bnfalt & \tpity{\tx}{\tM}{\tM} \bnfalt
+      \tnfune{(\tn:\tM,\tx:\tM)}{\tM}  \bnfalt \tsigmaty{\tx}{\tM}{\tM}
+      \\ && \bnfalt & \tdpaire{\tV}{\tV}{\tM}
+      \bnfnewline
+
+      \bnflabel{Computations} &
+      \tN & \bnfdef & \tV \bnfalt \tappe{\tV}{\tV} \bnfalt \tfste{\tV} \bnfalt \tsnde{\tV}
+      \bnfnewline
+
+      \bnflabel{Configurations} &
+      \tM & \bnfdef & \tN \bnfalt \tlete{\tx}{\tN}{\tM}
+      \bnfnewline
+
+      \bnflabel{Continuations} & \tK  & \bnfdef & \hole \bnfalt \tlete{\tx}{\hole}{\tM}
+    \end{bnfgrammar}
+    \caption{\tlang ANF}
+    \label{fig:abs-cc:cc:anf-full}
+  \end{figure}
+}
+
+\section{Closure Conversion}
+\label{sec:abs-cc:cc}
+\FigCCTermShort
+
+{
+    \allowdisplaybreaks
+I present the key closure conversion translation rules in
+\fullref[]{fig:abs-cc:cc:short}.
+Formally, the translation is defined by induction on typing derivations.
+This is necessary since the translation must produce a type annotation for the
+\tech{environment} argument of the \tech{code}.
+The translation \im{\cctrans{\se}} takes the typing derivation for \im{\se} as
+an implicit parameter.
+For concision, I give a complete definition of translation
+explicitly defined over typing derivations in \fullref[]{sec:abs-cc:cc:appendix},
+\fullref[]{fig:abs-cc:cc:full1} and \fullref[]{fig:abs-cc:cc:full2}.
+
+Every case of the translation except for functions is trivial, including
+application since application is still the elimination form for \tech{closures}
+after \tech{closure conversion}.
+In the non-trivial case, we translate \slang dependent functions to \tlang
+\tech{closures}, as described in \fullref[]{sec:abs-cc:ideas}.
+The translation of a function \im{\cctrans{\sfune{\sx}{\sA}{\se}}} produces a
+\tech{closure} \im{\tcloe{\teone}{\tetwo}}.
+The first component \im{\teone} is closed \tech{code}.
+Ignoring the type annotation for a moment, the \tech{code}
+\im{\tnfune{(\tn,\tx)}{\tlete{\tnpaire{\txi\dots}}{\tn}{\cctrans{\se}}}} projects each
+of the \im{\len{i}} free variables \im{\txi\dots} from the \tech{environment} \im{\tn}
+and binds them in the scope of the body \im{\cctrans{\se}}.
+Since \slang and \tlang are \tech{dependently typed}, we must also bind the free
+variables from the \tech{environment} in the type annotation for the argument
+\im{\tx}, \ie, producing the annotation
+\im{\tx:\tlete{\tnpaire{\txi\dots}}{\tn}{\cctrans{\sA}}} instead of just \im{\tx:\cctrans{\sA}}.
+Next we produce the \tech{environment} type \im{\tnsigmaty{(\txi:\cctrans{\sA}\dots)}},
+from the free source variables \im{\sxi\dots} of types \im{\sAi\dots}.
+We create the \tech{environment} \im{\tetwo} by creating the dependent n-tuple
+\im{\tnpaire{\txi\dots}}; these free variables will be instantiated with values
+at run time before calling the \tech{closure}.
+
+Notice that application is translated to application.
+In abstract closure conversion, the closure is not a pair; its elimination form
+is still just application, as shown in \fullref[]{fig:abs-cc:cc-cc:red}.
+This makes the translation of application deceptively simple compared to other
+closure conversion translations.
+
+\FigDFVs
+Computing free variables in a \tech{dependently typed} language is more complex
+than usual.
+To compute the sequence of free variables and their types, I define the
+metafunction \im{\DFV{\slenv}{\se,\sB}} in \fullref[]{fig:abs-cc:cc:dfvs}.
+Just from the syntax of terms \im{\se,\sB}, we can compute some sequence of free
+variables \im{\sxin{0},\dots,\sxin{n} = \FV{(\se,\sB)}}.
+However, the \tech{types} of these free variables \im{\sAin{0},\dots,\sAin{n}}
+may contain \emph{other} free variables, and their types may contain still
+others, and so on!
+We must, therefore, recursively compute the sequence of free variables and
+their types with respect to a typing environment \im{\slenv}.
+Note that because the \tech{type} \im{\sB} of a \tech{term} \im{\se} may contain
+different free variables than the \tech{term}, we must compute the sequence with
+respect to both a \tech{term} and its \tech{type}.
+However, in all recursive applications of this metafunction---\eg,
+\im{\DFV{\slenv}{\sAin{0},\_}}---the \tech{type} of \im{\sAin{0}} must be a
+\tech{universe} and cannot have any free variables.
+
+\subsection{Type Preservation}
+\label{sec:abs-cc:cc:type-pres}
+I prove \tech{type preservation}, using the standard architecture from
+\fullref[]{chp:type-pres}.
+
+I first show \tech{compositionality}.
+This lemma is the key difficulty in the proof of \tech{type preservation}
+because \tech{closure conversion} changes the binding structure of free
+variables.
+Whether we substitute a term for a variable before or after translation can
+drastically affect the shape of \tech{closures} produced by the translation.
+For instance, consider the term \im{\subst{(\sfune{\sy}{\sA}{\se})}{\sepr}{\sx}}.
+If we perform this substitution before translation, then we will generate an
+\tech{environment} with the shape \im{\tnpaire{\txi\dots,\txin{j}\dots}}, \ie,
+with only free variables and without \im{\tx} in the \tech{environment}.
+However, if we translate the individual components and then perform the
+substitution, then the \tech{environment} will have the shape
+\im{\tnpaire{\txi\dots,\cctrans{\sepr},\txin{j}\dots}}---that is, \im{\tx} would
+be free when we create the \tech{environment} and substitution would replace it
+by \im{\cctrans{\sepr}}.
+I use the \(\eta\)-principle for \tech{closures} to show that \tech{closures}
+that differ in this way are still equivalent.
+\begin{lemma}[Compositionality]
+  \label{lem:abs-cc:cc:subst}
+  \im{\cctrans{(\subst{\seone}{\setwo}{\sx})} \equiv \subst{\cctrans{\seone}}{\cctrans{\setwo}}{\sx}}
+\end{lemma}
+\begin{proof}
+  By induction on the typing derivation for \im{\seone}. I give the key cases.
+  \begin{proofcases}
+    \item \refrule[src]{Var}
+
+    \noindent We know that \im{\seone} is some free variable \im{\sxpr}, so either
+    \im{\sxpr = \sx}, hence \im{\cctrans{\setwo} \equiv \cctrans{\setwo}}, or
+    \im{\sxpr \neq \sx}, hence \im{\cctrans{\sxpr} \equiv \cctrans{\sxpr}}.
+
+    \item \refrule[srcapp]{Pi-Prop}
+
+    \noindent We know that \im{\seone = \spity{\sxpr}{\sA}{\sB}}. W.l.o.g., assume \im{\sxpr \neq \sx}.
+
+    We must show
+    \im{\cctrans{(\spity{\sxpr}{\subst{\sA}{\setwo}{\sx}}{\subst{\sB}{\setwo}{\sx}})} \equiv
+      \subst{\cctrans{(\spity{\sxpr}{\sA}{\sB})}}{\cctrans{\setwo}}{\tx}}.
+    \begin{align}
+      & \cctrans{(\spity{\sxpr}{\subst{\sA}{\setwo}{\sx}}{\subst{\sB}{\setwo}{\sx}})} \\
+      =~& \tpity{\txpr}{\cctrans{(\subst{\sA}{\setwo}{\sx})}}{\cctrans{(\subst{\sB}{\setwo}{\sx})}}
+        \\ & \text{by definition of the translation} \nonumber \\
+      =~& \tpity{\txpr}{(\subst{\cctrans{\sA}}{\cctrans{\setwo}}{\tx})}{(\subst{\cctrans{\sB}}{\cctrans{\setwo}}{\tx})}
+        \\ & \text{by the inductive hypothesis for \im{\sA} and \im{\sB}}
+             \nonumber \\
+      =~& \subst{(\tpity{\txpr}{\cctrans{\sA}}{\cctrans{\sB}})}{\cctrans{\setwo}}{\tx}
+          \\ & \text{by definition of substitution} \nonumber \\
+      =~& \subst{\cctrans{(\spity{\sxpr}{\sA}{\sB})}}{\cctrans{\setwo}}{\tx}
+          \\ & \text{by definition of translation} \nonumber
+    \end{align}
+
+    \item \refrule[srcapp]{Pi-Type}. Similar to \refrule[srcapp]{Pi-Prop}
+
+    \item \refrule[srcapp]{Lam}
+
+    \noindent We know that \im{\seone = \sfune{\sy}{\sA}{\se}}. W.l.o.g., assume that \im{\sy \neq \sx}.
+    We must show that
+    \im{\cctrans{(\subst{(\sfune{\sy}{\sA}{\se})}{\setwo}{\sx})} \equiv \subst{\cctrans{(\sfune{\sy}{\sA}{\se})}}{\cctrans{\setwo}}{\sx}}.
+    Recall that by convention we have that \im{\styjudg{\slenv}{\sfune{\sy}{\sA}{\se}}{\spity{\sy}{\sA}{\sB}}}.
+    \begin{align}
+      &\cctrans{(\subst{(\sfune{\sy}{\sA}{\se})}{\setwo}{\sx})} \\
+      =~& \cctrans{(\sfune{\sy}{(\subst{\sA}{\setwo}{\sx})}{\subst{\se}{\setwo}{\sx}})}
+        \\ & \text{by substitution} \nonumber \\
+      =~&\begin{aligned}[t]
+          \tcloe{(\tnfune{&\tn:\tnsigmaty{(\txi:\cctrans{\sAi}\dots)},\ty:\tlete{\tnpaire{\txi\dots}}{\tn}{\cctrans{(\subst{\sA}{\setwo}{\sx})}}}{
+          \\&\tlete{\tnpaire{\txi\dots}}{\tn}{\cctrans{(\subst{\se}{\setwo}{\sx})}}})}{\tnpaire{\txi\dots}}
+      \end{aligned}
+      \\ & \text{by definition of the translation} \nonumber
+    \end{align}
+    where \im{\sxi:\sAi\dots {}= \DFV{\slenv}{\sfune{\sy}{(\subst{\sA}{\setwo}{\sx})}{\subst{\se}{\setwo}{\sx}}}}.
+    Note that \im{\sx} is not in the sequence \im{(\sxi\dots)}.
+
+    On the other hand, we have
+    \begin{align}
+      \tf=~&\subst{\cctrans{(\sfune{\sy}{\sA}{\se})}}{\cctrans{\setwo}}{\sx} \label{prf:tf}\\
+      =~&\begin{aligned}[t]
+          \tcloe{(\tnfune{&\tn:\tnsigmaty{(\txin{j}:\cctrans{\sAin{j}}\dots)},\ty:\tlete{\tnpaire{\txin{j}\dots}}{\tn}{\cctrans{\sA}}}{
+          \\&\tlete{\tnpaire{\txin{j}\dots}}{\tn}{\cctrans{\se}}})}{\tnpaire{\txin{j_0}\dots,\cctrans{\setwo},\txin{j_{i+1}}\dots }}
+      \end{aligned}
+      \\ & \text{by definition of the translation} \nonumber
+    \end{align}
+    where \im{\sxin{j}:\sAin{j}\dots {}= \DFV{\slenv}{\sfune{\sy}{\sA}{\se}}}.
+    Note that \im{\sx} is in \im{\sxin{j}\dots};
+    we can write the sequence as \im{(\sxin{j_0} \dots \sx,\sxin{j_{i+1}}\dots)}.
+    Therefore, the environment we generate contains \im{\cctrans{\setwo}} in position \im{j_i}.
+
+    By \refrule*{eqv-eta1}{\im{\equiv}-Clo\im{_1}}, it suffices to show that
+    \begin{displaymath}
+    \tlete{\tnpaire{\txi\dots}}{\tnpaire{\txi\dots}}{\cctrans{(\subst{\se}{\setwo}{\sx})}} \equiv
+      \tappe{\tf}{\ty}
+    \end{displaymath}
+    where \im{\tf} is the closure from \fullref[]{prf:tf}.
+    \begin{align}
+      \tappe{\tf}{\ty} \equiv~&
+                        \tlete{\tnpaire{\txin{j_0} \dots
+                               \tx,\txin{j_{i+1}\dots}}}{\tnpaire{\txin{j_0}\dots,\cctrans{\setwo},\txin{j_{i+1}}\dots}}{\cctrans{\se}}
+      \\& \text{by \im{\step_{\beta}} in \tlang} \nonumber \\
+      \equiv~& \subst{\cctrans{\se}}{\cctrans{\setwo}}{\tx}
+      \\ & \text{by \len{j} applications of \im{\step_{\zeta}}, since only \im{\tx} has a value} \nonumber \\
+      \equiv~& \cctrans{(\subst{\se}{\setwo}{\sx})}
+      \\ & \text{by the inductive hypothesis applied to the derivation for \im{\se}} \nonumber \\
+      \equiv~& \tlete{\tnpaire{\txi\dots}}{\tnpaire{\txi\dots}}{\cctrans{(\subst{\se}{\setwo}{\sx})}}
+      \\ & \text{by \len{i} applications of \im{\step_{\zeta}}, since no variable has a value} \nonumber
+    \end{align}
+  \end{proofcases}
+\end{proof}
+
+Next I show \tech{preservation of reduction}: if a source term \im{\se} takes a
+step, then its translation \im{\cctrans{\se}} is \tech{convertible} to a
+definitionally \tech{equivalent} term \im{\te}.
+This proof essentially follows by \fullref[]{lem:abs-cc:cc:subst}.
+Note that since \fullref[]{lem:abs-cc:cc:subst} relies on our
+\(\eta\)-equivalence rule for \tech{closures}, we can only show reduction up to
+definitional \tech{equivalence}.
+That is, we cannot show \im{\cctrans{\se} \stepstar \cctrans{\sepr}}.
+This is not a problem; we reason about source programs to \tech{equivalence} anyway,
+and not up to syntactic equality.
+\begin{lemma}[Preservation of Reduction]
+  \label{lem:abs-cc:cc:pres-red}
+  If \im{\sstepjudg{\slenv}{\se}{\sepr}} then
+  \im{\tstepjudg[\stepstar]{\cctrans{\slenv}}{\cctrans{\se}}{\te}} and \im{\te \equiv \cctrans{\sepr}}
+\end{lemma}
+\begin{proof}
+  By cases on \im{\sstepjudg{\slenv}{\se}{\sepr}}.
+  Most cases follow easily by \fullref[]{lem:abs-cc:cc:subst}, since most cases of reduction are defined by substitution.
+  \begin{proofcases}
+    \item \im{\sx \step_{\delta} \sepr} where \im{\sx = \sepr : \sA \in \slenv}.
+
+    \noindent We must show that \im{\tx \stepstar \te} and \im{\cctrans{\sepr} \equiv \te}.
+    Let \im{\te \defeq \cctrans{\sepr}}.
+    It suffices to show that \im{\tx \stepstar \cctrans{\sepr}}.
+    By definition of the translation, we know that \im{\tx = \cctrans{\sepr} : \cctrans{\sA} \in
+      \cctrans{\slenv}} and \im{\tx \step_{\delta} \cctrans{\sepr}}.
+
+    \item \im{\slete{\sx}{\seone}{\setwo} \step_{\zeta} \subst{\setwo}{\seone}{\sx}}
+
+    \noindent We must show that \im{\cctrans{(\slete{\sx}{\seone}{\setwo})} \stepstar \te} and
+    \im{\cctrans{(\subst{\setwo}{\seone}{\sx})} \equiv \te}. Let \im{\te \defeq \subst{\cctrans{\setwo}}{\cctrans{\seone}}{\tx}}.
+    \begin{align}
+      \cctrans{(\slete{\sx}{\seone}{\setwo})} =
+      ~&\tlete{\tx}{\cctrans{\seone}}{\cctrans{\setwo}}
+      \\ & \text{by definition of the translation} \nonumber \\
+      \step_{\zeta}~& \subst{\cctrans{\setwo}}{\cctrans{\seone}}{\tx} \\
+      \equiv~&\cctrans{(\subst{\setwo}{\seone}{\sx})}
+      \\ & \text{by~\fullref{lem:abs-cc:cc:subst}} \nonumber
+    \end{align}
+
+
+    \item \im{\sappe{(\sfune{\sx}{\sA}{\seone})}{\setwo} \step_{\beta} \subst{\seone}{\setwo}{\sx}}
+
+    \noindent We must show that \im{\cctrans{(\sappe{(\sfune{\sx}{\sA}{\seone})}{\setwo})} \stepstar \te} and
+    \im{\cctrans{(\subst{\setwo}{\seone}{\sx})} \equiv \te}. Let \im{\te \defeq  {\subst{\cctrans{\seone}}{\cctrans{\setwo}}{\tx}}}.
+
+    \noindent By definition of the translation,
+    \im{\cctrans{(\sappe{(\sfune{\sx}{\sA}{\seone})}{\setwo})} = \tappe{\tf }{\cctrans{\setwo}}}, where
+    \begin{align*}
+      \tf =
+        \tcloe{(\tnfune{&\tn:\tnsigmaty{(\txi:\cctrans{\sAi}\dots)},\tx:\tlete{\tnpaire{\txi\dots}}{\tn}{\cctrans{\sA}}}{
+          \\&\tlete{\tnpaire{\txi\dots}}{\tn}{\cctrans{\seone}}})}{\tnpaire{\txi\dots}}
+    \end{align*}
+
+    \noindent and where \im{\sxi:\sAi\dots {}= \DFV{\slenv}{\sfune{\sx}{\sA}{\seone}}}.
+
+    To complete the proof, observe that,
+    \begin{align}
+      \tappe{\tf}{\cctrans{\setwo}} \step_{\beta}~
+      & \tlete{\tnpaire{\txi\dots}}{\tnpaire{\txi\dots}}{\subst{\cctrans{\seone}}{\cctrans{\setwo}}{\tx}} \\
+      {\step_{\zeta}^{\len{i}}}~& {\subst{\cctrans{\seone}}{\cctrans{\setwo}}{\tx}} \\
+      \equiv~&\cctrans{(\subst{\seone}{\setwo}{\sx})} & \text{by \fullref[]{lem:abs-cc:cc:subst}}
+    \end{align}
+  \end{proofcases}
+\end{proof}
+
+\begin{lemma}[Preservation of Conversion]
+  \label{lem:abs-cc:cc:pres-norm}
+  If \im{\sstepjudg[\stepstar]{\slenv}{\se}{\sepr}} then
+  \im{\tstepjudg[\stepstar]{\cctrans{\slenv}}{\cctrans{\se}}{\te}} and \im{\tequivjudg{\cctrans{\slenv}}{\te}{\cctrans{\sepr}}}.
+\end{lemma}
+\begin{proof}
+  By induction the derivation \im{\sstepjudg[\stepstar]{\slenv}{\se}{\sepr}}.\footnote{In the previous version of this work~\cite{bowman2018:cccc}, this proof was incorrectly stated by induction on the length of the reduction sequence.}
+  I give the key proof cases.
+  \begin{proofcases}
+    \item \refrule[src]{Red-Refl}
+
+      Trivial.
+
+    \item \refrule[src]{Red-Trans}
+
+      Follows by \fullref[]{lem:abs-cc:cc:pres-red} and the induction hypothesis.
+
+    \item \refrule[src]{Red-Cong-Let}
+
+      Follows by \refrule[refabscc]{Red-Cong-Let} and the induction hypothesis.
+
+    \item \refrule[srcapp]{Red-Cong-App}
+
+      Follows by \refrule[refabscc]{Red-Cong-App} and the induction hypothesis.
+
+    \item \refrule[srcapp]{Red-Cong-Lam}
+
+      We have that
+      \im{
+        \inferrule*[right={\rulename{Red-Cong-Lam}}]
+        {\sstepjudg[\stepstar]{\slenv}{\sA}{\sApr} \\
+         \sstepjudg[\stepstar]{\slenv,\sx:\sApr}{\se}{\sepr}}
+        {\sstepjudg[\stepstar]{\slenv}{\sfune{\sx}{\sA}{\se}}{\sfune{\sx}{\sApr}{\sepr}}}
+      }
+
+      We must show that
+      \im{\tstepjudg[\stepstar]{\cctrans{\slenv}}{\cctrans{\sfune{\sx}{\sA}{\se}}}{\tein{m}}} and \im{\tein{m} \equiv  \cctrans{\sfune{\sx}{\sApr}{\sepr}}}
+
+      By definition of the translation, it suffices to show that the following
+      is \tech{convertible} to \im{\tein{m} \equiv \cctrans{\sfune{\sx}{\sApr}{\sepr}}}.
+      \begin{displaymath}
+       {\cctrans{\sfune{\sx}{\sA}{\se}}} =
+      \tcloe{
+            \begin{stackTL}
+              (\tnfune{\begin{stackTL}(\tn:\tnsigmaty{(\txi:\cctrans{\sAi}\dots)},\tx:\tlete{\tnpaire{\txi\dots}}{\tn}{\cctrans{\sA}})}{
+                  \\
+                  \tlete{\tnpaire{\txi\dots}}{\tn}{\cctrans{\se}}})}{
+              \end{stackTL}
+              \\\tdnpaire{\txi\dots}{\tnsigmaty{(\txi:\cctrans{\sAi}\dots)}}}
+        \end{stackTL}
+      \end{displaymath}
+      where \im{\sxi:\sAi\dots{}=\DFV{\slenv}{\sfune{\sx}{\sA}{\se},\spity{\sx}{\sA}{\sB}}}
+
+      By the induction hypothesis applied to \im{\sA \stepstar \sApr} and
+      \im{\se \stepstar \sepr}, we know that \im{\cctrans{\sA} \stepstar \tA
+        \equiv \cctrans{\sApr}} and \im{\cctrans{\se} \stepstar \te \equiv \cctrans{\sepr}}.
+
+      Therefore, by \refrule[refabscc]{Red-Cong-Clo}, \refrule[refabscc]{Red-Cong-Code}, and
+      \refrule[refabscc]{Red-Cong-Let}, we know
+      \begin{displaymath}
+        \cctrans{\sfune{\sx}{\sA}{\se}} \stepstar
+        \tcloe{
+            \begin{stackTL}
+              (\tnfune{\begin{stackTL}(\tn:\tnsigmaty{(\txi:\cctrans{\sAi}\dots)},\tx:\tlete{\tnpaire{\txi\dots}}{\tn}{\tA})}{
+                  \\
+                  \tlete{\tnpaire{\txi\dots}}{\tn}{\te}})}{
+              \end{stackTL}
+              \\\tdnpaire{\txi\dots}{\tnsigmaty{(\txi:\cctrans{\sAi}\dots)}}}
+        \end{stackTL}
+      \end{displaymath}
+
+      We must show this term is \tech{equivalent} to \im{\cctrans{\sfune{\sx}{\sApr}{\sepr}}}.
+
+      By \refrule*{eqv-eta1}{\im{\equiv}-Clo1}, it suffices to show that the
+      bodies of the \tech{closures} are equivalent, \ie, that \im{\te \equiv
+        \cctrans{\sepr}}, which we know by the earlier appeal to the induction
+      hypothesis applied to \im{\se \stepstar \sepr}.
+  \end{proofcases}
+\end{proof}
+
+I next prove \tech{equivalence preservation}.
+As \tech{equivalence} is defined primarily by \tech{conversion}, the only
+interesting part of the next proof is preserving \(\eta\)-equivalence.
+To show that \(\eta\)-equivalence is preserved, we require the new \(\eta\)
+rules for \tech{closures}.
+\begin{lemma}[Preservation of Equivalence]
+  \label{lem:abs-cc:cc:pres-equiv}
+  If \im{\sequivjudg{\slenv}{\se}{\sepr}}, then
+  \im{\tequivjudg{\cctrans{\slenv}}{\cctrans{\se}}{\cctrans{\sepr}}}.
+\end{lemma}
+\begin{proof}
+  By induction on the derivation of \im{\se \equiv \sepr}.
+  \begin{proofcases}
+    \item \refrule*[src]{eqv}{\im{\equiv}}
+
+     By assumption, \im{\se \stepstar \seone} and \im{\sepr \stepstar \seone}.
+
+     By \fullref[]{lem:abs-cc:cc:pres-norm}, \im{\cctrans{\se} \stepstar \te} and \im{\te \equiv \cctrans{\seone}}, and
+     similarly.
+     \im{\cctrans{\sepr} \stepstar \tepr} and \im{\tepr \equiv \cctrans{\seone}}.
+     The result follows by symmetry and transitivity.
+
+    \item \refrule*[src]{eqv-eta1}{\im{\equiv}-\im{\eta_1}}
+
+    By assumption, \im{\se \stepstar \sfune{\sx}{\st}{\seone}}, \im{\sepr \stepstar \setwo} and
+    \im{\seone \equiv \sappe{\setwo}{\sx}}.
+
+    Must show \im{\cctrans{\se} \equiv \cctrans{\sepr}}.
+
+    By \fullref[]{lem:abs-cc:cc:pres-norm}, \im{\cctrans{\se} \stepstar \te} and \im{\te \equiv
+      \cctrans{(\sfune{\sx}{\st}{\seone})}}, and similarly \im{\cctrans{\sepr} \stepstar \tepr} and \im{\tepr
+      \equiv \cctrans{\setwo}}.
+
+    By transitivity of \im{\equiv}, it suffices to show
+    \im{\cctrans{(\sfune{\sx}{\st}{\seone})} \equiv \cctrans{\setwo}}.
+
+    By definition of the translation,
+    \begin{align}
+          \cctrans{(\sfune{\sx}{\st}{\seone})} =
+      \tcloe{(\tnfune{&\tn:\tnsigmaty{(\txi:\cctrans{\sAi}\dots)},\tx:\tlete{\tnpaire{\txi\dots}}{\tn}{\cctrans{\sA}}}{
+          \nonumber \\&\tlete{\tnpaire{\txi\dots}}{\tn}{\cctrans{\seone}}})}{\tnpaire{\txi\dots}} \nonumber
+    \end{align}
+    where \im{\sxi:\sAi\dots {}= \DFV{\slenv}{\sfune{\sx}{\st}{\seone}}}.
+
+    By \refrule*{eqv-eta1}{\im{\equiv}-Clo\im{_1}} in \tlang, it suffices to show that
+    \begin{align}
+      &\tlete{\tnpaire{\txi\dots}}{\tnpaire{\txi\dots}}{\cctrans{\seone}} \nonumber \\
+      \equiv~&\cctrans{\seone} \\ & \text{by \len{i} applications of \im{\step_\zeta}} \nonumber \\
+      \equiv~&\tappe{\cctrans{\setwo}}{\tx}
+      \\ & \text{by the inductive hypothesis applied to \im{\seone \equiv \sappe{\setwo}{\sx}}} \nonumber
+    \end{align}
+    \item \refrule*[src]{eqv-eta2}{\im{\equiv}-\im{\eta_2}}
+    Symmetric to the previous case; requires \refrule*{eqv-eta2}{\im{\equiv}-\im{\eta_2}} instead of
+    \refrule*{eqv-eta1}{\im{\equiv}-\im{\eta_1}}.
+  \end{proofcases}
+\end{proof}
+
+\begin{lemma}[Preservation of Subtyping]
+  \label{lem:abs-cc:cc:pres-sub}
+  If \im{\ssubtyjudg{\slenv}{\sA}{\sB}} then
+  \im{\tsubtyjudg{\cctrans{\slenv}}{\cctrans{\sA}}{\cctrans{\sB}}}
+\end{lemma}
+\begin{proof}
+  By induction on the derivation \im{\ssubtyjudg{\slenv}{\sA}{\sB}}.
+  I give the key cases.
+  \begin{proofcases}
+    \item \refrule*[srcapp]{sub-eqv}{\im{\subtypesym}-\im{\equiv}}
+
+      We know that \im{\sA \equiv \sB}, and must show that \im{\cctrans{\sA} \subtypesym \cctrans{\sB}}.
+      By \refrule*{sub-equiv}{\im{\subtypesym}-\im{\equiv}}, it suffices to show that
+      \im{\cctrans{\sA} \equiv \cctrans{\sB}} which follows by
+      \fullref{lem:abs-cc:cc:pres-equiv} and transitivity of \im{\equiv}.
+
+    \item \refrule*[src]{sub-cum}{\im{\subtypesym}-Cum}
+
+      We know that \im{\stypety{i} \subtypesym \stypety{i+1}}, and we must show that
+      \im{\cctrans{\stypety{i}} \subtypesym \cctrans{\stypety{i+1}}}, which
+      follows trivially from the definition of the translation and
+      \refrule*{sub-cum}{\im{\subtypesym}-Cum}.
+
+    \item \refrule*[src]{sub-pi}{\im{\subtypesym}-Pi}
+
+      We know that \im{
+        \inferrule*[right=\rulename{\im{\subtypesym}-Pi}]
+      {\sequivjudg{\slenv}{\sAone}{\sAtwo} \\
+       \ssubtyjudg{\slenv,\sxone:\sAtwo}{\sBone}{\subst{\sBtwo}{\sxone}{\sxtwo}}}
+      {\ssubtyjudg{\slenv}{\spity{\sxone}{\sAone}{\sBone}}{\spity{\sxtwo}{\sAtwo}{\sBtwo}}}
+        }
+
+      We must show that \im{\cctrans{\spity{\sxone}{\sAone}{\sBone}} \subtypesym  \cctrans{\spity{\sxtwo}{\sAtwo}{\sBtwo}}}.
+
+      By the definition of the translation, it suffices to show that
+      \im{\tpity{\txone}{\cctrans{\sAone}}{\cctrans{\sBone}} \subtypesym \tpity{\txtwo}{\cctrans{\sAtwo}}{\cctrans{\sBtwo}}}.
+
+      By \refrule*{sub-pi}{\im{\subtypesym}-Pi}, it suffices to show that
+      \begin{enumerate}
+      \item \im{\cctrans{\sAone} \equiv \cctrans{\sAtwo}}, which follows by
+        \fullref[]{lem:abs-cc:cc:pres-equiv}, and
+
+      \item \im{\cctrans{\sBone} \subtypesym \cctrans{\sBtwo}}, which follows by
+        the induction hypothesis applied to \im{\sBone \subtypesym \sBtwo}.
+      \end{enumerate}
+  \end{proofcases}
+\end{proof}
+
+Now I can prove \tech{type preservation}.
+I give the technical version of the lemma required to complete the proof,
+followed by the desired statement of the theorem.
+\begin{lemma}[Type and Well-formedness Preservation]
+  \label{lem:abs-cc:cc:type-pres}
+  ~
+  \begin{enumerate}
+    \item If \im{\swf{\slenv}} then \im{\twf{\cctrans{\slenv}}}
+    \item If \im{\styjudg{\slenv}{\se}{\sA}} then \inlinemath{\ttyjudg{\cctrans{\slenv}}{\cctrans{\se}}{\cctrans{\sA}}}
+  \end{enumerate}
+\end{lemma}
+\begin{proof}
+  Parts 1 and 2 proven by simultaneous induction on the mutually defined judgments
+    \im{\swf{\slenv}} and \im{\styjudg{\slenv}{\se}{\sA}}.
+
+  Part 1 follows easily by the induction hypotheses.
+  I give the key cases for part 2.
+  \begin{proofcases}
+    \item \refrule[srcapp]{Lam}
+
+    \noindent We have that \im{\styjudg{\slenv}{\sfune{\sx}{\sA}{\se}}{\spity{\sx}{\sA}{\sB}}}.
+    We must show that \im{\ttyjudg{\cctrans{\slenv}}{\cctrans{(\sfune{\sx}{\sA}{\se})}}{\cctrans{(\spity{\sx}{\sA}{\sB})}}}.
+
+    \noindent By definition of the translation, we must show that
+    \begin{displaymath}
+          \tcloe{(\tnfune{\begin{stackTL}(\tn:\tnsigmaty{(\txi:\cctrans{\sAi}\dots)},\tx:\tlete{\tnpaire{\txi\dots}}{\tn}{\cctrans{\sA}})}{
+              \\\tlete{\tnpaire{\txi\dots}}{\tn}{\cctrans{\seone}}})}{\tnpaire{\txi\dots}}
+         \end{stackTL}
+    \end{displaymath}
+    has type \im{\tpity{\tx}{\cctrans{\sA}}{\cctrans{\sB}}},
+    where \im{\sxi : \sAi\dots {}= \DFV{\slenv}{\sfune{\sx}{\st}{\seone}}}.
+
+    Notice that the annotation in the term \im{\tx:\tlete{\tnpaire{\txi\dots}}{\tn}{\cctrans{\sA}}}, does not match
+    the annotation in the type \im{\tx : \cctrans{\sA}}.
+    However, by \refrule{Clo}, we can derive that the closure has type:
+    \begin{displaymath}
+    \tpity{(\tx}{\tlete{\tnpaire{\txi\dots}}{\tnpaire{\txi\dots}}{\cctrans{\sA}})}{(\tlete{\tnpaire{\txi\dots}}{\tnpaire{\txi\dots}}{\cctrans{\sB}})},
+    \end{displaymath}
+    This is equivalent to \im{\tpity{\tx}{\cctrans{\sA}}{\cctrans{\sB}}} under
+    \im{\cctrans{\slenv}} since, as we saw in earlier proofs,
+    \im{(\tlete{\tnpaire{\txi\dots}}{\tnpaire{\txi\dots}}{\cctrans{\sA}}) \equiv
+      \cctrans{\sA}}.
+    So, by \refrule{Clo} and \refrule[refabscc]{Conv}, it suffices to show that the environment and the
+    code are well-typed.
+
+    First note that \im{\styjudg{\slenv}{\se}{\sA}} implies \im{\swf{\slenv}}~\cite{luo1989}.
+    By part 1 of the induction hypothesis applied to \im{\swf{\slenv}}, we know
+    \im{\twf{\cctrans{\slenv}}}.
+    Since each of \im{\sxi:\sAi\dots} come from \im{\slenv}, and
+    \im{\cctrans{\slenv}} is well-formed, we know each type in
+    \im{\cctrans{\slenv}} is well-typed.
+    Thus the following explicit environment constructed by closure conversion is well-typed:
+    \im{\ttyjudg{\cctrans{\slenv}}{\tnpaire{\txi\dots}}{\tnsigmaty{(\txi:\cctrans{\sAi}\dots)}}}.
+
+    Now we must show that the code
+    \begin{displaymath}
+    (\tnfune{(\begin{stackTL}\tn:\tnsigmaty{(\txi:\cctrans{\sAi}\dots)},\tx:\tlete{\tnpaire{\txi\dots}}{\tn}{\cctrans{\sA}})}{
+            \\\tlete{\tnpaire{\txi\dots}}{\tn}{\cctrans{\seone}}})
+        \end{stackTL}
+    \end{displaymath}
+    has type \im{\tcodety{\tn,\tx}{\tlete{\tnpaire{\txi\dots}}{\tn}{\cctrans{\sB}}}}. For brevity,
+    I omit the duplicate type annotations on \im{\tn} and \im{\tx}.
+
+    \noindent Observe that by the induction hypothesis applied to \im{\styjudg{\slenv}{\sA}{\sU}} and by weakening
+
+    \im{\ttyjudg{\tn: {\tnsigmaty{(\txi:\cctrans{\sAi}\dots)}}}{\tlete{\tnpaire{\txi\dots}}{\tn}{\cctrans{\sA}}}{\cctrans{\sU}}}.
+
+    \noindent Hence, by \refrule{Code}, it suffices to show
+
+    \im{\ttyjudg{\cdot,\tn,\tx}{
+        \tlete{\tnpaire{\txi\dots}}{\tn}{\cctrans{\seone}}}{\tlete{\tnpaire{\txi\dots}}{\tn}{\cctrans{\sB}}}}
+
+    \noindent which follows by the inductive hypothesis applied to \im{\styjudg{\slenv,\sx:\sA}{\seone}{\sB}},
+    and by weakening, since \im{\sxi\dots} are the free variables of \im{\seone}, \im{\sA}, and \im{\sB}.
+
+    \item \refrule[srcapp]{App}
+
+    \noindent We have that \im{\styjudg{\slenv}{\sappe{\seone}{\setwo}}{\subst{\sB}{\setwo}{\sx}}}.
+    We must show that \im{\ttyjudg{\cctrans{\slenv}}{\tappe{\cctrans{\seone}}{\cctrans{\setwo}}}{\cctrans{(\subst{\sB}{\setwo}{\sx})}}}.
+    By \fullref[]{lem:abs-cc:cc:subst}, it suffices to show
+    \im{\ttyjudg{\cctrans{\slenv}}{\tappe{\cctrans{\seone}}{\cctrans{\setwo}}}\subst{\cctrans{\sB}}{\cctrans{\setwo}}{\tx}}, which follows by
+    \refrule[refabscc]{App} and the inductive hypothesis applied to \im{\seone},
+    \im{\setwo} and \im{\sB}. \qedhere
+  \end{proofcases}
+\end{proof}
+
+\begin{theorem}[Type Preservation]
+  \nonbreaking{If \im{\styjudg{\slenv}{\se}{\st}} then \im{\ttyjudg{\cctrans{\slenv}}{\cctrans{\se}}{\cctrans{\st}}}.}
+\end{theorem}
+
+\subsection{Compiler Correctness}
+Now I prove \tech{correctness of separate compilation}.
+Unlike in \fullref[]{chp:anf}, there are no secondary evaluation semantics, so
+the proof follows easily following the standard architecture from
+\fullref[]{chp:type-pres}.
+
+As usual, I define linking as substitution and use the standard cross-language
+relation~\fullref[]{chp:source}.
+\tech{Components} in both \slang and \tlang are well-typed open terms, \ie,
+\im{\styjudg{\slenv}{\se}{\sA}}.
+I extend the \tech{compiler} to closing substitutions \im{\cctrans{\ssubst}} by
+point-wise application of the translation.
+
+The separate compilation guarantee is that the translation of the source
+component \im{\se} linked with substitution \im{\ssubst} is equivalent to first
+compiling \im{\se} and then linking with some \im{\tsubst} that is
+definitionally equivalent to \im{\cctrans{\ssubst}}.
+\begin{theorem}[Separate Compilation Correctness]
+  \label{thm:abs-cc:cc:comp-correct}
+  If \im{\wf{\slenv}{\se}},
+  \im{\ssubstok{\slenv}{\ssubst}},
+  \im{\ssubstok{\cctrans{\slenv}}{\tsubst}},
+  and \im{\cctrans{\ssubst} \equiv \tsubst}
+  then
+  \im{\seval{\ssubst(\se)} \approx \teval{\tsubst(\cctrans{\se})}}
+\end{theorem}
+\begin{proof}
+  Since the translation commutes with substitution, preserves equivalence, reduction implies
+  equivalence, and equivalence is transitive, the following diagram commutes.
+
+  \begin{tikzcd}
+    \cctrans{(\ssubst(\se))} \arrow[r, "\equiv"] \arrow[d, "\equiv"]
+    & \tsubst(\cctrans{\se}) \arrow[d, "\equiv"] \\
+      \cctrans{\sv} \arrow[r, "\equiv"]
+      & \tvpr
+  \end{tikzcd}
+
+  Since \im{\equiv} on \tech{observations} implies \im{\approx}, we know that \im{\sv \approx \tvpr}. \qedhere
+\end{proof}
+
+As a simple corollary, the compiler must also be whole-program correct.
+\begin{corollary}[Whole-Program Correctness]
+  If \im{\wf{}{\se}} then \im{\seval{\se} \approx \teval{\cctrans{\se}}}.
+\end{corollary}
+}
+
+\subsection{ANF Preservation}
+\label{sec:abs-cc:cc:anf}
+Ultimately we want to compose \tech{ANF} and \tech{closure conversion}, so we
+need \tech{closure conversion} to preserve \tech{ANF}.
+For simplicity, I've defined a more general \tech{closure conversion} over
+\slang terms, but the translation also preserves \tech{ANF}.
+
+\begin{typographical}
+  In this section, I restrict the source language from \slang to
+  \anftlang.
+  \anftlang is a source language in this section, so I typeset it in
+  \emph{\sfonttext{blue, non-bold, sans-serif font}}.
+\end{typographical}
+
+\FigCCANF
+I define the key \tech{ANF} syntax for \tlang in \fullref[]{fig:abs-cc:cc:anf};
+the full figure is given in \fullref[]{sec:abs-cc:appendix}
+\fullref[]{fig:abs-cc:cc:anf-full}.
+Recall from \fullref[]{chp:anf} that we define
+\tech*{anf:config}{configurations},
+\tech*{anf:comp}{computations}, and \tech*{anf:value}{values} in \tech{ANF}.
+The only interesting addition is \tech{closures}, which are \tech{values} and
+must contain \tech*{anf:value}{values} as components.
+Recall that I have an incomplete ANF translation for dependent conditionals in
+\fullref[]{chp:anf}, so I exclude dependent conditionals from the ANF
+definitions here.
+
+To show \tech{ANF} is preserved, we must show that \tech*{anf:config}{configurations} are
+translated to \tech*{anf:config}{configurations}, \tech*{anf:comp}{computations} to
+\tech*{anf:comp}{computations}, and \tech*{anf:value}{values} to \tech*{anf:value}{values}.
+Because the syntactic categories are mutually defined, we must show each of
+these is preserved simultaneously.
+\begin{theorem}[Preservation of ANF]
+  ~
+  Let \im{\styjudg{\slenv}{\se}{\sA}};
+  \begin{enumerate}
+    \item If \im{\se} is \im{\sV} then \im{\cctrans{\sV} = \tV}.
+    \item If \im{\se} is \im{\sN} then \im{\cctrans{\sN} = \tN}.
+    \item If \im{\se} is \im{\sM} then \im{\cctrans{\sM} = \tM}.
+  \end{enumerate}
+\end{theorem}
+\begin{proof}
+  Formally, the proof is by induction on the typing derivation for the
+  \tech{expression} \im{\se} being translated, assuming \im{\se} is in
+  \tech{ANF}, \ie, is either a \im{\sV}, an \im{\sN} or an \im{\sM}.
+  The typing derivation is only necessary since the translation must be defined
+  on typing derivations, as discussed in \fullref[]{chp:type-pres}.
+  For simplicity, I present the proof as over the syntax of the expression
+  \im{\se}, but note that in the case of functions we need the induction
+  hypothesis for a sub-derivation rather than a sub-expression.
+  I give the key cases.
+  \begin{proofcases}
+    \item \im{\se = \spity{\sx}{\sA}{\sB}}
+      Note that \im{\se} is a \tech*{anf:value}{value}
+      \im{\sV}, \im{\sA} and \im{\sB} are \tech*{anf:config}{configurations}, and
+      the translation \im{\te = \tpity{\tx}{\cctrans{\sA}}{\sB}}.
+      By part 3 of the induction hypothesis, \im{\cctrans{\sA}} and
+      \im{\cctrans{\sB}} are \tech*{anf:config}{configurations}, so \im{\te} is
+      a \tech*{anf:value}{value}.
+    \item \im{\se = \slete{\sx}{\sN}{\sMpr}}
+      Note that \im{\se} is a \tech*{anf:config}{configuration}.
+      We must show that the translation \im{\te =
+        \tlete{\tx}{\cctrans{\sN}}{\cctrans{\sMpr}}} is a
+      \tech*{anf:config}{configuration}, which follows by parts 2 and 3 of the
+      induction hypothesis.
+    \item \im{\se = \sfune{\sx}{\sA}{\sM}}
+      Note that \im{\se} is a \tech*{anf:value}{value}.
+      We must show that the translation \im{\te}, defined as follows, is a
+      \tech*{anf:value}{value}.
+      \begin{displaymath}
+        \te = \tcloe{
+            \begin{stackTL}
+              (\tnfune{\begin{stackTL}(\tn:\tnsigmaty{(\txi:\cctrans{\sAi}\dots)},\tx:\tlete{\tnpaire{\txi\dots}}{\tn}{\cctrans{\sA}})}{
+                  \\
+                  \tlete{\tnpaire{\txi\dots}}{\tn}{\cctrans{\se}}})}{
+              \end{stackTL}
+              \\\tdnpaire{\txi\dots}{\tnsigmaty{(\txi:\cctrans{\sAi}\dots)}}}
+        \end{stackTL}
+      \end{displaymath}
+      where~\im{\sxi:\sAi\dots{}=\DFV{\slenv}{\sfune{\sx}{\sA}{\se},\spity{\sx}{\sA}{\sB}}}
+
+      It suffices to show that both the \tech{code} and \tech{environment} are
+      \tech*{anf:value}{values}.
+
+      The \tech{environment}
+      \im{\tdnpaire{\txi\dots}{\tnsigmaty{(\txi:\cctrans{\sAi}\dots)}}} is a
+      \tech*{anf:value}{value} if \im{\cctrans{\sAi}\dots} are
+      \tech*{anf:config}{configurations}, which is true by part 3 of the
+      induction hypothesis applied to the typing derivations for \im{\sAi
+        \dots} (which are sub-derivations implied by the well-typedness of
+      \im{\se}).
+
+      The \tech{code} is a \tech*{anf:value}{value} if
+      \begin{enumerate}
+        \item \im{\tnsigmaty{(\txi:\cctrans{\sAi}\dots)}} is a \tech*{anf:config}{configuration}, which is true by part 3 of the induction hypothesis applied to the typing derivations for \im{\sAi \dots}.
+        \item \im{\tlete{\tnpaire{\txi\dots}}{\tn}{\cctrans{\sA}}} is a
+          \tech*{anf:config}{configuration}, which is true by part 3 of the induction
+          hypothesis applied to \im{\sA}.
+        \item \im{\tlete{\tnpaire{\txi\dots}}{\tn}{\cctrans{\se}}} is a
+          \tech*{anf:config}{configuration}, which is true by part 3 of the induction
+          hypothesis applied to \im{\cctrans{\se}}.
+      \end{enumerate}
+    \item \im{\se = \sappe{\sV}{\sVpr}}
+      We must show that \im{\te = \tappe{\tV}{\tVpr}}, which follows by part 1
+      of the induction hypothesis.
+  \end{proofcases}
+\end{proof}

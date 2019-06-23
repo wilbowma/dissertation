@@ -1,0 +1,1413 @@
+\renewcommand{\techprefix}{src}
+
+\newcommand{\FigECCSyntax}[1][t]{
+  \begin{figure}[#1]
+    \begin{bnfgrammar}
+      \bnflabel{Universes} &
+      \sU & \!\!\bnfdef & \spropty \bnfalt \stypety{i}
+      \bnfnewline
+
+      \bnflabel{Expressions} & \se,\sA,\sB & \bnfdef & \sx
+                                                       \bnfalt \sU
+                                                       \bnfalt \spity{\sx}{\sA}{\sB}
+                                                       \bnfalt \sfune{\sx}{\sA}{\se}
+                                                       \bnfalt \sappe{\se}{\se}
+                                                       \bnfalt \ssigmaty{\sx}{\sA}{\sB}
+      \\
+                           &&\bnfalt& \sdpaire{\seone}{\setwo}{\ssigmaty{\sx}{\sA}{\sB}}
+                                      \bnfalt \sfste{\se}
+                                      \bnfalt \ssnde{\se}
+                                      \bnfalt \sboolty
+                                      \bnfalt \struee
+                                      \bnfalt \sfalsee
+      \\
+                                      &&\bnfalt& \sife{\se}{\seone}{\setwo}
+                                      \bnfalt \slete{\sx}{\se}{\se}
+      \bnfnewline
+
+      \bnflabel{Environments} &
+      \slenv & \bnfdef & \cdot \bnfalt \slenv,\sx:\sA \bnfalt \slenv,\sx=\se
+    \end{bnfgrammar}
+    \caption{\slang Syntax}
+    \label{fig:ecc+:syntax}
+  \end{figure}
+}
+
+\newcommand{\betaReductionRule}{
+  \slenv \vdash \sappe{(\sfune{\sx}{\sA}{\seone})}{\setwo} & \step_{\beta} & \subst{\seone}{\setwo}{\sx}
+  \stepnewline
+}
+
+\newcommand{\letReductionRules}{
+  \slenv \vdash \sx & \step_{\delta} & \se & \where{\sx = \se \in \slenv}
+  \stepnewline
+
+  \slenv \vdash \slete{\sx}{\se}{\sepr} & \step_{\zeta} & \subst{\se}{\sepr}{\sx}
+  \stepnewline
+}
+
+\newcommand{\pairReductionRules}{
+  \slenv \vdash \sfste{\spaire{\seone}{\setwo}} & \step_{\pi_{1}} & \seone
+  \stepnewline
+
+  \slenv \vdash \ssnde{\spaire{\seone}{\setwo}} & \step_{\pi_{2}} & \setwo
+  \stepnewline
+}
+
+\newcommand{\conditionalReductionRules}{
+  \slenv \vdash \sife{\struee}{\seone}{\setwo} & \step_{\iota_{1}} & \seone
+  \stepnewline
+
+  \slenv \vdash \sife{\sfalsee}{\seone}{\setwo} & \step_{\iota_{1}} & \setwo
+  \stepnewline
+}
+
+\newcommand{\FigECCRed}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\sstepjudg{\slenv}{\se}{\sepr}}
+    \begin{reductionrules}
+      \betaReductionRule
+
+      \pairReductionRules
+
+      \conditionalReductionRules
+
+      \letReductionRules
+    \end{reductionrules}
+    \caption{\slang Reduction}
+    \label{fig:ecc+:red}
+  \end{figure}
+}
+
+\newcommand{\FigECCConv}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\sstepjudg[\stepstar]{\slenv}{\se}{\sepr}}
+    \begin{mathpar}
+      \inferrule*[right=\defrule{Red-Refl}]
+      {~}
+      {\sstepjudg[\stepstar]{\slenv}{\se}{\se}}
+
+      \inferrule*[right=\defrule{Red-Trans}]
+      {\sstepjudg{\slenv}{\se}{\seone} \\
+       \sstepjudg[\stepstar]{\slenv}{\seone}{\sepr}}
+      {\sstepjudg[\stepstar]{\slenv}{\se}{\sepr}}
+
+      \inferrule*[right=\defrule{Red-Cong-Let}]
+      {\sstepjudg[\stepstar]{\slenv}{\seone}{\seonepr} \\
+       \sstepjudg[\stepstar]{\slenv,\sx = \sepr}{\setwo}{\setwopr}}
+      {\sstepjudg[\stepstar]{\slenv}{\slete{\sx}{\seone}{\setwo}}{\slete{\sx}{\seonepr}{\setwopr}}}
+
+      \cdots
+    \end{mathpar}
+    \caption{\slang Conversion (excerpts)}
+    \label{fig:ecc+:conv}
+  \end{figure}
+}
+
+\newcommand{\FigECCEval}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\seval{\se} = \sv}
+    \vspace{-2ex}
+    \begin{displaymath}
+      \begin{array}{rcll}
+        \seval{\se} & = & \sv & \text{if \im{\wf{}{\se}} and \im{\sstepjudg[\stepstar]{\cdot}{\se}{\sv}}}
+      \end{array}
+    \end{displaymath}
+    \caption{\slang Evaluation}
+    \label{fig:ecc+:eval}
+  \end{figure}
+}
+
+\newcommand{\FigECCEqv}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\sequivjudg{\slenv}{\se}{\sepr}}
+    \begin{mathpar}
+      \inferrule*[right=\defrule*{eqv}{\im{\equiv}}]
+        {\sstepjudg[\stepstar]{\slenv}{\seone}{\se} \\
+         \sstepjudg[\stepstar]{\slenv}{\setwo}{\se}}
+        {\sequivjudg{\slenv}{\seone}{\setwo}}
+
+      \inferrule*[right=\defrule*{eqv-eta1}{\im{\equiv}-\im{\eta_1}}]
+        {\sstepjudg[\stepstar]{\slenv}{\seone}{\sfune{\sx}{\sA}{\se}} \\
+         \sstepjudg[\stepstar]{\slenv}{\setwo}{\setwopr} \\
+         \sequivjudg{\slenv,\sx:\sA}{\se}{\sappe{\setwopr}{\sx}}}
+        {\sequivjudg{\slenv}{\seone}{\setwo}}
+
+      \inferrule*[right=\defrule*{eqv-eta2}{\im{\equiv}-\im{\eta_2}}]
+        {\sstepjudg[\stepstar]{\slenv}{\seone}{\seonepr} \\
+         \sstepjudg[\stepstar]{\slenv}{\setwo}{\sfune{\sx}{\sA}{\se}} \\
+         \sequivjudg{\slenv,\sx:\sA}{\sappe{\seonepr}{\sx}}{\se}}
+        {\sequivjudg{\slenv}{\seone}{\setwo}}
+    \end{mathpar}
+    \caption{\slang Equivalence}
+    \label{fig:ecc+:equiv}
+  \end{figure}
+}
+
+\newcommand{\FigECCSub}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\ssubtyjudg{\slenv}{\sA}{\sB}}
+    \begin{mathpar}
+      \inferrule*[right=\defrule*{sub-eqv}{\im{\subtypesym}-\im{\equiv}}]
+      {\sequivjudg{\slenv}{\sA}{\sB}}
+      {\ssubtyjudg{\slenv}{\sA}{\sB}}
+
+      \inferrule*[right=\defrule*{sub-trans}{\im{\subtypesym}-Trans}]
+      {\ssubtyjudg{\slenv}{\sA}{\sApr} \\
+       \ssubtyjudg{\slenv}{\sApr}{\sB}}
+      {\ssubtyjudg{\slenv}{\sA}{\sB}}
+
+      \inferrule*[right=\defrule*{sub-prop}{\im{\subtypesym}-Prop}]
+      {~}
+      {\ssubtyjudg{\slenv}{\spropty}{\stypety{0}}}
+
+      \inferrule*[right=\defrule*{sub-cum}{\im{\subtypesym}-Cum}]
+      {~}
+      {\ssubtyjudg{\slenv}{\stypety{i}}{\stypety{i+1}}}
+
+      \inferrule*[right=\defrule*{sub-pi}{\im{\subtypesym}-Pi}]
+      {\sequivjudg{\slenv}{\sAone}{\sAtwo} \\
+       \ssubtyjudg{\slenv,\sxone:\sAtwo}{\sBone}{\subst{\sBtwo}{\sxone}{\sxtwo}}}
+      {\ssubtyjudg{\slenv}{\spity{\sxone}{\sAone}{\sBone}}{\spity{\sxtwo}{\sAtwo}{\sBtwo}}}
+
+      \inferrule*[right=\defrule*{sub-sig}{\im{\subtypesym}-Sig}]
+      {\ssubtyjudg{\slenv}{\sAone}{\sAtwo} \\
+       \ssubtyjudg{\slenv,\sxone:\sAtwo}{\sBone}{\subst{\sBtwo}{\sxone}{\sxtwo}}}
+      {\ssubtyjudg{\slenv}{\ssigmaty{\sxone}{\sAone}{\sBone}}{\ssigmaty{\sxtwo}{\sAtwo}{\sBtwo}}}
+    \end{mathpar}
+    \caption{\slang Subtyping}
+    \label{fig:ecc+:sub}
+  \end{figure}
+}
+
+\newcommand{\UniverseRules}[1][\defrule]{
+    \inferrule*[right=#1{Prop}]
+    {\swf{\slenv}}
+    {\styjudg{\slenv}{\spropty}{\stypety{0}}}
+
+    \inferrule*[right=#1{Type}]
+    {\swf{\slenv}}
+    {\styjudg{\slenv}{\stypety{i}}{\stypety{i+1}}}
+}
+
+\newcommand{\ImpredFunctionRule}[1][\defrule]{
+  \inferrule*[right=#1{Pi-Prop}]
+  {\styjudg{\slenv}{\sA}{\stypety{i}} \\
+   \styjudg{\slenv,\sx:\sA}{\sB}{\spropty}}
+  {\styjudg{\slenv}{\spity{\sx}{\sA}{\sB}}{\spropty}}
+}
+
+\newcommand{\DependentFunctionRules}[1][\defrule]{
+  \inferrule*[right=#1{Pi-Type}]
+  {\styjudg{\slenv}{\sA}{\stypety{i}} \\
+   \styjudg{\slenv,\sx:\sA}{\sB}{\stypety{i}}}
+  {\styjudg{\slenv}{\spity{\sx}{\sA}{\sB}}{\stypety{i}}}
+
+  \inferrule*[right=#1{Lam}]
+  {\styjudg{\slenv,\sx:\sA}{\se}{\sB}}
+  {\styjudg{\slenv}{\sfune{\sx}{\sA}{\se}}{\spity{\sx}{\sA}{\sB}}}
+
+  \inferrule*[right=#1{App}]
+  {\styjudg{\slenv}{\se}{\spity{\sx}{\sApr}{\sB}} \\
+   \styjudg{\slenv}{\sepr}{\sApr}}
+  {\styjudg{\slenv}{\sappe{\se}{\sepr}}{\subst{\sB}{\sepr}{\sx}}}
+}
+
+\newcommand{\DependentPairRules}[1][\defrule]{
+  \inferrule*[right=#1{Sig}]
+   {\styjudg{\slenv}{\sA}{\stypety{i}} \\
+    \styjudg{\slenv,\sx:\sA}{\sB}{\stypety{i}}}
+   {\styjudg{\slenv}{\ssigmaty{\sx}{\sA}{\sB}}{\stypety{i}}}
+
+   \inferrule*[right=#1{Pair}]
+   {\styjudg{\slenv}{\seone}{\sA} \\
+    \styjudg{\slenv}{\setwo}{\subst{\sB}{\seone}{\sx}}}
+   {\styjudg{\slenv}{\sdpaire{\seone}{\setwo}{(\ssigmaty{\sx}{\sA}{\sB})}}{\ssigmaty{\sx}{\sA}{\sB}}}
+
+   \inferrule*[right=#1{Fst}]
+   {\styjudg{\slenv}{\se}{\ssigmaty{\sx}{\sA}{\sB}}}
+   {\styjudg{\slenv}{\sfste{\se}}{\sA}}
+
+   \inferrule*[right=#1{Snd}]
+   {\styjudg{\slenv}{\se}{\ssigmaty{\sx}{\sA}{\sB}}}
+   {\styjudg{\slenv}{\ssnde{\se}}{\subst{\sB}{\sfste{\se}}{\sx}}}
+}
+
+\newcommand{\DependentConditionalRules}[1][\defrule]{
+     \inferrule*[right=#1{Bool}]
+     {\swf{\slenv}}
+     {\styjudg{\slenv}{\sboolty}{\spropty}}
+
+     \inferrule*[right=#1{True}]
+     {\swf{\slenv}}
+     {\styjudg{\slenv}{\struee}{\sboolty}}
+
+     \inferrule*[right=#1{False}]
+     {\swf{\slenv}}
+     {\styjudg{\slenv}{\sfalsee}{\sboolty}}
+
+     \inferrule*[right=#1{If}]
+     {\styjudg{\slenv,\sy:\sboolty}{\sB}{\sU} \\
+      \styjudg{\slenv}{\se}{\sboolty} \\
+      \styjudg{\slenv}{\seone}{\subst{\sB}{\struee}{\sy}} \\
+      \styjudg{\slenv}{\setwo}{\subst{\sB}{\sfalsee}{\sy}}}
+     {\styjudg{\slenv}{\sife{\se}{\seone}{\setwo}}{\subst{\sB}{\se}{\sy}}}
+}
+
+\newcommand{\DependentLetRules}{
+  \inferrule*[right=\defrule{Let}]
+   {\styjudg{\slenv}{\se}{\sA} \\
+    \styjudg{\slenv,\sx:\sA,\sx=\se}{\sepr}{\sB}}
+  {\styjudg{\slenv}{\slete{\sx}{\se}{\sepr}}{\subst{\sB}{\se}{\sx}}}
+}
+
+\newcommand{\FigECCTypingShort}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\styjudg{\slenv}{\se}{\sA}}
+    \begin{mathpar}
+      \cdots
+
+      \inferrule*[right=\defrule{Var}]
+      {\sx : \sA \in \slenv}
+      {\styjudg{\slenv}{\sx}{\sA}}
+
+      \UniverseRules
+
+      \DependentConditionalRules
+
+      \DependentLetRules
+
+      \inferrule*[right=\defrule{Conv}]
+      {\styjudg{\slenv}{\se}{\sA} \\
+       \styjudg{\slenv}{\sB}{\sU} \\
+       \ssubtyjudg{\slenv}{\sA}{\sB}}
+      {\styjudg{\slenv}{\se}{\sB}}
+    \end{mathpar}
+    \judgshape{\swf{\slenv}}
+    \begin{mathpar}
+      \inferrule*[right=\defrule{W-Empty}]
+      {~}
+      {\swf{\cdot}}
+
+      \inferrule*[right=\defrule{W-Assum}]
+      {\swf{\slenv} \\
+       \styjudg{\slenv}{\sA}{\sU}}
+      {\swf{\slenv,\sx:\sA}}
+
+      \inferrule*[right=\defrule{W-Def}]
+      {\swf{\slenv} \\
+       \styjudg{\slenv}{\se}{\sA}}
+      {\swf{\slenv,\sx=\se}}
+    \end{mathpar}
+    \caption{\slang Typing (excerpts)}
+    \label{fig:ecc+:type-short}
+  \end{figure}
+}
+
+\newcommand{\FigECCTyping}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\styjudg{\slenv}{\se}{\sA}}
+    \begin{mathpar}
+      \inferrule*[right=\defrule{Var}]
+      {\sx : \sA \in \slenv}
+      {\styjudg{\slenv}{\sx}{\sA}}
+
+      \UniverseRules
+
+      \ImpredFunctionRule
+
+      \DependentFunctionRules
+
+      \DependentPairRules
+
+      \DependentConditionalRules
+
+      \DependentLetRules
+
+      \inferrule*[right=\defrule{Conv}]
+      {\styjudg{\slenv}{\se}{\sA} \\
+       \styjudg{\slenv}{\sB}{\sU} \\
+       \ssubtyjudg{\slenv}{\sA}{\sB}}
+      {\styjudg{\slenv}{\se}{\sB}}
+    \end{mathpar}
+    \judgshape{\swf{\slenv}}
+    \begin{mathpar}
+      \inferrule*[right=\defrule{W-Empty}]
+      {~}
+      {\swf{\cdot}}
+
+      \inferrule*[right=\defrule{W-Assum}]
+      {\swf{\slenv} \\
+       \styjudg{\slenv}{\sA}{\sU}}
+      {\swf{\slenv,\sx:\sA}}
+
+      \inferrule*[right=\defrule{W-Def}]
+      {\swf{\slenv} \\
+       \styjudg{\slenv}{\se}{\sA}}
+      {\swf{\slenv,\sx=\se}}
+    \end{mathpar}
+    \caption{\slang Typing}
+    \label{fig:ecc+:type}
+  \end{figure}
+}
+
+\newcommand{\FigECCWF}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\swf{\slenv}}
+    \begin{mathpar}
+        \inferrule*[right=\defrule{W-Empty}]
+        {~}
+        {\swf{\cdot}}
+
+      \inferrule*[right=\defrule{W-Assum}]
+        {\swf{\slenv} \\
+         \styjudg{\slenv}{\sA}{\sU}}
+        {\swf{\slenv,\sx:\sA}}
+
+        \inferrule*[right=\defrule{W-Def}]
+        {\swf{\slenv} \\
+         \styjudg{\slenv}{\se}{\sA}}
+        {\swf{\slenv,\sx=\se}}
+    \end{mathpar}
+    \caption{\slang Well-Formed Environments}
+    \label{fig:ecc+:wf}
+  \end{figure}
+}
+
+\newcommand{\FigLinking}[1][t]{
+  \begin{figure}[#1]
+    \begin{bnfgrammar}
+      \bnflabel{Closing Substitutions} &
+      \ssubst & \defeq & \cdot \bnfalt \ssubst[\sx \mapsto \se]
+    \end{bnfgrammar}
+    \judgshape{\wf{\slenv}{\ssubst}}
+    \vspace{-1ex}
+    \begin{mathpar}
+      \inferrule
+      {~}
+      {\wf{\cdot}{\cdot}}
+
+      \inferrule
+      {\wf{\slenv}{\ssubst} \\
+       \styjudg{\cdot}{\se}{\sA}}
+      {\wf{\slenv,\sx:\sA}{\ssubst[\sx \mapsto \se]}}
+
+      \inferrule
+      {\wf{\slenv}{\ssubst} \\
+       \styjudg{\slenv}{\se}{\sA}}
+      {\wf{\slenv,\sx = \se}{\ssubst[\sx \mapsto \ssubst(\se)]}}
+    \end{mathpar}
+    \judgshape{\ssubst(\se) = \se}
+    \vspace{-1ex}
+    \begin{mathpar}
+      \cdot(\se) = \se
+
+      \ssubst[\sx \mapsto \sepr](\se) = \ssubst(\subst{\se}{\sx}{\sepr})
+    \end{mathpar}
+    \caption{\slang Closing Substitutions and Linking}
+    \label{fig:ecc+:link}
+  \end{figure}
+}
+
+\newcommand{\FigECCObs}[1][t]{
+  \begin{figure}[#1]
+    \begin{bnfgrammar}
+      \bnflabel{\slang Observations} &
+      \sv & \bnfdef & \struee \bnfalt \sfalsee
+      \bnfnewline
+    \end{bnfgrammar}
+    \caption{\slang Observations}
+    \label{fig:ecc+:obs}
+  \end{figure}
+}
+
+\newcommand{\FigObs}[1][t]{
+  \begin{figure}[#1]
+    \begin{bnfgrammar}
+      \bnflabel{Source Observations} &
+      \sv & \bnfdef & \struee \bnfalt \sfalsee
+      \bnfnewline
+
+      \bnflabel{Target Observations} &
+      \tv & \bnfdef & \ttruee \bnfalt \tfalsee
+    \end{bnfgrammar}
+    \judgshape{\sv \approx \tv}
+    \vspace{-1.5ex}
+    \begin{mathpar}
+      \struee \approx \ttruee
+
+      \sfalsee \approx \tfalsee
+    \end{mathpar}
+    \caption{Source and Target Observations}
+    \label{fig:ecc+:obs}
+  \end{figure}
+}
+
+\newcommand{\FigObsRel}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\sv \approx \tv}
+    \begin{mathpar}
+      \struee \approx \ttruee
+
+      \sfalsee \approx \tfalsee
+    \end{mathpar}
+    \caption{Source and Target Observation Relation}
+    \label{fig:ecc+:obsrel}
+  \end{figure}
+}
+
+\newcommand{\FigECCProg}[1][t]{
+  \begin{figure}[#1]
+    \begin{minipage}{.49\textwidth}
+    \judgshape{\wf{\slenv}{\se}}
+    \vspace{-1ex}
+    \begin{mathpar}
+      \inferrule
+      {\styjudg{\slenv}{\se}{\sboolty}}
+      {\wf{\slenv}{\se}}
+    \end{mathpar}
+    \end{minipage}
+    \begin{minipage}{.49\textwidth}
+    \judgshape{\wf{}{\se}}
+    \vspace{-1ex}
+    \begin{mathpar}
+      \inferrule
+      {\wf{\cdot}{\se}}
+      {\wf{}{\se}}
+    \end{mathpar}
+    \end{minipage}
+    \caption{\slang Components and Programs}
+    \label{fig:ecc+:wfprog}
+  \end{figure}
+}
+
+\newcommand{\FigECCConvFull}[1][t]{
+  \begin{figure}[#1]
+    \begin{mathpar}
+      \inferrule*[right=\defrule{Red-Refl}]
+      {~}
+      {\sstepjudg[\stepstar]{\slenv}{\se}{\se}}
+
+      \inferrule*[right=\defrule{Red-Trans}]
+      {\sstepjudg{\slenv}{\se}{\seone} \\
+       \sstepjudg[\stepstar]{\slenv}{\seone}{\sepr}}
+      {\sstepjudg[\stepstar]{\slenv}{\se}{\sepr}}
+
+      \inferrule*[right=\defrule{Red-Cong-Pi}]
+      {\sstepjudg[\stepstar]{\slenv}{\sA}{\sApr} \\
+       \sstepjudg[\stepstar]{\slenv,\sx:\sApr}{\se}{\sepr}}
+      {\sstepjudg[\stepstar]{\slenv}{\spity{\sx}{\sA}{\se}}{\spity{\sx}{\sApr}{\sepr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Lam}]
+      {\sstepjudg[\stepstar]{\slenv}{\sA}{\sApr} \\
+       \sstepjudg[\stepstar]{\slenv,\sx:\sApr}{\se}{\sepr}}
+      {\sstepjudg[\stepstar]{\slenv}{\sfune{\sx}{\sA}{\se}}{\sfune{\sx}{\sApr}{\sepr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-App}]
+      {\sstepjudg[\stepstar]{\slenv}{\seone}{\seonepr} \\
+       \sstepjudg[\stepstar]{\slenv}{\setwo}{\setwopr}}
+      {\sstepjudg[\stepstar]{\slenv}{\sappe{\seone}{\setwo}}{\sappe{\seonepr}{\setwopr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Sig}]
+      {\sstepjudg[\stepstar]{\slenv}{\sA}{\sApr} \\
+       \sstepjudg[\stepstar]{\slenv,\sx:\sApr}{\se}{\sepr}}
+      {\sstepjudg[\stepstar]{\slenv}{\ssigmaty{\sx}{\sA}{\se}}{\ssigmaty{\sx}{\sApr}{\sepr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Pair}]
+      {\sstepjudg[\stepstar]{\slenv}{\seone}{\seonepr} \\
+       \sstepjudg[\stepstar]{\slenv}{\setwo}{\setwopr} \\
+       \sstepjudg[\stepstar]{\slenv}{\sA}{\sApr}}
+      {\sstepjudg[\stepstar]{\slenv}{\sdpaire{\seone}{\setwo}{\sA}}{\sdpaire{\seonepr}{\setwopr}{\sApr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Fst}]
+      {\sstepjudg[\stepstar]{\slenv}{\se}{\sepr}}
+      {\sstepjudg[\stepstar]{\slenv}{\sfste{\se}}{\sfste{\sepr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Snd}]
+      {\sstepjudg[\stepstar]{\slenv}{\se}{\sepr}}
+      {\sstepjudg[\stepstar]{\slenv}{\ssnde{\se}}{\ssnde{\sepr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-If}]
+      {\sstepjudg[\stepstar]{\slenv}{\se}{\sepr} \\
+       \sstepjudg[\stepstar]{\slenv}{\seone}{\seonepr} \\
+       \sstepjudg[\stepstar]{\slenv}{\setwo}{\setwopr}}
+      {\sstepjudg[\stepstar]{\slenv}{\sife{\se}{\seone}{\setwo}}{\sife{\sepr}{\seonepr}{\setwopr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Let}]
+      {\sstepjudg[\stepstar]{\slenv}{\seone}{\seonepr} \\
+       \sstepjudg[\stepstar]{\slenv,\sx = \sepr}{\setwo}{\setwopr}}
+      {\sstepjudg[\stepstar]{\slenv}{\slete{\sx}{\seone}{\setwo}}{\slete{\sx}{\seonepr}{\setwopr}}}
+    \end{mathpar}
+    \caption{\slang Conversion}
+    \label{fig:ecc+:conv-cong}
+  \end{figure}
+}
+
+\chapter{Essence of Dependent Types}
+\label{chp:source}
+In this chapter, I formally introduce \tech{full-spectrum} \tech{dependent
+  types}.
+I am not making any advances in type theory; all the features I present are
+well-known and commonly used in contemporary \tech{dependently typed} languages.
+Therefore, I avoid any detailed discussion of the meta-theory or mathematical
+semantics of \tech{dependent types} and focus on the interpretation and use of
+these features as a programming language and \tech{program verification} system.
+
+I start by introducing the key features of
+\deftech*{Dependency,dependency,dependencies,dependencies,depends
+  on,dependent,depend on}{dependency}, that is, features whose expressions \im{e} haves
+\techs{type} that refer to a sub-expression of \im{e}.
+These are the features that distinguish \tech{dependently typed} languages from
+standard typed languages, and are all found in contemporary \tech{dependently
+  typed} languages such as Coq, Agda, Idris, and F*.
+
+I then build a \tech{dependently typed} source calculus, \slang, with each of
+these features.
+\slang is the basis for the source language used in the rest of this
+dissertation; I use it as the source language for \fullref[]{chp:anf} and
+\fullref[]{chp:abs-cc}, although, I remove one key feature from \slang starting
+in \fullref[]{chp:cps}.
+Recall that I use Coq as my ``ideal'' source language as its core language is
+relatively close to a small core calculus and it is used for many large-scale
+\tech{program verification} projects.
+\slang is close to Coq in terms of the features of \tech{dependency}, although
+it is missing two pragmatic features---recursive functions and \tech{computational
+relevance}---that are orthogonal to \tech{dependency}, which I discuss in
+\fullref[]{chp:conclusions}.
+If we can develop a \tech{type-preserving} \tech{compiler} for \slang, it ought
+to be possible to scale \tech{type preservation} to Coq.
+
+{
+\section{Essential Features of Dependency}
+\label{sec:design}
+\renewcommand{\sfont}{\mathrm}
+\renewcommand{\scolor}{\gcolor}
+\renewcommand{\sfontsym}{\gfontsym}
+\newmetavars{\nop}{\nop}{s}{x,e,U,A,B,C}
+
+\begin{typographical}
+In this section, I use a \emph{\textrm{black, non-bold, serif font}} to typeset
+examples of semantic rules and expressions for a dependently typed language that
+is never completely defined.
+\end{typographical}
+
+The following features represent the core type theoretic structure found in
+contemporary \tech{dependently typed} languages.
+If we must restrict or omit any of these features to build a
+\tech{type-preserving} translation, then it cannot scale to Coq without further
+work.
+
+Each feature below consists of some typing rules, some run-time \tech{reduction}
+rules used to run programs, and some \tech{equivalence} principles used to
+decide \tech{equivalence} between \tech{types} while type-checking.
+\tech{Equivalence} should be sound with respect to \tech{reduction}, \ie, if
+\im{\ge} reduces to \im{\gepr}, then \im{\ge} is also \tech{equivalent} to
+\im{\gepr}.
+This is what allows \tech{reduction} to take place in the type system, and thus
+how \tech{types} can compute and refine \tech{terms}.
+I omit explicit \tech{equivalence} rules when I have given the \tech{reduction}
+rules.
+
+\subsection{Higher Universes}
+Recall that in \tech{full-spectrum} \tech{dependent types}, there is no
+syntactic distinction between \tech{terms} and \tech{types}---there are only
+\tech{expressions}---so we need to describe the \tech{type} of a \tech{type}.
+\deftech*{universe,universes,Universe,Universes}{Universes} are the \tech{types}
+of \tech{types}, and \deftech*{higher universe,higher universes,Higher
+  universe,Higher universes}{higher universes} make it possible to write
+\tech{specifications} about \tech{types}, or \tech{specifications} about
+\tech{specifications} about \tech{types}, and so on. This is useful for formal
+mathematics and generic programming, both of which are
+commonly done in \tech{dependently typed} languages.
+
+The typing rules for \tech{universes} are given below.
+\begin{mathpar}
+  \UniverseRules[\discard]
+\end{mathpar}
+This presentation uses the usual presentation of \tech{universes} a-la Russell,
+where we have no syntactic distinction between what can appear on the left- or
+right-hand side of the colon (:).
+There is one base universe, \im{\spropty}, the \tech{type} of \tech{types} or
+\tech{type} of \emph{propositions}.
+\im{\spropty} itself has a type, \im{\stypety{0}}.
+I use the meta-variable \im{\sU} to refer to either \im{\spropty} or some higher
+universe \im{\stypety{i}}.
+
+When source programmers can write down \tech{universes} other than a single base
+\tech{universe}, \ie, when the programmer can write down \im{\stypety{0}} or
+\im{\stypety{i}} and not just \im{\spropty}, the type system has \tech{higher
+  universes}.
+By disallowing the programmer from writing any \tech{universe} other than the
+base \tech{universe}, we can get away with exactly two universes: \im{\spropty},
+which the programmer can use, and its type \im{\stypety{0}}, which only the type
+system can use when type checking \im{\spropty}.
+In this case, \im{\spropty} is often written as \im{\sstarty} and
+\im{\stypety{0}} is written \im{\sboxty}.
+With \tech{higher universes}, each \tech{universe} \im{\stypety{i}} also needs a
+\tech{type}, \im{\stypety{i+1}}.
+
+Some languages, such as Coq and F*, use multiple base \tech{universes} with
+different interpretations.
+For example, Coq uses two base universes, \im{\ssetty} and \im{\spropty}, where
+(loosely speaking) \tech{terms} whose \tech{types} have \tech{type} \im{\ssetty}
+are interpreted as \deftech*{computational relevance,computationally
+  relevant}{computationally relevant} (\ie, as program
+\tech{implementations}), while \tech{terms} whose \tech{types} have \tech{type}
+\im{\spropty} are interpreted as \deftech{computationally irrelevant} (\ie, as
+\tech{proofs} with no run-time behavior).
+I ignore this kind of distinction for this dissertation.
+
+\deftech*{cumulative,cumulativity,Cumulativity}{Cumulativity} is a pragmatic
+feature related to \tech{higher universes} found in some \tech{dependently
+  typed} languages.
+It allows a \tech{type} in a lower \tech{universe} to also implicitly
+inhabit a \tech{higher universe}; it is a form of subtyping for
+\tech{universes}.
+Coq supports \tech{cumulativity}, while Agda does not.
+With \tech{cumulativity}, the following typing rules are admissible, although
+they are usually derived from a subtyping judgment.
+\begin{mathpar}
+  \inferrule
+  {\swf{\slenv}}
+  {\styjudg{\slenv}{\spropty}{\stypety{i}}}
+
+  \inferrule
+  {\swf{\slenv} \\
+   i < j}
+  {\styjudg{\slenv}{\stypety{i}}{\stypety{j}}}
+\end{mathpar}
+
+\tech{Universes} support no \tech{reduction} rules or \tech{equivalence} principles.
+
+\begin{digression}
+\tech{Universes} are used in the type system as a \tech{type}-level witness to
+being a \tech{type}.
+Recall that we have no syntactic distinction between \tech{terms} and
+\tech{types}, but \tech{universes} can give us a way of classifying \tech{terms}
+and \tech{types}.
+An \tech{expression} \im{\se} of \tech{type} \im{\sU} (either \im{\spropty} or
+\im{\stypety{i}}) is a \tech{type}, whereas an \tech{expression} \im{\se} of
+type \im{\sA} such that \im{\sA} is not a \tech{universe} is a \tech{term}.
+
+Despite this, \tech{types} may still be required at run-time, contrary to our
+intuition about \tech{terms} and \tech{types}.
+Deciding whether an \tech{expression} is \tech{computationally relevant} is
+still an active area of research~\cite{tejiscak2015:dtp-draft}.
+For example, Coq provides a \tech*[computational
+  relevance]{computational-relevance} distinction between its two base
+universes, so deciding whether \tech{expressions} in those universes are
+relevant is simple.
+But for \tech{higher universes}, a sound and approximate static analysis is
+used.
+Work on explicit relevance annotations does not have a complete story for
+arbitrary inductively defined data or recursive
+functions~\cite{mishra-linger2008:phd}.
+\end{digression}
+
+\subsection{Dependent Functions}
+\deftech*{dependent-function,dependent function,dependent function types,dependent function
+  type,dependent functions,Dependent function,Dependent functions}{Dependent
+  functions} give the programmer the ability to write functions whose result
+\tech{type} refers by name to the arguments of the function.
+This allows encoding pre and postconditions on the function and
+representing theorems with universal quantification.
+
+The typing rules for \tech{dependent functions} are given below.
+\begin{mathpar}
+  \DependentFunctionRules[\discard]
+\end{mathpar}
+As with all \tech{types} in a \tech{dependent type} system, \tech{types}
+themselves have \tech{types}.
+Therefore, we have a typing rule for the \tech{type} of \tech{dependent
+  functions} \im{\spity{\sx}{\sA}{\sB}}, whose type is a \tech{universe}
+\im{\stypety{i}}.
+\tech{Dependent function types} are introduced by the usual anonymous function
+\im{\sfune{\sx}{\sA}{\se}} and eliminated through application
+\im{\sappe{\se}{\sepr}}.
+In the typing rule for application, we see \tech{dependency}---the
+sub-expression \im{\sepr} is copied into the type system to instantiate
+\im{\sx}.
+This copying is the key problem in \tech{type preserving} compilation,
+essentially because we need to transform both \im{\sepr}'s interpretation as a
+program for compilation and \im{\sepr}'s interpretation as a \tech{type}-level
+\tech{expression} for type-checking.
+
+\tech{Dependent functions} support the usual run-time operation,
+\(\beta\)-reduction, defined below.
+\begin{reductionrules}
+  \betaReductionRule
+\end{reductionrules}
+
+It is undesirable to allow \(\eta\)-reduction in the presence of other common
+features in \tech{dependently typed} languages, as it breaks \deftech{subject
+  reduction} (preservation of \tech{types} under \tech{reduction}).
+\begin{mathpar}
+  \sfune{\sx}{\sA}{\sappe{\sf}{\sx}} \not\step_{\eta} \sf
+\end{mathpar}
+For example\footnote{This example is reproduced from the Coq reference manual,
+  \url{https://coq.inria.fr/distrib/current/refman/language/cic.html}.},
+if we combine the \(\eta\)-reduction with \tech{cumulativity}, then
+\tech{subject reduction} does not hold in the system.
+Suppose \im{\sfune{\sx}{\sA}{\sappe{\sf}{\sx}} :
+  \spity{\sx}{\stypety{1}}{\stypety{1}}} but \im{\sf :
+  \spity{\sx}{\stypety{2}}{\stypety{1}}} due to \tech{cumulativity}.
+After \(\eta\)-reduction, the type changes to a super-type of the original term,
+hence \tech{subject reduction} does not hold.
+As such, \(\eta\)-reduction is excluded from Coq, which supports \tech{cumulativity}.
+Agda, which does not have \tech{cumulativity}, supports \(\eta\)-reduction, but
+the feature is being reconsidered as it breaks \tech{subject reduction} when
+combined with dependent record types.\footnote{\url{https://github.com/agda/agda/issues/2732}}
+
+While \(\eta\)-reduction is problematic, we can safely include
+\(\eta\)-equivalence for \tech{dependent functions}.
+Adding \(\eta\)-equivalence directly, instead of deriving it from
+\(\eta\)-reduction, avoids the problems of combining \(\eta\)-principles with
+\tech{cumulativity}.
+We can include \(\eta\)-equivalence by adding the following (somewhat informal)
+equivalence rule.
+\begin{mathpar}
+  \inferrule
+  {\text{when \im{\se} is a function}}
+  {\sequivjudg{\slenv}{\se}{\sfune{\sx}{\sappe{\se}{\sx}}}}
+\end{mathpar}
+There are different ways to implement this \tech{equivalence}, which primarily
+differ in how to decide whether \im{\se} is a function.
+The simplest technique is to make \tech{equivalence} type-directed and use the
+type of \im{\se} to decide.
+Coq uses an untyped \tech{equivalence}, which I choose to adopt and present in
+the next section.
+
+\(\eta\)-equivalence is included in some, but not all, \tech{dependently typed}
+languages.
+Older version of Coq omitted and current versions of F* exclude it, but recent
+versions of Coq, Idris, and Agda include it.
+
+\begin{digression}
+Unfortunately, by adding \(\eta\)-equivalence instead of deriving it from
+\(\eta\)-reduction, we (necessarily) complicate the judgmental structure of the
+\tech{dependent type} system.
+It means \tech{equivalence} is not derived simply from the \tech{reduction}, but
+is an auxiliary judgment.
+Each new judgment complicates the type system and any reasoning about the type
+system, and means the choice of how the \tech{equivalence} is defined will
+affect \tech{type preservation}.
+However, disrupting \tech{subject reduction} is at least as problematic, since a
+\tech{compiler} might want to reduce terms, \eg, to perform optimizations.
+I discuss how the choice of \tech{equivalence} judgment affects \tech{type
+  preservation} further in \fullref[]{chp:type-pres}.
+\end{digression}
+
+There is an additional concern for typing \tech{dependent function} when we have
+\tech{higher universes}---\deftech{predicativity}, \ie, what \tech{universe}
+the \tech{type} of the function argument can have.
+The earlier typing rule for dependent function types is \deftech{predicative}
+because it requires that the argument \tech{type} have the same \tech{universe}
+as the result \tech{type}, \ie, the function is quantifying over
+\tech{expressions} that ``live'' in a \tech{universe} no higher (``larger'')
+than the \tech{universe} of \tech{expressions} the function produces.
+\tech{Dependent functions} can also support
+\deftech*{impredicative,Impredicative,Impredicativity,impredicativity}{impredicative}
+quantification, in which the function quantifies over \tech{expressions} in a
+\emph{higher} \tech{universe} than the \tech{expressions} the function produces.
+A common way to support \tech{impredicativity} is to add the typing rule below.
+\begin{mathpar}
+  \ImpredFunctionRule[\discard]
+\end{mathpar}
+
+\tech{Impredicative} \tech{dependent functions} strictly increases the
+expressivity of the type system.
+For example, with \tech{impredicativity} we can encode the polymorphic identity
+function as \im{\sf : \spity{\salpha}{\spropty}{\sfunty{\salpha}{\salpha}}} and
+apply it to itself
+\im{(\sappe{\sf}{(\spity{\salpha}{\spropty}{\sfunty{\salpha}{\salpha}})~\sf}) :
+    \spity{\salpha}{\spropty}{\sfunty{\salpha}{\salpha}}}.
+Without \tech{impredicativity}, we could not write this example.
+
+However, \tech{impredicativity} can easily lead to \tech{inconsistency}.
+Martin-L\"of's original presentation of type theory allowed arbitrary
+impredicative quantification~\cite{martin-loef1971} by declaring \im{\spropty :
+  \spropty}, but is \tech{inconsistent}~\cite{girard1972} (which I understand
+via \citet{coquand1986}, as I'm not sufficiently fluent in French to read the
+original).
+We can also get \tech{inconsistency} by allowing \tech{impredicativity} at more
+than one \tech{universe} in the hierarchy~\cite{girard1972} (again, via
+\citet{coquand1986}); note that the above \tech{impredicative} rule allows
+\tech{impredicative} quantification only when the \tech{dependent function} is
+in the \tech{universe} \im{\spropty}.
+\tech{Impredicativity} is also \tech{inconsistent} when combined with some
+axioms, such as set-theoretic excluded middle and \tech{computational
+  relevance}.
+
+The above tension between additional expressivity and \tech{inconsistency} makes
+\tech{impredicativity} a contentious feature.
+Some \tech{dependently typed} language allow it, some reject it entirely, and
+some meet somewhere in between.
+Current versions of Agda reject \tech{impredicativity}, making it impossible to
+build certain models such as an embedding of \tech{impredicative} System F in
+Agda's base universe \im{\ssetty}.
+By default, Coq allows \tech{impredicativity} in \im{\spropty} but not
+\im{\ssetty}, to support set-theoretic reasoning about programs in \im{\ssetty}
+which must be computationally relevant.
+Dependent Haskell~\cite{weirich2017}, a \tech{dependently typed} variant of
+Haskell, allows arbitrary \tech{impredicativity} and gives up \tech{logical
+  consistency} in favor of a more expressive but still \tech{type safe}
+language.\footnote{While Dependent Haskell is a realistic contemporary example,
+  the idea of admitting inconsistency in favor of other pragmatic considerations
+  was seriously considered much earlier by \citet{cardelli1986}.}
+
+\begin{digression}
+\tech{Dependent function types} are also called \deftech*{pi type}{\(\Pi\) types},
+\deftech*{dependent product,dependent products}{dependent products},
+\emph{indexed Cartesian products}, or \emph{Cartesian products of a family of
+  types}.
+The latter names suggesting products seem to be commonly used in mathematical
+settings, and are related to how \tech{dependent functions} are given
+mathematical semantics.
+As product is suggestive of pairs, I exclusively use \tech{dependent functions}
+to suggest their interpretation as functions.
+
+To give an intuition about their nature as pairs, we can view \tech{dependent
+  functions} \im{\gpity{\gx}{\gA}{\gB}} as an infinite \emph{lazy} pair
+\im{\subst{\gB}{\gxin{0}}{\gx} \land \subst{\gB}{\gxone}{\gx} \land ...
+  \subst{\gB}{\gxin{i}}{\gx} \land \dots}, for all \im{\gxi : \gA}.
+The finite representation is a function.
+To see this concretely, we can encode a finite lazy pair using \tech{dependent
+  functions} as follows.
+\begin{displaymath}
+  \begin{array}{lll}
+    \gpairty{\gA}{\gB} &=& \gpity{\gx}{\gboolty}{\gife{\gx}{\gA}{\gB}} \\
+    \gfste{\ge} &=& \gappe{\ge}{\gtruee} \\
+    \gsnde{\ge} &=& \gappe{\ge}{\gfalsee}  \\
+    \gpaire{\geone}{\getwo} &=& \gfune{\gx}{\gboolty}{\gife{\gx}{\geone}{\getwo}} \\
+  \end{array}
+\end{displaymath}
+This requires booleans and dependent elimination of booleans, discussed later in
+\fullref[]{sec:dep-cond}.
+The type of pairs \im{\gpairty{\gA}{\gB}} is defined as a \tech{dependent
+  function} that, when given a boolean, returns is something of type \im{\gA} or
+\im{\gB} depending on the value of the boolean argument.
+We provide \im{\gtruee} to get a \im{\gA} and \im{\gfalsee} to get \im{\gB}.
+This yields a 2-element pair, since there are two booleans.
+We can imagine that if the \tech{dependent function} was quantifying over a
+larger type, with infinitely many elements, how this could represent an infinite
+pair.
+\end{digression}
+
+\subsection{Dependent Pairs}
+\deftech*{dependent pair,Dependent pair,dependent pairs,Dependent
+    pairs}{Dependent pairs} allows programmers to write a pair in which the
+\tech{type} of the second component refers to the first component by name.
+This allows encoding an \tech{expression} \im{\se} paired with a \tech{proof}
+\im{\se} that satisfies some \tech{specification}, and representing theorems
+with existential quantification.
+
+The typing rules for \tech{dependent pairs} are given below.
+\begin{mathpar}
+  \DependentPairRules[\discard]
+\end{mathpar}
+\tech{Dependent pair} \tech{types} have the type \im{\stypety{i}} of each
+component.
+Unlike \tech{dependent functions}, it is always \tech{inconsistent} to allow
+\tech{impredicativity} for \tech{dependent pairs}~\cite{girard1972,coquand1986}.
+The introduction rule is a pair
+\im{\sdpaire{\seone}{\setwo}{\ssigmaty{\sx}{\sA}{\sB}}} of components
+\im{\seone}, of type \im{\sA}, and \im{\setwo} of type \im{\subst{\sB}{\seone}{\sx}}.
+Note that since we cannot, in general, decide how to abstract the type of
+\im{\setwo} from the particular \im{\seone}, pairs must be annotated.
+For brevity, we omit the type annotation on dependent pairs, as in
+\im{\spaire{\seone}{\setwo}}.
+The elimination form for \tech{dependent pairs} are first \im{\sfste{\se}}
+and second \im{\ssnde{\se}} projections of \tech{dependent pairs}.
+Like in the typing rule for application, in the typing rule for second projection
+\im{\ssnde{\se}}, we see \tech{dependency}---the first component of the pair
+\im{\seone} can be referred to by the name \im{\sx} in the type \im{\sB} of the
+second component.
+
+The \tech{reduction} rules for \tech{dependent pairs} are the usual projection
+rules for pairs, presented below.
+
+\begin{reductionrules}
+  \pairReductionRules
+\end{reductionrules}
+
+In this dissertation, I do not require additional \tech{equivalence} rules, in
+particular, an \(\eta\)-equivalence rule.
+\(\eta\)-equivalence is defined for \tech{dependent pairs} in Agda (more
+generally, for record types, which are iterated \tech{dependent pairs}), but not
+in Coq.
+As I did not find a need for \(\eta\)-equivalence of \tech{dependent pairs}, I
+choose to follow Coq and omit it.
+
+One may expect that we could encode \tech{dependent pairs} using \tech{dependent
+  functions}, similar to how we Church-encode pairs using functions, and thus
+expect \tech{dependent pairs} are not an essential feature.
+Such an encoding is not possible in general; for example, it is not possible in
+the impredicative Calculus of Constructions~\cite{streicher1989}, and thus not
+possible in Coq.
+Therefore, we need to consider \tech{dependent pairs} as a separate and distinct
+feature of \tech{dependency}.
+
+\begin{digression}
+\tech{Dependent pairs} are also called \deftech*{dependent sum}{dependent sums},
+\deftech*{strong sigma}{strong \(\Sigma\) types}, \emph{indexed disjoint union},
+\emph{disjoint unions of families of types}, and (extremely confusingly, since
+it is also used to refer to \tech{dependent functions}) \emph{dependent
+  products}.
+As with \tech{dependent functions}, I choose to focus on their interpretation as
+pairs and use \tech{dependent pairs} exclusively.
+
+We can view a \tech{dependent pair} \im{\gsigmaty{\gx}{\gA}{\gB}} as an infinite
+sum \im{\subst{\gB}{\gxin{0}}{\gx} \lor \subst{\gB}{\gxone}{\gx} \lor \dots
+  \subst{\gB}{\gxin{i}}{\gx} \dots} for all \im{\gxi : \gB}.
+To get an intuition for this, we can recover finite sums using \tech{dependent
+  pairs} and booleans in a dual construction to \tech{dependent functions}.
+\marginpar{Encoding finite sums using \tech{dependent pairs} also requires
+  \(\eta\)-equivalence for booleans, but I ignore this for simplicity.}
+\begin{displaymath}
+  \begin{array}{lll}
+    \gsumty{\gA}{\gB} &=& \gsigmaty{\gx}{\gboolty}{\gife{\gx}{\gA}{\gB}} \\
+    \gsume{1}{\ge} &=& \gpaire{\gtruee}{\ge} \\
+    \gsume{2}{\ge} &=& \gpaire{\gfalsee}{\ge} \\
+    \gcasee{\ge}{\gxone}{\geone}{\gxtwo}{\getwo} &=& \gife{\gfste{\ge}}{\subst{\geone}{\gsnde{\ge}}{\gxone}}{\subst{\getwo}{\gsnde{\ge}}{\gxtwo}}
+  \end{array}
+\end{displaymath}
+\end{digression}
+
+Strongly related to \tech{dependent pairs} are \deftech*{existential
+  types,existential package,existential packages,Existential types,existential
+  type,Existential type}{existential types},
+a restriction of \tech{dependent pairs} that allows elimination only by pattern
+matching and where the first component can never be \tech{depended upon} in
+elimination.
+In fact, \tech{dependent pairs} are sometimes called \deftech{strong dependent
+  pairs} while \tech{existential types} are called \deftech{weak dependent
+  pairs}; I exclusively used \tech{existential type} or \tech{existential
+  package}.
+The typing rules for \tech{existential types} are below.
+\begin{mathpar}
+  \inferrule
+  {\styjudg{\slenv}{\sA}{\stypety{i}} \\
+   \styjudg{\slenv,\sx:\sA}{\sB}{\stypety{i}}}
+  {\styjudg{\slenv}{\sexistty{\sx}{\sA}{\sB}}{\stypety{i}}}
+
+  \inferrule
+  {\styjudg{\slenv}{\sA}{\stypety{i}} \\
+   \styjudg{\slenv,\sx:\sA}{\sB}{\spropty}}
+  {\styjudg{\slenv}{\sexistty{\sx}{\sA}{\sB}}{\spropty}}
+
+  \inferrule
+  {\styjudg{\slenv}{\se}{\sA} \\
+   \styjudg{\slenv}{\sepr}{\subst{\sB}{\se}{\sx}}}
+  {\styjudg{\slenv}{\spacke{\se}{\sepr}{\sexistty{\sx}{\sA}{\sB}}}{\sexistty{\sx}{\sA}{\sB}}}
+
+  \inferrule
+  {\styjudg{\slenv}{\se}{\sexistty{\sx}{\sA}{\sB}} \\
+   \styjudg{\slenv,\salpha:\sA,\sx:\sB}{\sepr}{\sC} \\
+   \styjudg{\slenv}{\sC}{\stypety{i}}}
+  {\styjudg{\slenv}{\sunpacke{\salpha}{\sx}{\se}{\sepr}}{\sC}}
+\end{mathpar}
+The introduction form is still a pair, although it is distinguished from
+\tech{dependent pairs} by the \sfonttext{pack} keyword.
+However, the elimination for requires pattern matching the
+\tech{type} \im{\sC} produced by pattern matching does not contain any reference
+to \im{\sx} or \im{\salpha}.
+This prevents us from defining the second projection operation
+\im{\ssnde{\se}} when the type of the second component of \im{\se} \tech{depends
+  on} the first component.
+This restriction in the elimination rule makes \tech{impredicative}
+\tech{existential types} \tech{consistent}.
+
+\tech{Existential types} are not an essential feature for \tech{dependency}
+since they can be defined using \tech{dependent functions}~\cite{coquand1986}.
+However, the ability to support \tech{impredicativity} makes them useful for
+some encodings and compiler transformations, as I discuss further in
+\fullref[]{chp:abs-cc} and \fullref[]{chp:param-cc}.
+
+\subsection{Dependent Conditional}
+\label{sec:dep-cond}
+\deftech*{dependent conditional,dependent conditionals,Dependent
+  conditional,Dependent conditionals}{Dependent conditional} refers to dependent
+elimination of a sum type, such as booleans or (non-dependent) sums
+\im{\ssumty{\sA}{\sB}}.
+The key features are: (1) that the elimination form is branching and (2) that the
+type of each branch can be different, depending on the value \im{e} being
+branched on.
+This allows programming with branches that depend on the value of the
+conditional and encoding theorems with (finite) disjunction.
+
+I choose to use booleans with a dependent \gfonttext{if}.
+The key typing rules are below.
+\begin{mathpar}
+  \DependentConditionalRules[\discard]
+\end{mathpar}
+The introduction forms are the usual \im{\struee} and \im{\sfalsee}, but notice
+that the elimination form is \tech{dependent}.
+When branching on an \tech{expression} \im{\se}, the type of each branch
+\im{\sB} can be different depending on the value of \im{\se}.
+
+\begin{digression}
+  Some \tech{dependent conditional} construct is necessary, although which
+  particular construct doesn't matter as each can be encoded with the other.
+  We use the same construction to encode finite sums using booleans and
+  \tech{dependent pairs} as presented in the previous section, and encode
+  booleans using finite sums as follows.
+    \begin{displaymath}
+    \begin{array}{lll}
+      \gboolty &=& \gsumty{\gunitty}{\gunitty} \\
+      \gtruee &=& \gsume{1}{\gunite} \\
+      \gfalsee &=& \gsume{2}{\gunite} \\
+      \gife{\ge}{\geone}{\getwo} &=& \gcasee{\ge}{\_}{\geone}{\_}{\getwo}
+    \end{array}
+  \end{displaymath}
+\end{digression}
+
+\begin{digression}
+  The \tech{dependent conditional} is the only feature of \tech{dependency}
+  commonly presented as \deftech{positive type}---essentially, a \tech{type}
+  whose constructors are considered primary and whose elimination form is simply
+  pattern matching on the constructors.
+  This is interesting, as it also introduces the most difficulty for \tech{type
+    preservation}, as I discuss in \fullref[]{chp:anf} and
+  \fullref[]{chp:cps}.
+
+  It is unclear if this is because of the presentation as a \tech{positive type}.
+  The presentation as a \tech{negative type} requires a sequent calculus
+  presentation where sequents support multiple conclusions.
+  This is not done in any \tech{dependently typed} language, however,
+  like \tech{type preservation} for \tech{dependent types}, combining sequent
+  calculus and \tech{dependent types} has been a long open problem and is still
+  ongoing work~\cite{miquey2018}.
+\end{digression}
+
+\subsection{What about Inductive Types}
+Those familiar with \tech{dependent types} may be surprised at the omission of a
+common and seemingly critical feature from the feature set just presented:
+inductive types.
+Most \tech{dependently typed} languages---including Coq, Agda, Idris, and
+F*---feature primitive inductively defined datatypes, which allow the programmer
+to add new datatypes over which terminating functions can be defined.
+This both allows the programmer to add new datatypes and simplifies
+\tech{logical consistency} by providing a schematic way of generating
+well-founded inductive structures.
+However, we can instead encode inductive datatypes using the following features
+of \tech{dependency} and recursive types.
+For example, \citet{altenkirch2010} give a \tech{dependently typed} calculus
+in which inductive datatypes are encoded using \tech{dependent functions},
+\tech{dependent pairs}, \tech{dependent conditionals} (all introduced below),
+and recursive types.
+(This idea should be familiar from the simply typed and even untyped settings.)
+Since recursive types introduce no new expressiveness in terms of
+\tech{dependency}, I consider them inessential.
+}
+
+\renewcommand{\scolor}[1]{\mathcolor{RoyalBlue}{#1}}
+\renewcommand{\sfont}[1]{\scolor{\mathsf{#1}}}
+\renewcommand{\sfontsym}[1]{\sfont{#1}}
+\newmetavars{\sfont}{\scolor}{s}{x,e,U,A,B,C}
+
+\section{A Representative Source Calculus}
+\label{sec:source}
+\FigECCSyntax
+
+In this section I present \slang, a source calculus with all the core features
+of \tech{dependency} described in the previous section.
+I include a complete reference in \fullref[]{sec:source:appendix}, with any
+elided portions of figures.
+I start by presenting the judgments related to type checking, then move on to
+judgments related to evaluation and compilation.
+
+\begin{typographical}
+In this section, I typeset \slang as a source language, that is, in a
+\emph{\sfonttext{blue, non-bold, sans-serif font}}, because it will serve as a
+source calculus in later chapters.
+\end{typographical}
+
+\slang is meant to capture the features of \tech{dependency} found in
+contemporary \tech{dependently typed} languages, such as Coq, without any
+features orthogonal to \tech{dependency} and \tech{type preserving} compilation.
+This allows us to study \tech{type preservation} and \tech{dependency} without
+worrying about extraneous details.
+
+\slang is also designed to simplify \tech{type preservation} as much as possible
+while still being a convincing representation of a realistic \tech{dependently
+  typed} language.
+I add one feature that is not essential to \tech{dependency} but simplifies some
+proofs---\tech{definitions}, which I introduce shortly.
+I also carefully design the judgmental structure of \slang.
+In particular, I choose to implement non-type-directed \tech{equivalence}
+through (non-type-directed) \tech{reduction}.
+This complicates \(\eta\)-equivalence slightly, but greatly simplifies
+\tech{type preservation} as I discuss in \fullref[]{chp:type-pres}.
+The choice is also justified---the Calculus of Inductive Constructions, on which
+Coq is based, uses the exact same design.
+
+\subsection{Type System}
+The language \slang is Luo's Extended Calculus of Constructions
+(\deftech{ECC})~\cite{luo1989} extended with \tech{definitions}~\cite{severi1994:dpts} and
+\tech{dependent conditionals} (booleans and dependent \gfonttext{if}).
+\tech{ECC} itself extends the Calculus of Constructions
+(\deftech{CoC})~\cite{coquand1988} with \tech{dependent pairs} and \tech{higher
+  universes}.
+
+I present the syntax of \slang in \fullref[]{fig:ecc+:syntax}.
+As described in \fullref[]{chp:intro}, there is no explicit \tech{phase
+  distinction}, \ie, there is no syntactic distinction between \tech{terms} and
+\tech{types}; there are only \tech{expressions}.
+For clarity, I will usually use the meta-variable \im{\se} to evoke a
+\tech{term}, and the meta-variables \im{\sA} and \im{\sB} to evoke a
+\tech{type}.
+For variables, I usually use Latin letters such as \im{\sx} and \im{\sy} to
+evoke a \tech{term} variables, and Greek letters such as \im{\salpha} and
+\im{\sbeta} to evoke a \tech{type} variables.
+Of course, since there is no formal distinction, the above conventions will
+break down.
+The \tech{expressions} include all the features presented in the previous
+section, plus \sfonttext{let} \tech{expressions} \im{\slete{\sx}{\se}{\sepr}},
+which are used to introduce \tech{definitions}.
+Note that \sfonttext{let}-bound definitions in \slang do not include type
+annotations; this is not standard, but type checking is still decidable, and it
+simplifies compilation~\cite{severi1994:dpts}.
+I discuss how this affects the translation in \fullref[]{chp:anf}.
+
+All \tech{expressions} are typed and reduced with respect to a local environment
+\im{\slenv}.
+Environments contain assumptions or axioms \im{\sx : \sA}, which declares that
+the name \im{\sx} has type \im{\sA} or, equivalently, that \im{\sx} is a proof
+of \im{\sA}, and \tech{definitions} \im{\sx = \se}, which
+declares that the name \im{\sx} is defined to be the \tech{expression} \im{\se}.
+For simplicity, I typically ignore the details of capture-avoiding substitution.
+This is standard practice, but is worth pointing out explicitly anyway.
+
+\FigECCRed
+In \fullref[]{fig:ecc+:red}, I define the \deftech{reduction} relation
+\im{\sstepjudg{\slenv}{\se}{\sepr}}, \ie, a single step of evaluation.
+This \tech{reduction} relation is used both for running programs and deciding
+\tech{equivalence} between \tech{types} during type checking, therefore
+\tech{reduction} is defined over open terms.
+While the \tech{reduction} relation is untyped, \ie, not type directed, it is
+only guaranteed to be terminating on well-typed \tech{terms}.
+The \tech{reduction} relation include all the \tech{reduction} rules
+presented previously in \fullref[]{sec:design}, plus the two \tech{reduction}
+rules for \tech{definitions}: (1) \(\delta\)-reduction of a variable to its
+\tech{definition} from the current local environment and (2) \(\zeta\)-reduction
+of a \sfonttext{let}-expression by substitution.
+As we will see in the typing rules for \sfonttext{let}, \tech{definitions} are
+introduced during type checking, not \tech{reduction}, thus \(\delta\)-reduction
+and \(\zeta\)-reduction are not redundant.
+
+\FigECCConv
+In \fullref[]{fig:ecc+:conv}, I give the main rules for the \tech{conversion}
+relation \im{\sstepjudg[\stepstar]{\slenv}{\se}{\sepr}}.
+The remaining congruence rules are entirely uninteresting; nevertheless, I
+define them in \fullref[]{fig:ecc+:conv-cong}.
+\deftech*{convert,converted,convertible,conversion,Conversion,conversion relation}{Conversion} is the
+reflexive, transitive, congruence closure of the \tech{reduction} relation---it
+applies any \tech{reduction} rule, any number of times, under any context.
+Intuitively, \tech{conversion} is used to normalize \tech{terms} in
+\tech{types} and to normalize \tech{type}-level computation, and thus decide
+\tech{type} \tech{equivalence}.
+It tells us when one \tech{type} \emph{converts} to another.
+It also serves to define the \tech*[evaluation function]{evaluation
+  (meta-)function} for \slang.
+
+The only surprising \tech{conversion} rule is \refrule{Red-Cong-Let}, which
+allows a \tech{definition} to be introduced when applying \tech{conversion} to a
+\sfonttext{let} expression.
+This means there are two, confluent, ways to evaluate a \sfonttext{let}
+expression:
+\im{\sstepjudg[\step_{\zeta}]{\slenv}{\slete{\sx}{\se}{\sepr}}{\subst{\sepr}{\se}{\sx}}}, or
+\begin{mathpar}
+  \inferrule
+  {\inferrule
+   {\inferrule
+    {\inferrule{\sstepjudg[\step_{\delta}]{\slenv,\sx=\se}{\sx}{\se}}{\vdots} \\
+     \inferrule{\dots}{\vdots}  \\
+     \inferrule{\sstepjudg[\step_{\delta}]{\slenv,\sx=\se}{\sx}{\se}}{\vdots}}
+    {\sstepjudg[\stepstar]{\slenv,\sx=\se}{\sepr}{\subst{\sepr}{\se}{\sx}}}}
+   {\sstepjudg[\stepstar]{\slenv}{\slete{\sx}{\se}{\sepr}}{\slete{\sx}{\se}{\subst{\sepr}{\se}{\sx}}}} \\
+   \inferrule
+   {~}
+   {\sstepjudg[\step_{\zeta}]{\slenv}{\slete{\sx}{\se}{\sepr}}{\subst{\sepr}{\se}{\sx}}}}
+  {\sstepjudg[\stepstar]{\slenv}{\slete{\sx}{\se}{\sepr}}{\subst{\sepr}{\se}{\sx}}}
+\end{mathpar}
+The advantage is that
+\deftech*{definition,dependent
+  let,definitions,Definition,Definitions}{definitions}, essentially a delayed
+substitution that is introduced during type checking, allow \(\delta\)-reduction
+during type-checking.
+In a non-dependent setting, we could just write an application anywhere we might
+write \sfonttext{let}, since the two programs reduce to exactly the same thing.
+However, with \tech{definitions}, \(\delta\)-reduction essentially allows what
+would be a \(\beta\)-reduction at run-time to happen during type-checking,
+providing an additional \tech{type} \tech{equivalence}.
+For example, the \(\beta\)-reduction \im{\sappe{(\sfune{\sx}{\sA}{\sepr})}{\se}
+  \step_\beta \subst{\sepr}{\se}{\sx}} provide (syntactically, through
+substitution) the knowledge that \im{\sx \equiv \se}, but only after the
+function is type checked and allowed to evaluate.
+Instead in the \sfonttext{let} expression above, definitions record that \im{\sx
+  = \se} while type checking the body \im{\sepr}, and provide the equivalence
+\im{\sx \equiv \se} via \(\delta\)-reduction.
+This is useful for \tech{type preservation}, as I show in \fullref[]{chp:anf}
+and \fullref[]{chp:abs-cc}.
+
+\begin{digression}
+  \tech{Definitions} aren't necessary to get this additional \tech{equivalence}.
+  The same effect can be achieved by simulating \tech{definitions} using the
+  \tech{identity type} to provide an explicit proof of equality \im{\sx = \se}
+  via an additional argument to a function.
+  Then, by eliminating this in the body of the function, the body is
+  type-checked under the additional \tech{equivalence}.
+  That is, we can define \im{\slete{\sx}{\se}{\sepr}} using the \tech{identity
+    type} as follows.
+  \begin{displaymath}
+    \begin{array}{rcl}
+      \slete{\sx}{\se}{\sepr} & \defeq & \sappe{(\snfune{(\sx,\sp:\sx = \se)}{\scoee{\sp}{\sepr}})}{\se~(\sfont{refl}~{\se})}
+    \end{array}
+  \end{displaymath}
+  Here, \im{\sx = \se} is the \deftech{identity type}, a \tech{type}
+  representing the fact that two \tech{expressions} are \tech{equivalent}.
+  The elimination form \im{\scoee{\sp}{\sepr}} essentially substitutes \im{\sx}
+  by \im{\se} in the type of \im{\sepr} when \im{\sp : \sx = \se}.
+  The introduction form \im{\sfont{refl}~{\se}} can only introduce a proof that
+  \im{\se = \se}, \ie, \im{\sfont{refl}~{\se} : \se = \se}
+
+  However, defining \sfonttext{let} this way introduces significant indirection
+  in what we're trying to express, and creates unnecessary function applications
+  which could complicate compilation, so I just add \tech{definitions} to \slang.
+\end{digression}
+
+\FigECCEqv
+In \fullref[]{fig:ecc+:equiv}, I define \deftech*{definitional
+  equivalence,equivalent,equivalence,Equivalence,definitionally
+  equivalent}{definitional equivalence} (also known as \emph{judgmental
+  equivalence}) \im{\sequivjudg{\slenv}{\se}{\sepr}},
+which defines when two \tech{expressions} are \tech{equivalent}.
+\tech{Equivalence} is defined as \tech{conversion} up to
+\(\eta\)-equivalence on functions, which is standard~\cite{luo1989}.
+
+Note that \(\eta\)-equivalence rules do not look like the standard
+\(\eta\)-equivalence for functions presented in \fullref[]{sec:design}, and do
+not actually check both sides are functions.
+For example, in \refrule*{eqv-eta1}{\im{\equiv}-\im{\eta_1}}, the right side
+\im{\setwo} is just \tech{converted} to an arbitrary \im{\seonepr} and then
+applies \im{\seonepr} as a function.
+This trick allows us to define \(\eta\)-equivalence without making
+\tech{reduction}, \tech{conversion}, or \tech{equivalence} type directed, but
+still ensure that two \tech{expressions} are \(\eta\)-equivalent only when both
+behave as \tech{equivalent} functions.
+Note, however, that it ignores domain annotations, so the following apparently
+strange \tech{equivalence} holds for arbitrary \im{\sA} and \im{\sB}.
+\begin{mathpar}
+  \sfune{\sx}{\sA}{\se} \equiv \sfune{\sx}{\sB}{\se}
+\end{mathpar}
+This is not a problem, since the type system will only use the
+\tech{equivalence} relation \emph{after} checking that the terms are well-typed.
+In fact, this design choice is an advantage, as discussed in
+\fullref[]{chp:type-pres}.
+Because there is no explicit symmetry rule, we require two symmetric
+\(\eta\)-equivalence rules.
+
+\FigECCSub
+I include \tech{cumulativity} through \deftech*{subtyping,Subtyping}{subtyping}
+\im{\ssubtyjudg{\slenv}{\sA}{\sB}}, \fullref[]{fig:ecc+:sub}.
+\tech{Subtyping} extends \tech{equivalence} with the \tech{cumulativity} rules,
+allowing \tech{types} in lower \tech{universes} to inhabit higher
+\tech{universes}, and the standard congruence rules.
+Note that functions are not contra-variant in their argument, but equi-variant.
+This is surprising and not strictly necessary; it is used to support a simpler
+set-theoretic
+semantics.\footnote{\url{https://web.archive.org/web/20180913043136/https://pigworker.wordpress.com/2015/01/09/universe-hierarchies/}}
+However, it is standard~\cite{luo1989}, so I stick with it.
+
+\FigECCTypingShort
+An excerpt of type system for \slang in is given in
+\fullref[]{fig:ecc+:type-short}, and is mutually defined with the
+well-formedness relation on typing environments.
+The typing rules are essentially the same as presented earlier in
+\fullref[]{sec:design}, with the addition of the typing rule for
+\sfonttext{let}, and the rule for subtyping, \refrule{Conv}.
+The complete figure is given in \fullref[]{fig:ecc+:type} in
+\fullref[]{sec:source:appendix}.
+\refrule{Let} gives a \tech{dependent type} for \sfonttext{let}
+\tech{expressions}; note that in \im{\slete{\sx}{\se}{\sepr}}, the
+type \im{\subst{\sB}{\se}{\sx}} contains the sub-expression \im{\se}.
+But it also binds \im{\sx = \se} as a \tech{definition} while type checking the
+body \im{\sepr}.
+This essentially allows the \tech{dependency} \im{\subst{\sB}{\se}{\sx}} to be
+resolved ``early'', as discussed earlier.
+\refrule{Conv} allows any \tech{expression} \im{\se} whose \tech{type} is
+\im{\sA} to also be valid at the super type \im{\sB}, or, since subtyping
+extends \tech{equivalence}, when \im{\sA \equiv \sB}.
+Because \tech{equivalence} and \tech{subtyping} are defined on untyped syntax,
+we must also ensure that \im{\sB} is a valid \tech{type}.
+The well-formedness rules for environments are entirely standard.
+
+\subsection{Evaluation and Compilation}
+\begin{typographical}
+  In this section, I use a \emph{\tfonttext{bold, red, serif font}} for target language
+  observations.
+  For now, the target language is undefined, but the observations will be the
+  same in every target language.
+\end{typographical}
+An \tech{expression} being type checked is different from \emph{\tech{program}},
+\ie, an \tech{expression} that can be evaluated at run time.
+\tech{Expressions} have arbitrary free variables and arbitrary types.
+\deftech*{program,programs,Program,Programs}{Programs} are closed
+\tech{expressions} that \tech{evaluate} and produce easily distinguished
+outputs.
+\tech{Programs} must be closed or \tech{evaluation} cannot proceed past some
+variables, and must have outputs that a programmer can distinguish.
+For example, a programmer does not want to try to distinguish between two
+functions, but can easily distinguish between two booleans or two printed
+strings.
+
+\FigObs
+To formalize \tech{programs} we first need to fix a notion of
+\deftech*{observation,observations,Observation,Observations}{observation}, the
+distinguishable results of \tech{evaluating} a \tech{program}.
+Since \slang is effect-free and strongly normalizing, I define
+\tech{observations} as boolean values in \fullref[]{fig:ecc+:obs}.
+\tech{Observations} should be simple for the programmer to distinguish even
+across languages.
+I formalize this by defining a cross-language observation relation \im{\approx}.
+This relates source and target observations in standard way---booleans are
+related across languages when they are the same.
+The languages will change for each translation, but all language observations
+will also be boolean values and use the same observation relation.
+
+\FigECCProg[tbh]
+I formalize \tech{programs} and \tech{program components} via the judgments
+\im{\wf{}{\se}} and \im{\wf{\slenv}{\se}} in \fullref[]{fig:ecc+:wfprog}.
+A well-formed \deftech*{Components,component,components,program component}{program
+  component} (or just \emph{component}) is a well-typed \tech{expression}
+\im{\se} that produces an \tech{observation} when linked with a closing
+substitution (\ie, has type \im{\sboolty}).
+A well-formed \tech{program} is simply a closed \tech{component}.
+
+\FigECCEval[tbh]
+In \fullref[]{fig:ecc+:eval}, I define the
+\deftech*{evaluate,evaluating,evaluation,evaluation function}{evaluation (meta-)function}
+\im{\seval{\se}}, which runs \tech{programs} to produce \tech{observations}.
+This defines the run-time semantics of \slang programs.
+It is this semantics that the \tech{compiler} will preserve to prove
+\tech{compiler correctness}, as discussed in \fullref[]{chp:type-pres}.
+
+\FigLinking[tbh]
+For reasoning about \tech{separate compilation}, I formalize linking for \slang
+in \fullref[]{fig:ecc+:link}.
+Free variables \im{\slenv} represent the imports to a component \im{\se}, and
+their types represent the interface for those imports.
+A closing substitution \im{\ssubst} represents the components that \im{\se} is
+linked with via \im{\ssubst(\se)}.
+This is a meta-application of the closing substitution to \im{\se} and replaces
+each \im{\sx \in \slenv} by an expression \im{\ssubst{\sx}} in the closing
+substitution.
+For linking to be well-defined---\ie, for there to be no \tech{linking
+  errors}---the closing \im{\ssubst} substitution must be well-typed,
+\im{\wf{\slenv}{\ssubst}}, with respect to the same environment as \im{\se},
+\im{\styjudg{\slenv}{\se}{\sA}}.
+Typing for a substitution \im{\ssubst} simply checks that each component
+\im{[\sx \mapsto \sepr] \in \ssubst} in the substitution has the corresponding
+type in \im{\slenv}, \ie, \im{\sepr : \sA} when \im{\sx : \sA \in \slenv}.
+For \tech{definitions} in \im{\slenv}, the substitution must map to a closed version of
+the same \tech{definition}.

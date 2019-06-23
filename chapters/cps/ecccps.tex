@@ -1,0 +1,845 @@
+\renewcommand{\techprefix}{cps}
+
+\newcommand{\FigCPSSyntax}[1][t]{
+  \begin{figure}[#1]
+    \begin{bnfgrammar}
+      \bnflabel{Universes} &
+        \cpsU & \bnfdef & \cpsstarty \bnfalt \cpsboxty
+        \bnfnewline
+
+      \bnflabel{Expressions} &
+      \cpse,\cpsA,\cpsB & \bnfdef & \cpsx \bnfalt \cpsstarty
+      \bnfalt \cpspity{\cpsx}{\cpsA}{\cpse}
+      \bnfalt \cpsfune{\cpsx}{\cpsA}{\cpse}
+      \bnfalt \cpsappe{\cpse}{\cpse}
+      \bnfalt \cpscappe{\cpse}{\cpsA}{\cpse}
+      \\ && \bnfalt & \cpssigmaty{\cpsx}{\cpsA}{\cpsB}
+      \bnfalt \cpsdpaire{\cpseone}{\cpsetwo}{\cpssigmaty{\cpsx}{\cpsA}{\cpsB}}
+      \bnfalt \cpsfste{\cpse} \bnfalt \cpssnde{\cpse}
+      \\ && \bnfalt & \cpsboolty
+      \bnfalt \cpstruee
+      \bnfalt \cpsfalsee
+      \bnfalt \cpsife{\cpse}{\cpseone}{\cpsetwo}
+        \\ && \bnfalt & \cpsalete{\cpsx}{\cpse}{\cpsA}{\cpse}
+        \bnfnewline
+
+       \bnflabel{Environments} &
+        \cpslenv & \bnfdef & \cdot \bnfalt \cpslenv,\cpsx:\cpsA \bnfalt \cpslenv,\cpsx = \cpse:\cpsA
+    \end{bnfgrammar}
+    \caption{\cpstlang Syntax}
+    \label{fig:cps:cps:syntax}
+  \end{figure}
+}
+
+\newcommand{\FigCPSRed}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\cpsstepjudg[\step]{\cpslenv}{\cpse}{\cpsepr}}
+    \begin{reductionrules}
+      \cpslenv \vdash \cpsappe{(\cpsfune{\cpsx}{\cpsA}{\cpseone})}{\cpsetwo} & \step_{\beta} & \subst{\cpseone}{\cpsetwo}{\cpsx}
+      \stepnewline
+
+      \cpslenv \vdash \cpscappe{\cpsfune{\cpsalpha}{\cpsstarty}{\cpseone}}{\cpsA}{\cpsetwo} & \step_{@} & \cpsappe{(\subst{\cpseone}{\cpsA}{\cpsalpha})}{\cpsetwo}
+      \stepnewline
+
+      \cpslenv \vdash \cpsfste{\cpspaire{\cpseone}{\cpsetwo}} & \step_{\pi_1} & \cpseone
+      \stepnewline
+
+      \cpslenv \vdash \cpssnde{\cpspaire{\cpseone}{\cpsetwo}} & \step_{\pi_2} & \cpsetwo
+      \stepnewline
+
+      \cpslenv \vdash \cpsife{\cpstruee}{\cpseone}{\cpsetwo} & \step_{\iota_{1}} & \cpseone
+      \stepnewline
+
+      \cpslenv \vdash \cpsife{\cpsfalsee}{\cpseone}{\cpsetwo} & \step_{\iota_{1}} & \cpsetwo
+      \stepnewline
+
+      \cpslenv \vdash \cpsx & \step_{\delta} & \cpse & \where{\cpsx = \cpse \in \cpslenv}
+      \stepnewline
+
+      \cpslenv \vdash \cpsalete{\cpsx}{\cpsetwo}{\cpsA}{\cpseone} & \step_{\zeta} & \subst{\cpseone}{\cpsetwo}{\cpsx}
+      \stepnewline
+    \end{reductionrules}
+    \caption{\cpstlang Reduction}
+    \label{fig:cps:cps:red}
+  \end{figure}
+}
+
+\newcommand{\FigCPSEqv}[1][t]{
+  \begin{figure}
+    \judgshape{\cpsequivjudg{\cpslenv}{\cpse}{\cpsepr}}
+    \begin{mathpar}
+      \inferrule*[right=\defrule*{eqv}{\inlinemath{\equiv}}]
+      {\cpsstepjudg[\stepstar]{\cpslenv}{\cpse}{\cpseone} \\
+       \cpsstepjudg[\stepstar]{\cpslenv}{\cpsepr}{\cpseone}}
+      {\cpsequivjudg{\cpslenv}{\cpse}{\cpsepr}}
+
+      \inferrule*[right=\defrule*{eqv-eta1}{\inlinemath{\equiv}-\im{\eta_1}}]
+      {\cpsstepjudg[\stepstar]{\cpslenv}{\cpse}{\cpsfune{\cpsx}{\cpsA}{\cpseone}} \\
+       \cpsstepjudg[\stepstar]{\cpslenv}{\cpsepr}{\cpsetwo} \\
+       \cpsequivjudg{\cpslenv,\cpsx:\cpsA}{\cpseone}{\cpsappe{\cpsetwo}{\cpsx}}}
+      {\cpsequivjudg{\cpslenv}{\cpse}{\cpsepr}}
+
+      \inferrule*[right=\defrule*{eqv-eta2}{\inlinemath{\equiv}-\im{\eta_2}}]
+      {\cpsstepjudg[\stepstar]{\cpslenv}{\cpse}{\cpseone} \\
+       \cpsstepjudg[\stepstar]{\cpslenv}{\cpsepr}{\cpsfune{\cpsx}{\cpsA}{\cpsetwo}} \\
+       \cpsequivjudg{\cpslenv,\cpsx:\cpsA}{\cpsappe{\cpseone}{\cpsx}}{\cpsetwo}}
+      {\cpsequivjudg{\cpslenv}{\cpse}{\cpsepr}}
+
+      \inferrule*[right=\defrule*{eqv-cont}{\inlinemath{\equiv}-Cont}]
+      {~}
+      {\cpsequivjudg{\cpslenv}{{(\cpscappe{\cpseone}{\cpsA}{(\cpsfune{\cpsx}{\cpsB}{\cpsetwo})})}}{\cpsappe{(\cpsfune{\cpsx}{\cpsB}{\cpsetwo})}{(\cpsncappe{\cpseone}{\cpsB}{\cpsidk})}}}
+
+      \inferrule*[right=\defrule*{eqv-sym}{\im{\equiv}-Sym}]
+      {\cpsequivjudg{\cpslenv}{\cpsepr}{\cpse}}
+      {\cpsequivjudg{\cpslenv}{\cpse}{\cpsepr}}
+
+      \inferrule*[right=\defrule*{eqv-trans}{\im{\equiv}-Trans}]
+      {\cpsequivjudg{\cpslenv}{\cpse}{\cpseone}\\
+       \cpsequivjudg{\cpslenv}{\cpseone}{\cpsepr}}
+      {\cpsequivjudg{\cpslenv}{\cpse}{\cpsepr}}
+    \end{mathpar}
+    \caption{\cpstlang Equivalence}
+    \label{fig:cps:cps:eqv}
+  \end{figure}
+}
+
+\newcommand{\FigCPSConv}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\cpsequivjudg{\cpslenv}{\cpse}{\cpsepr}}
+    \begin{mathpar}
+      \inferrule*[right=\defrule{Red-Refl}]
+      {~}
+      {\cpsstepjudg[\stepstar]{\cpslenv}{\cpse}{\cpse}}
+
+      \inferrule*[right=\defrule{Red-Trans}]
+      {\cpsstepjudg{\cpslenv}{\cpse}{\cpseone} \\
+       \cpsstepjudg[\stepstar]{\cpslenv}{\cpseone}{\cpsepr}}
+      {\cpsstepjudg[\stepstar]{\cpslenv}{\cpse}{\cpsepr}}
+
+      \inferrule*[right=\defrule{Red-Cong-Pi}]
+      {\cpsstepjudg[\stepstar]{\cpslenv}{\cpsA}{\cpsApr} \\
+       \cpsstepjudg[\stepstar]{\cpslenv,\cpsx:\cpsApr}{\cpse}{\cpsepr}}
+      {\cpsstepjudg[\stepstar]{\cpslenv}{\cpspity{\cpsx}{\cpsA}{\cpse}}{\cpspity{\cpsx}{\cpsApr}{\cpsepr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Lam}]
+      {\cpsstepjudg[\stepstar]{\cpslenv}{\cpsA}{\cpsApr} \\
+       \cpsstepjudg[\stepstar]{\cpslenv,\cpsx:\cpsApr}{\cpse}{\cpsepr}}
+      {\cpsstepjudg[\stepstar]{\cpslenv}{\cpsfune{\cpsx}{\cpsA}{\cpse}}{\cpsfune{\cpsx}{\cpsApr}{\cpsepr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-App}]
+      {\cpsstepjudg[\stepstar]{\cpslenv}{\cpseone}{\cpseonepr} \\
+       \cpsstepjudg[\stepstar]{\cpslenv}{\cpsetwo}{\cpsetwopr}}
+      {\cpsstepjudg[\stepstar]{\cpslenv}{\cpsappe{\cpseone}{\cpsetwo}}{\cpsappe{\cpseonepr}{\cpsetwopr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Cont}]
+      {\cpsstepjudg[\stepstar]{\cpslenv}{\cpseone}{\cpseonepr} \\
+       \cpsstepjudg[\stepstar]{\cpslenv}{\cpsA}{\cpsApr} \\
+       \cpsstepjudg[\stepstar]{\cpslenv}{\cpsetwo}{\cpsetwopr}}
+      {\cpsstepjudg[\stepstar]{\cpslenv}{\cpscappe{\cpseone}{\cpsA}{\cpsetwo}}{\cpscappe{\cpseonepr}{\cpsApr}{\cpsetwopr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Sig}]
+      {\cpsstepjudg[\stepstar]{\cpslenv}{\cpsA}{\cpsApr} \\
+       \cpsstepjudg[\stepstar]{\cpslenv,\cpsx:\cpsApr}{\cpse}{\cpsepr}}
+      {\cpsstepjudg[\stepstar]{\cpslenv}{\cpssigmaty{\cpsx}{\cpsA}{\cpse}}{\cpssigmaty{\cpsx}{\cpsApr}{\cpsepr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Pair}]
+      {\cpsstepjudg[\stepstar]{\cpslenv}{\cpseone}{\cpseonepr} \\
+       \cpsstepjudg[\stepstar]{\cpslenv}{\cpsetwo}{\cpsetwopr} \\
+       \cpsstepjudg[\stepstar]{\cpslenv}{\cpsA}{\cpsApr}}
+      {\cpsstepjudg[\stepstar]{\cpslenv}{\cpsdpaire{\cpseone}{\cpsetwo}{\cpsA}}{\cpsdpaire{\cpseonepr}{\cpsetwopr}{\cpsApr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Fst}]
+      {\cpsstepjudg[\stepstar]{\cpslenv}{\cpse}{\cpsepr}}
+      {\cpsstepjudg[\stepstar]{\cpslenv}{\cpsfste{\cpse}}{\cpsfste{\cpsepr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Snd}]
+      {\cpsstepjudg[\stepstar]{\cpslenv}{\cpse}{\cpsepr}}
+      {\cpsstepjudg[\stepstar]{\cpslenv}{\cpssnde{\cpse}}{\cpssnde{\cpsepr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-If}]
+      {\cpsstepjudg[\stepstar]{\cpslenv}{\cpse}{\cpsepr} \\
+       \cpsstepjudg[\stepstar]{\cpslenv}{\cpseone}{\cpseonepr} \\
+       \cpsstepjudg[\stepstar]{\cpslenv}{\cpsetwo}{\cpsetwopr}}
+      {\cpsstepjudg[\stepstar]{\cpslenv}{\cpsife{\cpse}{\cpseone}{\cpsetwo}}{\cpsife{\cpsepr}{\cpseonepr}{\cpsetwopr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Let}]
+      {\cpsstepjudg[\stepstar]{\cpslenv}{\cpseone}{\cpseonepr} \\
+       \cpsstepjudg[\stepstar]{\cpslenv}{\cpsA}{\cpsApr} \\
+       \cpsstepjudg[\stepstar]{\cpslenv,\cpsx = \cpsepr : \cpsApr}{\cpsetwo}{\cpsetwopr}}
+      {\cpsstepjudg[\stepstar]{\cpslenv}{\cpsalete{\cpsx}{\cpseone}{\cpsA}{\cpsetwo}}{\cpsalete{\cpsx}{\cpseonepr}{\cpsApr}{\cpsetwopr}}}
+    \end{mathpar}
+    \caption{\cpstlang Conversion}
+  \end{figure}
+}
+
+\newcommand{\FigCPSWf}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\cpswf{\cpslenv}}
+    \begin{mathpar}
+      \inferrule*[right=\defrule{W-Empty}]
+      {~}
+      {\cpswf{\cdot}}
+
+      \inferrule*[right=\defrule{W-Assum}]
+      {\cpswf{\cpslenv} \\
+       \cpstyjudg{\cpslenv}{\cpsA}{\cpsU}}
+      {\cpswf{\cpslenv,\cpsx:\cpsA}}
+
+      \inferrule*[right=\defrule{W-Def}]
+      {\cpswf{\cpslenv} \\
+       \cpstyjudg{\cpslenv}{\cpse}{\cpsA} \\
+       \cpstyjudg{\cpslenv}{\cpsA}{\cpsU}}
+      {\cpswf{\cpslenv,\cpsx = \cpse :\cpsA}}
+    \end{mathpar}
+    \caption{\cpstlang Well-formed Environments}
+  \end{figure}
+
+}
+\newcommand{\FigCPSTyping}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\cpstyjudg{\cpslenv}{\cpse}{\cpsA}}
+    \begin{mathpar}
+      \inferrule*[right=\defrule{Var}]
+      {(\cpsx : \cpsA \in \cpslenv \text{ or }
+        \cpsx = \cpse : \cpsA \in \cpslenv) \\
+        \cpswf{\cpslenv}}
+      {\cpstyjudg{\cpslenv}{\cpsx}{\cpsA}}
+
+      \inferrule*[right=\defrule{*}]
+      {\cpswf{\cpslenv}}
+      {\cpstyjudg{\cpslenv}{\cpsstarty}{\cpsboxty}}
+
+     \inferrule*[right=\defrule{Pi-*}]
+      {\cpstyjudg{\cpslenv,\cpsx:\cpsA}{\cpsB}{\cpsstarty}}
+      {\cpstyjudg{\cpslenv}{\cpspity{\cpsx}{\cpsA}{\cpsB}}{\cpsstarty}}
+
+      \inferrule*[right=\defrule*{Pi-Square}{Pi-\im{\square}}]
+      {\cpstyjudg{\cpslenv,\cpsx:\cpsA}{\cpsB}{\cpsboxty}}
+      {\cpstyjudg{\cpslenv}{\cpspity{\cpsx}{\cpsA}{\cpsB}}{\cpsboxty}}
+
+      \inferrule*[right=\defrule{Lam}]
+      {\cpstyjudg{\cpslenv,\cpsx:\cpsA}{\cpse}{\cpsB} \\
+       \cpstyjudg{\cpslenv}{\cpspity{\cpsx}{\cpsA}{\cpsB}}{\cpsU}}
+      {\cpstyjudg{\cpslenv}{\cpsfune{\cpsx}{\cpsA}{\cpse}}{\cpspity{\cpsx}{\cpsA}{\cpsB}}}
+
+      \inferrule*[right=\defrule{App}]
+      {\cpstyjudg{\cpslenv}{\cpse}{\cpspity{\cpsx}{\cpsApr}{\cpsB}} \\
+       \cpstyjudg{\cpslenv}{\cpsepr}{\cpsApr}}
+      {\cpstyjudg{\cpslenv}{\cpsappe{\cpse}{\cpsepr}}{\subst{\cpsB}{\cpsepr}{\cpsx}}}
+
+      \inferrule*[right=\defrule{T-Cont}]
+      {\cpstyjudg{\cpslenv}{\cpse}{\cpspity{\cpsalpha}{\cpsstarty}{\cpsfunty{(\cpsfunty{\cpsB}{\cpsalpha})}{\cpsalpha}}} \\
+       \cpstyjudg{\cpslenv}{\cpsA}{\cpsstarty} \\
+       \cpstyjudg{\cpslenv,\cpsx = \cpsncappe{\cpse}{\cpsB}{\cpsidk}}{\cpsepr}{\cpsA}}
+      {\cpstyjudg{\cpslenv}{\cpscappe{\cpse}{\cpsA}{(\cpsfune{\cpsx}{\cpsB}{\cpsepr})}}{\cpsA}}
+
+      \inferrule*[right=\defrule{Sig}]
+      {\cpstyjudg{\cpslenv}{\cpsA}{\cpsstarty} \\
+       \cpstyjudg{\cpslenv,\cpsx:\cpsA}{\cpsB}{\cpsstarty}}
+      {\cpstyjudg{\cpslenv}{\cpssigmaty{\cpsx}{\cpsA}{\cpsB}}{\cpsstarty}}
+
+      \inferrule*[right=\defrule{Pair}]
+      {\cpstyjudg{\cpslenv}{\cpseone}{\cpsA} \\
+       \cpstyjudg{\cpslenv}{\cpsetwo}{\subst{\cpsB}{\cpseone}{\cpsx}}}
+      {\cpstyjudg{\cpslenv}{\cpsdpaire{\cpseone}{\cpsetwo}{\cpssigmaty{\cpsx}{\cpsA}{\cpsB}}}{\cpssigmaty{\cpsx}{\cpsA}{\cpsB}}}
+
+      \inferrule*[right=\defrule{Fst}]
+      {\cpstyjudg{\cpslenv}{\cpse}{\cpssigmaty{\cpsx}{\cpsA}{\cpsB}}}
+      {\cpstyjudg{\cpslenv}{\cpsfste{\cpse}}{\cpsA}}
+
+      \inferrule*[right=\defrule{Snd}]
+      {\cpstyjudg{\cpslenv}{\cpse}{\cpssigmaty{\cpsx}{\cpsA}{\cpsB}}}
+      {\cpstyjudg{\cpslenv}{\cpssnde{\cpse}}{\subst{\cpsB}{\cpsfste{\cpse}}{\cpsx}}}
+
+      \inferrule*[right=\defrule{Bool}]
+      {\cpswf{\cpslenv}}
+      {\cpstyjudg{\cpslenv}{\cpsboolty}{\cpsstarty}}
+
+      \inferrule*[right=\defrule{True}]
+      {\cpswf{\cpslenv}}
+      {\cpstyjudg{\cpslenv}{\cpstruee}{\cpsboolty}}
+
+      \inferrule*[right=\defrule{False}]
+      {\cpswf{\cpslenv}}
+      {\cpstyjudg{\cpslenv}{\cpsfalsee}{\cpsboolty}}
+
+      \inferrule*[right=\defrule{If}]
+      {\cpstyjudg{\cpslenv}{\cpse}{\cpsboolty} \\
+       \cpstyjudg{\cpslenv}{\cpseone}{\cpsB} \\
+       \cpstyjudg{\cpslenv}{\cpsetwo}{\cpsB}}
+      {\cpstyjudg{\cpslenv}{\cpsife{\cpse}{\cpseone}{\cpsetwo}}{\cpsB}}
+
+      \inferrule*[right=\defrule{Let}]
+      {\cpstyjudg{\cpslenv}{\cpse}{\cpsA} \\
+       \cpstyjudg{\cpslenv,\cpsx=\cpse:\cpsA}{\cpsepr}{\cpsB}}
+      {\cpstyjudg{\cpslenv}{\cpsalete{\cpsx}{\cpse}{\cpsA}{\cpsepr}}{\subst{\cpsB}{\cpse}{\cpsx}}}
+
+      \inferrule*[right=\defrule{Conv}]
+      {\cpstyjudg{\cpslenv}{\cpse}{\cpsA} \\
+       \cpstyjudg{\cpslenv}{\cpsB}{\cpsU} \\
+       \cpsequivjudg{\cpslenv}{\cpsA}{\cpsB}}
+      {\cpstyjudg{\cpslenv}{\cpse}{\cpsB}}
+    \end{mathpar}
+    \caption{\cpstlang Typing}
+    \label{fig:cps:cps:type}
+  \end{figure}
+}
+
+\newcommand{\FigCPSProg}[1][t]{
+  \begin{figure}[#1]
+    \begin{minipage}{.49\textwidth}
+    \judgshape{\wf{\cpslenv}{\cpse}}
+    \begin{mathpar}
+      \inferrule
+      {\styjudg{\cpslenv}{\cpse}{\tpity{\talpha}{\tstarty}{\tfunty{(\tfunty{\tboolty}{\talpha})}{\talpha}}}}
+      {\wf{\cpslenv}{\cpse}}
+    \end{mathpar}
+    \end{minipage}
+    \begin{minipage}{.49\textwidth}
+    \judgshape{\wf{}{\cpse}}
+    \begin{mathpar}
+      \inferrule
+      {\wf{\cdot}{\cpse}}
+      {\wf{}{\cpse}}
+    \end{mathpar}
+    \end{minipage}
+    \caption{\cpstlang Components and Programs}
+    \label{fig:cps:wfprog}
+  \end{figure}
+}
+
+\newcommand{\FigCPSEval}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\teval{\cpse} = \cpsv}
+    \begin{displaymath}
+      \begin{array}{rcll}
+        \teval{\cpse} & = & \cpsv & \text{if \im{\wf{}{\cpse}} and \im{\cpsstepjudg[\stepstar]{\cdot}{\cpscappe{\cpse}{\cpsboolty}{\cpsidk}}{\cpsv}}}
+      \end{array}
+    \end{displaymath}
+    \caption{\cpstlang Evaluation}
+    \label{fig:cps:eval}
+  \end{figure}
+}
+
+\newcommand{\FigCPSObsRel}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\sv \approx \tv}
+    \begin{mathpar}
+      \struee \approx \ttruee
+
+      \sfalsee \approx \tfalsee
+    \end{mathpar}
+    \caption{Observation Relation between \cpsslang and \cpstlang}
+    \label{fig:cps:obsrel}
+  \end{figure}
+}
+
+\newcommand{\FigCPSChanges}[1][t]{
+  \begin{figure}[#1]
+    \begin{flushleft}Extensions to Syntax, \fullref[]{fig:cps:ecc:syntax}\end{flushleft}
+    \begin{bnfgrammar}
+        \bnflabel{Terms} & \cpse & \bnfdef & \cdots \bnfalt \cpscappe{\cpse}{\cpsA}{\cpsepr}
+    \end{bnfgrammar}
+
+    \begin{flushleft}Extensions to Reduction and Equivalence, \fullref[]{fig:cps:ecc:conv}\end{flushleft}
+    \judgshape{\cpsstepjudg[\step]{\cpslenv}{\cpse}{\cpsepr}}
+    \begin{reductionrules}
+      \cpscappe{\cpsfune{\cpsalpha}{\cpsstarty}{\cpseone}}{\cpsA}{\cpsetwo} & \step_{@} & \cpsappe{(\subst{\cpseone}{\cpsA}{\cpsalpha})}{\cpsetwo}
+      \stepnewline
+      & \vdots &
+    \end{reductionrules}
+
+    \judgshape{\cpsequivjudg{\cpslenv}{\cpse}{\cpsepr}}
+    \begin{mathpar}
+      \cdots
+
+      \inferrule*[right=\defrule*{eqv-cont}{\inlinemath{\equiv}-Cont}]
+      {~}
+      {\cpsequivjudg{\cpslenv}{{(\cpscappe{\cpseone}{\cpsA}{(\cpsfune{\cpsx}{\cpsB}{\cpsetwo})})}}{\cpsappe{(\cpsfune{\cpsx}{\cpsB}{\cpsetwo})}{(\cpsncappe{\cpseone}{\cpsB}{\cpsidk})}}}
+    \end{mathpar}
+
+    \begin{flushleft}Extensions to Typing, \fullref[]{fig:cps:ecc:type}\end{flushleft}
+    \judgshape{\cpstyjudg{\cpslenv}{\cpse}{\cpsA}}
+    \begin{mathpar}
+      \cdots
+
+      \inferrule*[right=\defrule{T-Cont}]
+      {\cpstyjudg{\cpslenv}{\cpse}{\cpspity{\cpsalpha}{\cpsstarty}{\cpsfunty{(\cpsfunty{\cpsB}{\cpsalpha})}{\cpsalpha}}} \\
+        \cpstyjudg{\cpslenv}{\cpsA}{\cpsstarty} \\
+        \cpstyjudg{\cpslenv,\cpsx = \cpsncappe{\cpse}{\cpsB}{\cpsidk}}{\cpsepr}{\cpsA}}
+      {\cpstyjudg{\cpslenv}{\cpscappe{\cpse}{\cpsA}{(\cpsfune{\cpsx}{\cpsB}{\cpsepr})}}{\cpsA}}
+    \end{mathpar}
+    \caption{\cpstlang: \cpsslang with CPS Extensions (excerpts)}
+    \label{fig:cps:cps:convty}
+  \end{figure}
+}
+
+\newcommand{\FigCCConv}[1][]{
+  \begin{figure}[#1]
+    \judgshape{\ccequivjudg{\cclenv}{\cceone}{\ccetwo}}
+    \begin{mathpar}
+      \text{All other rules identical to \cpsslang}
+
+      \inferrule*[right=\defrule*{eqv-Ext}{\inlinemath{\equiv}-Ext}]
+      {\cctyjudg{\cclenv}{\ccp}{\cceone\mathrel{=}\ccetwo}}
+      {\ccequivjudg{\cclenv}{\cceone}{\ccetwo}}
+    \end{mathpar}
+    \caption{Extensional CoC Equivalence}
+    \label{fig:cps:cc:conv}
+  \end{figure}
+}
+
+\newcommand{\FigANF}[1][t]{
+  \begin{figure}
+    \judgshape{\anfjudg{\cpslenv}{\cpse}{\cpsA}{\cce}}
+    \begin{mathpar}
+      \text{All other rules are homomorphic}
+
+      \inferrule*[right=\defrule{Un-Cont}]
+      {\anfjudg{\cpslenv}{\cpse}{\_}{\cce} \\
+       \anfjudg{\cpslenv}{\cpsB}{\_}{\ccB} \\
+       \anfjudg{\cpslenv}{\cpsA}{\_}{\ccA} \\
+       \anfjudg{\cpslenv,\cpsx = \cpsncappe{\cpse}{\cpsB}{\cpsidk}}{\cpsepr}{\cpsA}{\ccepr}}
+      {\anfjudg{\cpslenv}{\cpscappe{\cpse}{\cpsA}{(\cpsfune{\cpsx}{\cpsB}{\cpsepr})}}{\cpsA}{
+          \ccalete{\ccx}{\ccappe{\cce}{\ccB~\ccidk}}{\ccB}{\ccepr}}}
+    \end{mathpar}
+    \caption{Model of \cpstlang in Extensional CoC}
+    \label{fig:cps:anf}
+  \end{figure}
+}
+
+\section{{{CPS}} Intermediate Language}
+\label{sec:cps:ecccps}
+
+\FigCPSChanges
+The target language \cpstlang is \cpsslang extended with a syntax for
+\tech{parametric} reasoning about \tech{computations} in \tech{CPS}, as
+discussed in \fullref[]{sec:cps:ideas}.
+I present these extensions formally in \fullref[]{fig:cps:cps:convty}, and give
+the complete language definition in \fullref[]{sec:cps:tlang:appendix}.
+I add the form \im{\cpscappe{\cpse}{\cpsA}{\cpsepr}} to the syntax of
+\cpstlang.
+This form represents a \tech{computation} \im{\cpse} applied to the answer type
+\im{\cpsA} and the \tech{continuation} \im{\cpsepr}.
+The reduction semantics is the same as that of the standard application.
+The \tech{equivalence} rule \refrule*{eqv-cont}{\im{\equiv}-Cont} states that a
+\tech{computation} \im{\cpse} applied to its \tech{continuation}
+\im{\cpsfune{\cpsx}{\cpsB}{\cpsepr}} is equivalent to the application of that
+\tech{continuation} to the \tech{underlying value} of \im{\cpse}.
+We extract the \tech{underlying value} by applying \im{\cpse} to the
+\deftech{halt continuation}, encoded as the identity function in this system.
+\refrule{T-Cont} is used to type check applications that use the new
+\im{\tfontsym{@}} syntax.
+This typing rule internalizes the fact that a \tech{continuation} will be applied to
+one particular input, rather than an arbitrary value.
+It tells the type system that the application of a \tech{computation} to a
+\tech{continuation}
+\im{\cpscappe{\cpse}{\cpsA}{(\cpsfune{\cpsx}{\cpsB}{\cpsepr})}} jumps to the
+\tech{continuation} \im{\cpsepr} after evaluating \im{\cpse} to a \tech{value}
+and binding the result to \im{\cpsx}.
+We check the body of the \tech{continuation} \im{\cpsepr} under the assumption
+that \im{\cpsx = {\cpsncappe{\cpse}{\cpsB}{\cpsidk}}}, \ie, with the equality
+that the name \im{\cpsx} refers to the \tech{underlying value} in the
+\tech{computation} \im{\cpse}, which we access using the interface given by the
+\tech{polymorphic answer type}.
+
+\refrule*{eqv-cont}{\im{\equiv}-Cont} is a declarative rule that requires
+explicit symmetry and transitivity rules to complete the definition.
+I conjecture that the algorithmic versions look something like the
+following.
+\begin{mathpar}
+  \inferrule*[right=\rulename{\inlinemath{\equiv}-Cont\im{_1}}]
+  {\cpsstepjudg[\stepstar]{\cpslenv}{\cpse}{(\cpscappe{\cpseone}{\cpsA}{(\cpsfune{\cpsx}{\cpsB}{\cpsetwo})})} \\
+    \cpsequivjudg{\cpslenv}{\cpsappe{(\cpsfune{\cpsx}{\cpsB}{\cpsetwo})}{(\cpsncappe{\cpseone}{\cpsB}{\cpsidk})}}{\cpsepr}}
+  {\cpsequivjudg{\cpslenv}{\cpse}{\cpsepr}}
+
+  \inferrule*[right=\rulename{\inlinemath{\equiv}-Cont\im{_2}}]
+  {\cpsstepjudg[\stepstar]{\cpslenv}{\cpsepr}{(\cpscappe{\cpseone}{\cpsA}{(\cpsfune{\cpsx}{\cpsB}{\cpsetwo})})} \\
+    \cpsequivjudg{\cpslenv}{\cpse}{\cpsappe{(\cpsfune{\cpsx}{\cpsB}{\cpsetwo})}{(\cpsncappe{\cpseone}{\cpsB}{\cpsidk})}}}
+  {\cpsequivjudg{\cpslenv}{\cpse}{\cpsepr}}
+\end{mathpar}
+
+Note that \refrule*{eqv-cont}{\im{\equiv}-Cont} and \refrule{T-Cont} internalize
+a specific ``free theorem'' that we need in order to prove \tech{type
+  preservation} of the \tech{CPS} translation.
+In particular, \refrule*{eqv-cont}{\im{\equiv}-Cont} only holds when the
+\tech{CPS'd} \tech{computation} \im{\cpseone} has the expected parametric type
+\im{\cpspity{\cpsalpha}{\cpsstarty}{\cpsfunty{(\cpsfunty{\cpsA}{\cpsalpha})}{\cpsalpha}}} given in
+\refrule{T-Cont}.
+Notice, however, that our statement of \refrule*{eqv-cont}{\im{\equiv}-Cont} does not put
+any requirements on the \tech{type} of \im{\cpseone}.
+This is because we use an untyped \tech{equivalence}, and this untyped
+\tech{equivalence} is necessary to prove \tech{type preservation} (see
+\fullref[]{sec:cps:cbn:proof}).
+Therefore, we cannot simply add typing assumptions directly to
+\refrule*{eqv-cont}{\im{\equiv}-Cont}.
+Instead, we must rely on the fact that the term
+\im{\cpscappe{\cpse}{\cpsA}{\cpsepr}} has only one introduction rule,
+\refrule{T-Cont}.
+Since there is only one applicable typing rule, anytime
+\im{\cpscappe{\cpse}{\cpsA}{\cpsepr}} appears
+in our type system, \im{\cpse} has the required parametric type.
+Furthermore, while \tech{equivalence} is untyped, we never appeal to \tech{equivalence}
+with ill-typed terms; we only refer to the \tech{equivalence} \im{\cpsApr \equiv
+  \cpsBpr} in \refrule[refcps]{Conv} \emph{after} checking that both \im{\cpsApr} and
+\im{\cpsBpr} are well-typed.
+For example, suppose the term \im{\cpscappe{\cpse}{\cpsA}{\cpsepr}} occurs in
+type \im{\cpsApr}, and to prove that \im{\cpsApr \equiv \cpsBpr} requires our
+new rule \refrule*{eqv-cont}{\im{\equiv}-Cont}.
+Because \im{\cpsApr} is well-typed, we know that its subterms, including
+\im{\cpscappe{\cpse}{\cpsA}{\cpsepr}}, are well-typed.
+Since \im{\cpscappe{\cpse}{\cpsA}{\cpsepr}} can only be well-typed by
+\refrule{T-Cont}, we know \im{\cpse} has the required parametric type.
+
+Finally, notice that in \refrule{T-Cont} and
+\refrule*{eqv-cont}{\im{\equiv}-Cont} I use standard application syntax for the
+term \im{\cpsncappe{\cpse}{\cpsB}{\cpsidk}}.
+The new \im{\tfontsym{@}} syntax is only necessary in the \tech{CPS} translation
+when we require one of our new rules to type check the translated \tech{term}.
+The type of the identity function doesn't depend on any value, so we never need
+\refrule{T-Cont} to type check the identity continuation.
+In a sense, \im{{\cpsncappe{\cpse}{\cpsB}{\cpsidk}}} is the normal form of a
+\tech{CPS'd} ``\tech{value}'' so we never need
+\refrule*{eqv-cont}{\im{\equiv}-Cont} to rewrite this term---\ie, using
+\refrule*{eqv-cont}{\im{\equiv}-Cont} to rewrite
+\im{{\cpsncappe{\cpse}{\cpsB}{\cpsidk}}} to
+\im{\cpsappe{\cpsidk}{(\cpsncappe{\cpse}{\cpsB}{\cpsidk})}} would just
+evaluate to the original term.
+
+\subsection{Meta-theory}
+\label{sec:cps:consistent}
+I prove that \cpstlang is consistent by giving a \tech{model} of \cpstlang in
+the extensional \tech{CoC}, following the standard architecture described in
+\fullref[]{chp:type-pres}.
+
+\begin{typographical}
+  In this section, I write terms in extensional \tech{CoC} using a
+  \ccfonttext{italic, black, serif font}.
+\end{typographical}
+
+The idea behind the \tech{model} is that we can translate each use of
+\refrule*{eqv-cont}{\im{\equiv}-Cont} in \cpstlang to a propositional
+equivalence in extensional \tech{CoC}.
+Next, we translate any term that is typed by \refrule{T-Cont} into a
+\tech{dependent let}.
+Finally, as before, we establish that if there were a proof of \im{\tFalse}
+in \cpstlang, our translation would construct a proof of \im{\ccFalse} in
+extensional \tech{CoC}.
+But since extensional \tech{CoC} is consistent, there can be no proof of
+\im{\tFalse} in \cpstlang.
+
+As our \tech{model} is in the extensional \tech{CoC}, it is not clear that type
+checking in \cpstlang is decidable.
+I believe that type checking should be decidable for all programs produced by
+the \tech{CPS} translations, since type checking in the source language
+\cpsslang is decidable.
+In the worst case, to ensure decidability we could change the translation to use
+a propositional version of \refrule*{eqv-cont}{\im{\equiv}-Cont}.
+The definitional presentation is simpler, but it should be possible to change
+the translation so that, in any term that currently relies on
+\refrule*{eqv-cont}{\im{\equiv}-Cont}, we insert type annotations that compute
+type equivalence using a propositional version of
+\refrule*{eqv-cont}{\im{\equiv}-Cont}.
+I leave the issue of decidability of type checking in \cpstlang for future
+work.
+
+\subsubsection{Modeling {[$\equiv$-Cont]}}
+\FigCCConv
+The extensional \tech{CoC} differs from the source language \cpsslang in one key
+way: it allows using the existence of a \tech{propositional equivalence} as
+a \tech{definitional equivalence}, as shown in \fullref[]{fig:cps:cc:conv}.
+The syntax and typing rules are otherwise similar to \cpsslang presented in
+\fullref[]{sec:cps:ecc}, but must be extended to include the \tech{identity
+  type}.
+
+In extensional \tech{CoC}, we can \tech{model} each use of the
+\tech{definitional equivalence} \refrule*{eqv-cont}{\im{\equiv}-Cont} by
+\refrule*{eqv-Ext}{\im{\equiv}-Ext}, as long as there exists a proof
+\im{\ccp : (\ccappe{\cce}{\ccA~\cck}) \mathrel{=}
+  (\ccappe{\cck}{(\ccappe{\cce}{\ccB~\ccidk})})}, \ie, a propositional proof of
+\refrule*{eqv-cont}{\im{\equiv}-Cont}; I prove this propositional proof always
+exists by using the parametricity translation of \citet{keller2012}.
+This translation gives a parametric \tech{model} of \tech{CoC} in itself.
+This translation is based on prior translations that apply to all Pure Type
+Systems~\cite{bernardy2012}, but includes an \tech{impredicative}
+\tech{universe} and provides a Coq implementation that I use for the key proof.
+
+The parametricity translation of a type \im{\ccA}, written \im{\paramtr{\ccA}},
+essentially transforms the type into a relation on terms of that type.
+On terms \im{\cce} of type \im{\ccA}, the translation \im{\paramtr{\cce}}
+produces a proof that \im{\cce} is related to itself in the relation given by
+\im{\paramtr{\ccA}}.
+For example, a type \im{\ccstarty} is translated to the relation
+\im{\paramtr{\ccstarty} =
+  \ccfune{(\ccx,\ccxpr}{\ccstarty)}{\ccfunty{\ccx}{\ccfunty{\ccxpr}{\ccstarty}}}}.
+The translation of a polymorphic function type
+\im{\paramtr{\ccpity{\ccalpha}{\ccstarty}{\ccA}}} is the following.
+\begin{displaymath}
+  {\ccnfune{(\ccf,\ccfpr:(\ccpity{\ccalpha}{\ccstarty}{\ccA}))}{\ccpity{(\ccalpha,\ccalphapr}{\ccstarty)}{\ccpity{\ccalphain{r}}{\paramtr{\ccstarty}{\ccalpha~\ccalphapr}}{(\paramtr{A}{(\ccappe{\ccf}{\ccalpha})~(\ccappe{\ccfpr}{\ccalphapr})})}}}}
+\end{displaymath}
+This relation produces a proof that the bodies of functions \im{\ccf} and \im{\ccfpr} are
+related when provided a relation \im{\ccalphain{r}} for the two types of \im{\ccalpha} and
+\im{\ccalphapr}.
+This captures the idea that functions at this type must behave parametrically in
+the abstract type \im{\ccalpha}.
+This translation gives us \fullref{thm:cps:param}, \ie, that every expression in
+extensional \tech{CoC} is related to itself in the relation given by its type.
+\begin{theorem}[Parametricity for extensional \tech{CoC}]
+  \label{thm:cps:param}
+  If \im{\cctyjudg{\cclenv}{\cct}{\cctpr}} then \im{\cctyjudg{\paramtr{\cclenv}}{\paramtr{\cct}}{\ccappe{\paramtr{\cctpr}}{\cct~\cct}}}
+\end{theorem}
+
+I apply \fullref[]{thm:cps:param} to the \tech{CPS} type
+\im{\ccpity{\ccalpha}{\ccstarty}{\ccfunty{(\ccfunty{\ccB}{\ccalpha})}{\ccalpha}}}
+to prove \fullref[]{lem:cps:cont-shuffle}.
+Since a \tech{CPS'd} term is a polymorphic function, we get to provide a
+relation \im{\ccalphain{r}} for the type \im{\ccalpha}.
+The translation then gives us a proof that \im{{\ccappe{\cce}{\ccA~\cck}}} and
+\im{{\ccappe{\cce}{\ccB~\ccidk}}} are related by \im{\ccalphain{r}},
+so we simply choose \im{\ccalphain{r}} to be a relation that guarantees
+\im{\ccappe{\cce}{\ccA~\cck} = \ccappe{\cck}{(\ccappe{\cce}{\ccB~\ccidk})}}.
+I formalize part of the proof in Coq, given in \fullref[]{sec:cps:tlang:appendix}.
+By \refrule*{eqv-Ext}{\im{\equiv}-Ext}, \fullref[]{thm:cps:param}, and the
+relation just described, we arrive at a proof of
+\fullref[]{lem:cps:cont-shuffle} for \tech{CPS'd} \tech{computations} encoded in
+the extensional \tech{CoC}.
+\begin{lemma}[Continuation Shuffling]
+  \label{lem:cps:cont-shuffle}
+  If \im{\cctyjudg{\cclenv}{\ccA}{\ccstarty}},
+  \im{\cctyjudg{\cclenv}{\ccB}{\ccstarty}},
+  \im{\cctyjudg{\cclenv}{\cck}{\ccfunty{\ccB}{\ccA}}}, and
+  \im{\cctyjudg{\cclenv}{\cce}{\ccpity{\ccalpha}{\ccstarty}{\ccfunty{(\ccfunty{\ccB}{\ccalpha})}{\ccalpha}}}}
+  then
+  \im{\ccequivjudg{\cclenv}{\ccappe{\cce}{\ccA~\cck}}{\ccappe{\cck}{(\ccappe{\cce}{\ccB~\ccidk})}}}
+\end{lemma}
+
+Note that this lemma relies on the type of the term \im{\cce}.
+We must only appeal to this lemma, and the equivalence justified by it, when
+\im{\cce} has the right type.
+In \cpstlang, this is guaranteed by the typing rule \refrule{T-Cont}, as
+discussed earlier in this section.
+
+\subsubsection{Modeling {T-Cont}}
+\FigANF
+
+In \fullref[]{fig:cps:anf}, I present the key translation rule for
+\tech{modeling} \cpstlang in extensional \tech{CoC}.
+All other rules are inductive on the structure of typing derivations.
+Note that since we only need to justify the additional typing rule
+\refrule{T-Cont}, this is the only rule that is changed by the translation.
+
+For brevity in the proofs, I define the following notation for the translation
+of \tech{expressions} and from \cpstlang into extensional \tech{CoC}.
+\begin{displaymath}
+  \cpsmodel{\cpse} \defeq \cce~\where{\anfjudg{\cpslenv}{\cpse}{\cpsA}{\cce}}
+\end{displaymath}
+By writing \im{\cpsmodel{\cpse}}, I refer to the \tech{expression} produced by the
+translation with the typing derivation \im{\cpstyjudg{\cpslenv}{\cpse}{\cpsA}}
+as an implicit parameter.
+
+First, I show that the definition of \im{\False} is preserved.
+As in \fullref[]{chp:abs-cc}, I define \im{\tFalse} as
+\im{\cpspity{\cpsalpha}{\cpsstarty}{\cpsalpha}}, \ie, the function that accepts
+any proposition and returns a proof that the proposition holds.
+It is simple to see that this \tech{type} has type \im{\cpsstarty} in \cpstlang
+by the rule \refrule[refcps]{Pi-*}.
+Note that \im{{\cpspity{\cpsalpha}{\cpsstarty}{\cpsalpha}}} is translated to
+\im{\ccpity{\ccalpha}{\ccstarty}{\ccalpha}} of type \im{\ccstarty}, \ie,
+\im{\tFalse} is translated to \im{\ccFalse}.
+\begin{lemma}[Preservation of Falseness]
+  \label{lem:cps:false-pres}
+  \im{\anfjudg{\cpslenv}{(\cpspity{\cpsalpha}{\cpsstarty}{\cpsalpha})}{\cpsstarty}{\ccpity{\ccalpha}{\ccstarty}{\ccalpha}}}
+\end{lemma}
+
+Again, I start by proving \tech{compositionality}, a crucial lemma to both
+\tech{equivalence} preservation and \tech{type preservation}.
+The proof is straightforward by induction on the typing derivation of
+\im{\cpse}.
+\begin{lemma}[Compositionality]
+  \label{lem:cps:subst}
+  \im{\cpsmodel{(\subst{\cpse}{\cpsepr}{\cpsx})} \equiv \subst{\cpsmodel{\cpse}}{\cpse^{\cpsprime\circ}}{\ccx}}
+\end{lemma}
+\begin{proof}
+  By induction on the typing derivation of \im{\cpse}.
+  There is one interesting case.
+  \begin{proofcases}
+    \item \refrule{T-Cont} \im{\cpse = \cpscappe{\cpseone}{\cpsB}{(\cpsfune{\cpsxpr}{\cpsA}{\cpsetwo})}}
+    and \im{\cpsmodel{\cpse} = \cclete{\ccxpr}{(\ccappe{\cpsmodel{\cpseone}}{\cpsmodel{\cpsA}~\ccidk})}{\cpsmodel{\cpsetwo}}}
+
+    Without loss of generality, assume \im{\cpsx \neq \cpsxpr}.
+
+    It suffices to show that
+
+    \im{\cpsmodel{(\cpscappe{\subst{\cpseone}{\cpsepr}{\cpsx}}{\subst{\cpsB}{\cpsepr}{\cpsx}}{\subst{(\cpsfune{\cpsxpr}{\cpsA}{\cpsetwo})}{\cpsepr}{\cpsx}})}
+      =
+      \subst{(\cclete{\ccxpr}{(\ccappe{\cpsmodel{\cpseone}}{\cpsmodel{\cpsA}~\ccidk})}{\cpsmodel{\cpsetwo}})}{\cpse^{\cpsprime\circ}}{\ccx}
+    }
+    \begin{align}
+        & \cpsmodel{(\cpscappe{\subst{\cpseone}{\cpsepr}{\cpsx}}{\subst{\cpsB}{\cpsepr}{\cpsx}}{\subst{(\cpsfune{\cpsxpr}{\cpsA}{\cpsetwo})}{\cpsepr}{\cpsx}})} \nonumber \\
+        =~&
+            \cpsmodel{(\cpscappe{\subst{\cpseone}{\cpsepr}{\cpsx}}{\subst{\cpsB}{\cpsepr}{\cpsx}}{(\cpsfune{\cpsxpr}{\subst{\cpsA}{\cpsepr}{\cpsx}}{\subst{\cpsetwo}{\cpsepr}{\cpsx}})})}
+            \\
+        & \text{by definition of substitution} \nonumber \\
+        =~&
+            (\cclete{\ccxpr}{(\ccappe{\cpsmodel{(\subst{\cpseone}{\cpsepr}{\cpsx})}}{\cpsmodel{(\subst{\cpsA}{\cpsepr}{\cpsx})}~\ccidk})}{\cpsmodel{(\subst{\cpsetwo}{\cpsepr}{\cpsx})}})
+            \\
+        & \text{by definition of the translation} \nonumber \\
+        =~&
+            (\cclete{\ccxpr}{(\ccappe{\subst{\cpsmodel{\cpseone}}{\cpse^{\cpsprime\circ}}{\ccx}}{{\subst{\cpsmodel{\cpsA}}{\cpse^{\cpsprime\circ}}{\ccx}}~\ccidk})}{\subst{\cpsmodel{\cpsetwo}}{\cpse^{\cpsprime\circ}}{\ccx}})
+            \\
+        & \text{by the induction hypothesis} \nonumber \\
+        =~&
+            \subst{(\cclete{\ccxpr}{\ccappe{\cpsmodel{\cpseone}}{\cpsmodel{\cpsA}~\ccidk}}{\cpsmodel{\cpsetwo}})}{\cpse^{\cpsprime\circ}}{\ccx}
+            \\
+        & \text{by definition of substitution} \nonumber
+      \end{align}
+  \end{proofcases}
+\end{proof}
+
+The \tech{equivalence} rules of extensional \tech{CoC} with the addition of
+\fullref{lem:cps:cont-shuffle} subsume the \tech{equivalence} rules of
+\cpstlang.
+Therefore, to show that equivalence is preserved, it suffices to show that
+\tech{conversion} is preserved.
+I first show that reduction is preserved, \fullref[]{lem:cps:step-pres}, which
+easily implies preservation of \tech{conversion} \fullref[]{lem:cps:red-pres}.
+\begin{lemma}[Preservation of Reduction]
+  \label{lem:cps:step-pres}
+  If \im{\cpseone \step \cpsetwo}, then \im{\cpseone^\circ \stepstar \ccepr} and \im{\cpsetwo^\circ \equiv \ccepr}
+\end{lemma}
+\begin{proof}
+  By cases on the reduction step \im{\cpseone \step \cpsetwo}.
+  There is one interesting case.
+  \begin{proofcases}
+    \item \im{\cpse = \cpscappe{(\cpsfune{\cpsalpha}{\cpsstarty}{\cpseone})}{\cpsB}{(\cpsfune{\cpsxpr}{\cpsA}{\cpsetwo})} \step_{@}
+      \cpsappe{(\subst{\cpseone}{\cpsB}{\cpsalpha})}{(\cpsfune{\cpsxpr}{\cpsA}{\cpsetwo})}
+    }
+
+      By definition
+      \begin{displaymath}
+      \cpsmodel{\cpse} =
+      (\cclete{\ccxpr}{(\ccappe{\cpsmodel{(\cpsfune{\cpsalpha}{\cpsstarty}{\cpseone})}}{\cpsmodel{\cpsA}~\ccidk})}{\cpsmodel{\cpsetwo}}) \step_{\zeta}
+      \subst{\cpsmodel{\cpsetwo}}{(\ccappe{\cpsmodel{(\cpsfune{\cpsalpha}{\cpsstarty}{\cpseone})}}{\cpsmodel{\cpsA}~\ccidk})}{\ccxpr}
+      \end{displaymath}
+
+    We must show
+    \im{\cpsmodel{(\cpsappe{(\subst{\cpseone}{\cpsB}{\cpsalpha})}{(\cpsfune{\cpsxpr}{\cpsA}{\cpsetwo})})}
+      \equiv \subst{\cpsmodel{\cpsetwo}}{(\ccappe{\cpsmodel{(\cpsfune{\cpsalpha}{\cpsstarty}{\cpseone})}}{\cpsmodel{\cpsA}~\ccidk})}{\ccxpr}}.
+    \begin{align}
+      & \cpsmodel{(\cpsappe{(\subst{\cpseone}{\cpsB}{\cpsalpha})}{(\cpsfune{\cpsxpr}{\cpsA}{\cpsetwo})})} \nonumber \\
+      \equiv~&
+        (\ccappe{(\subst{\cpsmodel{\cpseone}}{\cpsmodel{\cpsB}}{\ccalpha})}{(\ccfune{\ccxpr}{\cpsmodel{\cpsA}}{\cpsmodel{\cpsetwo}})})
+        \\
+      & \text{by \fullref[]{lem:cps:subst} and definition of \im{^\circ}} \nonumber \\
+       \equiv~&
+ \ccappe{(\ccfune{\ccalpha}{\ccstarty}{\cpsmodel{\cpseone}})}{\cpsmodel{\cpsB}~(\ccfune{\ccxpr}{\cpsmodel{\cpsA}}{\cpsmodel{\cpsetwo}})}
+         \\
+         & \text{by \refrule*[ext-cc]{eqv}{\im{\equiv}} and \im{\step_{\beta}}} \nonumber \\
+       \equiv~&
+         \ccappe{(\ccfune{\ccxpr}{\cpsmodel{\cpsA}}{\cpsmodel{\cpsetwo}})}{(\ccappe{(\ccfune{\ccalpha}{\ccstarty}{\cpsmodel{\cpseone}})}{\cpsmodel{\cpsA}~\ccidk})}
+         \\
+         & \text{by \fullref{lem:cps:cont-shuffle}} \nonumber \\
+      \equiv~&
+        \subst{\cpsmodel{\cpsetwo}}{(\ccappe{(\ccfune{\ccalpha}{\ccstarty}{\cpsmodel{\cpseone}})}{\cpsmodel{\cpsA}~\ccidk})}{\ccxpr}
+        \\
+       & \text{by \refrule*[ext-cc]{eqv}{\im{\equiv}} and \im{\step_{\beta}}} \nonumber \\
+      \equiv~&
+        \subst{\cpsmodel{\cpsetwo}}{(\ccappe{\cpsmodel{(\cpsfune{\cpsalpha}{\cpsstarty}{\cpseone})}}{\cpsmodel{\cpsA}~\ccidk})}{\ccxpr}
+        \\
+       & \text{by \fullref[]{lem:cps:subst}} \nonumber
+    \end{align}
+  \end{proofcases}
+\end{proof}
+
+\begin{lemma}[Preservation of Conversion]
+  \label{lem:cps:red-pres}
+  If \im{{\cpseone} \stepstar {\cpsetwo}}, then
+  \im{\cpsmodel{\cpseone} \stepstar \ccepr} and \im{\cpsmodel{\cpsetwo} \equiv \ccepr}.
+\end{lemma}
+\begin{proof}
+  By induction on the derivation of \im{\cpseone \stepstar
+    \cpsetwo}.\footnote{In the previous version of this
+    work~\cite{bowman2018:cps-sigma}, this proof was incorrectly stated as by
+    induction on the length of reduction sequences.}
+  The proof is completely straightforward; I give the key case.
+  \begin{proofcases}
+    \item \refrule[refcps]{Red-Cong-Cont}
+
+      We have that
+      \im{\cpscappe{\cpseone}{\cpsA}{\cpsfune{\cpsx}{\cpsB}{\cpsetwo}} \stepstar
+        \cpscappe{\cpseonepr}{\cpsApr}{\cpsfune{\cpsx}{\cpsBpr}{\cpsetwopr}}},
+      and we must show that
+      \im{\ccalete{\ccx}{\ccappe{\cpsmodel{\cpseone}}{\cpsmodel{\cpsB}~\ccidk}}{\cpsmodel{\cpsB}}{\cpsmodel{\cpsetwo}} \stepstar \ccepr} where \im{\ccepr \equiv
+        {\ccalete{\ccx}{\ccappe{\cpsmodel{\cpseonepr}}{\cpsmodel{\cpsBpr}~\ccidk}}{\cpsmodel{\cpsBpr}}{\cpsmodel{\cpsetwopr}}}}.
+
+      By the induction hypothesis, we know that \im{\cpsmodel{\cpseone}
+        \stepstar \cceone \equiv \cpsmodel{\cpseonepr}}, \im{\cpsmodel{\cpsB}
+        \stepstar \ccB \equiv \cpsmodel{\cpsBpr}}, and \im{\cpsmodel{\cpsetwo}
+        \stepstar \ccetwo \equiv \cpsmodel{\cpsetwopr}}.
+
+      Therefore, by the congruence rules for extensional \tech{CoC}
+      \refrule[ext-cc]{Red-Cong-Let} and \refrule[ext-cc]{Red-Cong-App}, we know
+      that
+      \im{\ccalete{\ccx}{\ccappe{\cpsmodel{\cpseone}}{\cpsmodel{\cpsB}~\ccidk}}{\cpsmodel{\cpsB}}{\cpsmodel{\cpsetwo}} \stepstar
+        \ccalete{\ccx}{\ccappe{\cceone}{\ccB~\ccidk}}{\ccB}{\ccetwo}}.
+
+      The goal follows by transitivity of \im{\equiv}, since
+      \begin{displaymath}
+      \ccalete{\ccx}{\ccappe{\cceone}{\ccB~\ccidk}}{\ccB}{\ccetwo}
+\equiv {\ccalete{\ccx}{\ccappe{\cpsmodel{\cpseonepr}}{\cpsmodel{\cpsBpr}~\ccidk}}{\cpsmodel{\cpsBpr}}{\cpsmodel{\cpsetwopr}}}
+      \end{displaymath}
+  \end{proofcases}
+\end{proof}
+
+\begin{lemma}[Preservation of Equivalence]
+  \label{lem:cps:eqv-pres}
+  If \im{{\cpseone} \equiv {\cpsetwo}}, then \im{\cpsmodel{\cpseone} \equiv \cpsmodel{\cpsetwo}}
+\end{lemma}
+
+Finally, I can show \tech{type preservation}, which completes the proof of
+\tech{consistency}.
+Since the translation is homomorphic on all typing rules except
+\refrule{T-Cont}, there is only one interesting case in the proof of
+\fullref[]{lem:cps:type-pres}.
+We must show that \refrule{Un-Cont} is \tech{type preserving}.
+Note that the case for \refrule[refcps]{Conv} appeals to \fullref[]{lem:cps:eqv-pres}.
+\begin{lemma}[Type Preservation]
+  \label{lem:cps:type-pres}
+  If \im{\cpstyjudg{\cpslenv}{\cpse}{\cpsA}} then
+  \im{\cctyjudg{\cpsmodel{\cpslenv}}{\cpsmodel{\cpse}}{\cpsmodel{\cpsA}}}
+\end{lemma}
+\begin{proof}
+  By induction on the derivation \im{\cpstyjudg{\cpslenv}{\cpse}{\cpsA}}.
+  There is one interesting case.
+  \begin{proofcases}
+    \item \refrule{T-Cont}
+
+    We have the following.
+    \begin{mathpar}
+      \inferrule
+      {\cpstyjudg{\cpslenv}{\cpseone}{\cpspity{\cpsalpha}{\cpsstarty}{\cpsfunty{(\cpsfunty{\cpsB}{\cpsalpha})}{\cpsalpha}}} \\
+          \cpstyjudg{\cpslenv}{\cpsA}{\cpsstarty} \\
+         \cpstyjudg{\cpslenv,\cpsxpr = \cpsncappe{\cpseone}{\cpsB}{\cpsidk}}{\cpsetwo}{\cpsA}}
+      {\cpstyjudg{\cpslenv}{\cpscappe{\cpseone}{\cpsA}{(\cpsfune{\cpsxpr}{\cpsB}{\cpsetwo})}}{\cpsA}}
+    \end{mathpar}
+
+    We must show
+    \im{\cctyjudg{\cpsmodel{\cpslenv}}{\cclete{\ccxpr}{(\ccappe{\cpsmodel{\cpseone}}{\cpsmodel{\cpsB}~\ccidk})}{\cpsmodel{\cpsetwo}}}{\cpsmodel{\cpsA}}}.
+
+    By \refrule[ext-cc]{Let} in Extensional CoC, it suffices to show
+    \begin{itemize}
+    \item
+      \im{\cctyjudg{\cpsmodel{\cpslenv}}{(\ccappe{\cpsmodel{\cpseone}}{\cpsmodel{\cpsB}~\ccidk})}{\cpsmodel{\cpsB}}},
+      which follows easily by the induction hypothesis applied to the premises of \refrule{T-Cont}.
+    \item \im{\cctyjudg{\cpsmodel{\cpslenv},\ccxpr =
+          (\ccappe{\cpsmodel{\cpseone}}{\cpsmodel{\cpsB}~\ccidk}) : \cpsmodel{\cpsB}}
+        {\cpsmodel{\cpsetwo}}{\cpsmodel{\cpsA}}
+      }, which follows immediately by the induction hypothesis.
+    \end{itemize}
+  \end{proofcases}
+\end{proof}
+
+\begin{theorem}[Logical Consistency of \cpstlang]
+  \label{thm:cps:cc:consistency}
+  There does not exist a closed term \im{\cpse} such that \im{\cpstyjudg{\cdot}{\cpse}{\tFalse}}.
+\end{theorem}

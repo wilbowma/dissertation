@@ -1,0 +1,388 @@
+% Misc
+
+\let\lemma\undefined
+\newtheorem{lemma}[theorem]{Lemma}
+\Crefname{lemma}{Lemma}{Lemmas}
+
+\newtheorem{conjecture}[theorem]{Conjecture}
+
+\newcommand{\code}[1]{\mintinline{agda}{#1}}
+% Don't want omitthis because it is conditionally displayed
+\newcommand{\discard}[1]{}
+
+\newenvironment{bnfgrammar}
+{\begin{displaymath}\begin{array}{lrcl}}
+{\end{array}\end{displaymath}}
+
+\newcommand{\bnfnewline}{
+  \\[6pt]
+}
+
+\newenvironment{reductionrules}
+{\begin{displaymath}\begin{array}{rlll}}
+{\end{array}\end{displaymath}}
+
+\newcommand{\stepnewline}{
+  \\[4pt]
+}
+
+\newcommand{\False}{\ensuremath{\bot}\xspace}
+\newcommand{\sFalse}{\ensuremath{\sfontsym{\False}}\xspace}
+\newcommand{\tFalse}{\ensuremath{\tfontsym{\False}}\xspace}
+
+%% Stuff that belongs in mttex
+\newenvironment{proofcases}
+{\begin{enumerate}[label={\bfseries Case:},itemindent=2em]\ignorespacesafterend}
+{\end{enumerate}}
+
+\newenvironment{lemmacases}
+{~\begin{enumerate}\ignorespacesafterend}
+{\end{enumerate}\ignorespacesafterend}
+
+\newcommand{\with}[1]{\mathrm{with}\:#1}
+
+%% Coercion
+\newexpr{coe}{2}{\kwopen{\langfont{subst}}_{#1}\mathpunct{}#2}
+
+\makeatletter
+%% NB: Removes parens around argument from \@fune
+\renewcommand{\@fune}[3]{%
+  \kwopen{\langsymfont{\uplambda}}%
+  {#1} \mathbin{:} {#2}%
+  \mathclose{.}%
+  \mathpunct{}#3%
+}
+
+%% NB: use ; as separator instead of |
+\renewcommand{\@casee}[5]{%
+  \kwopen{\langfont{case}}%
+  #1%
+  \kwbin{\langfont{of}}%
+  #2 \mathpunct{.} #3%
+  \mathpunct{\langsymfont{;}}%
+  #4 \mathpunct{.} #5%
+}
+
+\newexpr{nlet}{2}{%
+  \kwopen{\langfont{let}}%
+  #1%
+  \kwbin{\langfont{in}}%
+  #2}
+\makeatother
+
+\newcommand{\len}[1]{|#1|}
+\newtheorem*{digression}{Digression}
+\newtheorem*{typographical}{Typographical Note}
+
+%% The Generic Language
+%% For when I don't want to distinguish between languages, but still want to write terms in prefix.
+
+\newcommand{\gfont}{\mathrm}
+\newcommand{\gfonttext}{\nop}
+\newcommand{\gfontsym}{\nop}
+\newcommand{\gcolor}{\nop}
+\newlanguage{\gcolor}{\gfont}{\gfontsym}{g}
+{}
+{lenv/\Gamma}
+{pi,pair,fun,bool,sigma,sum,unit}
+{fun,app,pair,if,fst,snd,true,false,case,sum,unit,nfun}
+
+\newmetavars{\nop}{\nop}{g}{x,e,U,A,B,K,C,k}
+
+\newcommand{\gFalse}{\False}
+\newcommand{\ginje}{\gsume}
+
+\newcommand{\gjudg}{\judg}
+
+\newcommand{\model}[1]{\sembrace{#1}^\circ}
+
+%% The Source Language Macros
+%% These macros are used for both CoC and ECC
+
+% The slang macro should be redefine in each part.
+\renewcommand{\slang}{ECC\xspace}
+\renewcommand{\scolor}[1]{\mathcolor{RoyalBlue}{#1}}
+
+\newlanguage{\scolor}{\sfont}{\sfontsym}{s}
+{x,y,e,t,U,i,f,A,B,C,v,a,n,k,z,N,M,K,V,p,g}
+{lenv/\Gamma,alpha/\alpha,beta/\beta,subst/\gamma}
+{pi,fun,sigma,type,dpair,sum,prop,set,bool,npi,star,box,unit,exist,code}
+{fun,app,alet,let,fst,snd,dpair,pair,sum,case,true,false,if,nfun,unit,pack,unpack,coe,npair,clo}
+% TODO Do I need nfune and npity?
+
+\newcommand{\sinje}{\ssume}
+
+\renewcommand{\step}{\vartriangleright}
+\renewcommand{\stepstar}{\step^*}
+
+\newcommand{\subtypesym}{\preceq}
+\newcommand{\sstepjudg}[4][\step]{\wf{#2}{#3\mathbin{#1}#4}}
+\newcommand{\sequivjudg}[3]{\wf{#1}{#2\mathbin{\equiv}#3}}
+\newcommand{\ssubtyjudg}[3]{\wf{#1}{#2\mathbin{\subtypesym}#3}}
+\newcommand{\styjudg}[3]{\judg{#1}{#2}{#3}}
+\newcommand{\swf}[1]{\wf{}{#1}}
+
+\newcommand{\ecceqv}[4]{\judg{#1}{#2 \approx #3}{#4}}
+
+\newcommand{\seval}[1]{\sfont{eval}(#1)}
+
+\newcommand{\ssubstok}{\wf}
+
+%% Parametric CPS Macros:
+\newcommand{\cpsslang}{CoC$^{D}$\xspace}
+\newcommand{\eccidk}{\sfont{id}}
+\newcommand{\cps}{CoC$^{k}$}
+\newcommand{\cpstlang}{\cps\xspace}
+\newcommand{\cpsprime}{\tprime}
+
+\newlanguage{\tcolor}{\tfont}{\tfontsym}{cps}
+{k,x,y,e,t,U,A,B,z,f,v,l}
+{alpha/\alpha,lenv/\Gamma,subst/\gamma,K/\kappa}
+{pi,pair,sigma,fun,sum,prop,set,type,box,star,bool}
+{fun,app,alet,let,fst,snd,pair,dpair,nfun,sum,case,true,false,if}
+
+%\newcommand{\cpsstarty}{\cpspropty}
+%\newcommand{\cpsboxty}{\cpstypety{}}
+
+\newcommand{\cpscappe}[3]{\cpsappe{#1}{\tfontsym{@}~#2~#3}}
+\newcommand{\cpsncappe}[3]{\cpsappe{#1}{#2~#3}}
+\newcommand{\cpsidk}{\tfont{id}}
+
+\newcommand{\cpswf}{\swf}
+\newcommand{\cpstyjudg}{\styjudg}
+\newcommand{\cpsstepjudg}{\sstepjudg}
+\newcommand{\cpsequivjudg}{\sequivjudg}
+\newcommand{\cpssubtyjudg}{\ssubtyjudg}
+
+\newcommand{\cpsterm}[1]{\textsc{cps}\sembrace{#1}}
+\newcommand{\cpstype}[1]{\textsc{cpsT}\sembrace{#1}}
+
+\newcommand{\cbnsym}[1]{\leadsto^{n}_{#1}}
+\newcommand{\cbnsymK}{\cbnsym{\kappa}}
+\newcommand{\cbnsymU}{\cbnsym{U}}
+\newcommand{\cbnsymA}{\cbnsym{A}}
+\newcommand{\cbnsymAdiv}{\cbnsym{A^{\div}}}
+\newcommand{\cbnsyme}{\cbnsym{e}}
+\newcommand{\cbnsymlenv}{\cbnsym{}}
+\newcommand{\cbnU}[3]{\wf{#1}{#2\mathbin{\cbnsymU}#3}}
+\newcommand{\cbnK}[4]{\judg{#1}{#2}{#3\mathbin{\cbnsymK}#4}}
+\newcommand{\cbnA}[4]{\judg{#1}{#2}{#3\mathbin{\cbnsymA}#4}}
+\newcommand{\cbnAdiv}[4]{\judg{#1}{#2}{#3\mathbin{\cbnsymAdiv}#4}}
+\newcommand{\cbne}[4]{\judg{#1}{#2}{#3\mathbin{\cbnsyme}#4}}
+\newcommand{\cbnlenv}[2]{\wf{}{#1\cbnsymlenv}#2}
+
+\newcommand{\cbnnametext}{CPS$^{n}$\xspace}
+\newcommand{\cbnname}[1][{}]{CPS$^{n}#1$}
+\newcommand{\cbnAname}{\cbnname[_A]}
+\newcommand{\cbnArule}[1]{\refrule*{cbnA:#1}{\cbnAname-#1}}
+\newcommand{\defcbnArule}[1]{\defrule*{cbnA:#1}{\cbnAname-#1}}
+\newcommand{\cbnAdivname}{\cbnname[_{A^\div}]}
+\newcommand{\cbnAdivrule}[1]{\refrule*{cbnAdiv:#1}{\cbnAdivname-#1}}
+\newcommand{\defcbnAdivrule}[1]{\defrule*{cbnAdiv:#1}{\cbnAdivname-#1}}
+\newcommand{\cbnename}{\cbnname[_e]}
+\newcommand{\cbnerule}[2][\techprefix]{\refrule*[#1]{cbne:#2}{\cbnename-#2}}
+\newcommand{\defcbnerule}[1]{\defrule*{cbne:#1}{\cbnename-#1}}
+\newcommand{\cbnlenvname}{\cbnname[_\Gamma]}
+\newcommand{\cbnlenvrule}[2][\techprefix]{\refrule*[#1]{cbnlenv:#2}{\cbnlenvname-#2}}
+\newcommand{\defcbnlenvrule}[1]{\defrule*{cbnlenv:#1}{\cbnlenvname-#1}}
+\newcommand{\cbnKname}{\cbnname[_\kappa]}
+\newcommand{\cbnKrule}[1]{\refrule*{cbnK:#1}{\cbnKname-#1}}
+\newcommand{\defcbnKrule}[1]{\defrule*{cbnK:#1}{\cbnKname-#1}}
+\newcommand{\cbnUname}{\cbnname[_U]}
+\newcommand{\cbnUrule}[1]{\refrule{\cbnUname-#1}}
+\newcommand{\defcbnUrule}[1]{\defrule*{cbnU:#1}{\cbnUname-#1}}
+
+\newcommand{\cbvsym}[1]{\leadsto^{v}_{#1}}
+\newcommand{\cbvsymK}{\cbvsym{\kappa}}
+\newcommand{\cbvsymU}{\cbvsym{U}}
+\newcommand{\cbvsymA}{\cbvsym{A}}
+\newcommand{\cbvsymAdiv}{\cbvsym{A^{\div}}}
+\newcommand{\cbvsyme}{\cbvsym{e}}
+\newcommand{\cbvsymlenv}{\cbvsym{}}
+\newcommand{\cbvU}[3]{\wf{#1}{#2\mathbin{\cbvsymU}#3}}
+\newcommand{\cbvK}[4]{\judg{#1}{#2}{#3\mathbin{\cbvsymK}#4}}
+\newcommand{\cbvA}[4]{\judg{#1}{#2}{#3\mathbin{\cbvsymA}#4}}
+\newcommand{\cbvAdiv}[4]{\judg{#1}{#2}{#3\mathbin{\cbvsymAdiv}#4}}
+\newcommand{\cbve}[4]{\judg{#1}{#2}{#3\mathbin{\cbvsyme}#4}}
+\newcommand{\cbvlenv}[2]{\wf{}{#1\cbvsymlenv}#2}
+
+\newcommand{\cbvnametext}{CPS$^{v}$\xspace}
+\newcommand{\cbvname}[1][{}]{CPS$^{v}#1$}
+\newcommand{\cbvAname}{\cbvname[_A]}
+\newcommand{\cbvArule}[1]{\rulename{\cbvAname-#1}}
+\newcommand{\cbvAdivname}{\cbvname[_{A^div}]}
+\newcommand{\cbvAdivrule}[1]{\rulename{\cbvAdivname-#1}}
+\newcommand{\cbvename}{\cbvname[_e]}
+\newcommand{\cbverule}[1]{\rulename{\cbvename-#1}}
+\newcommand{\cbvlenvname}{\cbvname[_\Gamma]}
+\newcommand{\cbvlenvrule}[1]{\rulename{\cbvlenvname-#1}}
+\newcommand{\cbvKname}{\cbvname[_\kappa]}
+\newcommand{\cbvKrule}[1]{\refrule*{cbvK:#1}{\cbvKname-#1}}
+\newcommand{\defcbvKrule}[1]{\defrule*{cbvK:#1}{\cbvKname-#1}}
+\newcommand{\cbvUname}{\cbvname[_U]}
+\newcommand{\cbvUrule}[1]{\refrule*{cbvU:#1}{\cbvUname-#1}}
+\newcommand{\defcbvUrule}[1]{\defrule*{cbvU:#1}{\cbvUname-#1}}
+
+% CPS Model translation
+
+\newcommand{\anfsym}{\leadsto_{\circ}}
+\newcommand{\anfjudg}[4]{\judg{#1}{#2}{#3 \mathrel{\anfsym} #4}}
+\newcommand{\cpsmodel}[1]{{#1}^\circ}
+
+\newcommand{\cccolor}[1]{#1}
+\newcommand{\ccfont}[1]{#1}
+\newcommand{\ccfonttext}[1]{\textit{\cccolor{#1}}}
+\newcommand{\ccfontsym}[1]{#1}
+\newcommand{\ccFalse}{\ccfont{\False}}
+
+\newlanguage{\cccolor}{\ccfont}{\ccfontsym}{cc}
+{k,x,y,e,t,U,A,B,z,f,p}
+{alpha/\alpha,lenv/\Gamma,subst/\gamma,K/\kappa}
+{pi,star,box,pair,sigma,fun}
+{nfun,fun,app,alet,let,fst,snd,pair,dpair}
+
+\newcommand{\ccstepjudg}[4][\step]{\wf{#2}{#3\mathbin{#1}#4}}
+\newcommand{\ccequivjudg}[3]{\wf{#1}{#2\mathbin{\equiv}#3}}
+\newcommand{\cctyjudg}[3]{\judg{#1}{#2}{#3}}
+\newcommand{\ccidk}{\ccfont{id}}
+
+\newcommand{\paramtr}[1]{\sembrace{#1}^{\mathcal{P}}}
+
+%% Target language for ANF and CC
+
+
+\renewcommand{\tcolor}[1]{\mathcolor{OrangeRed}{#1}}
+
+%% Heterogeneous plugging
+%% (heterogeneous hole-with)
+\newcommand{\hhw}[1]{\boldsymbol{\langle}\!\boldsymbol{\langle}#1\boldsymbol{\rangle}\!\boldsymbol{\rangle}}
+
+%% Heterogeneous subst
+\newcommand{\hsubst}[3]{#1[#2/\!/#3]}
+
+\newlanguage{\tcolor}{\tfont}{\tfontsym}{t}
+{x,y,N,V,K,M,A,B,U,i,f,j,e,C,k,z,v,p,E}
+{lenv/\Gamma,alpha/\alpha,beta/\beta}
+{pi,fun,sigma,type,dpair,sum,prop,bool}
+{fun,app,let,fst,snd,dpair,pair,sum,case,coe,true,false,if,nlet}
+
+\newcommand{\tinje}{\tsume}
+
+\newcommand{\tstepjudg}[4][\mapsto]{#3 #1 #4}
+\newcommand{\tequivjudg}{\sequivjudg}
+\newcommand{\tsubtyjudg}{\ssubtyjudg}
+\newcommand{\ttyjudg}{\styjudg}
+\newcommand{\twf}{\swf}
+
+% ANF Translation
+\newcommand{\anfslang}{ECC$^{D}$\xspace}
+\newcommand{\anftlang}{ECC$^{A}$\xspace}
+\newcommand{\anf}[2]{\sembrace{#1}{#2}}
+\newcommand{\anfh}[1]{\sembrace{#1}}
+
+\newcommand{\teval}[1]{\tfont{eval}(#1)}
+
+% blue on the outside but red on the inside
+%\newcommand{\sbound}[1]{\sfont{\boldsymbol{\big((}}#1\sfont{\boldsymbol{)\big)}}}
+\newcommand{\sbound}[1]{\mathcal{ST}(#1)}
+
+% Exported definitions of the translation of #1
+\newcommand{\tedefs}[1]{\mathtt{defs}{({#1})}}
+\newcommand{\edefs}[1]{\tedefs{\anfh{#1}}}
+
+% Exported hole of the translation of #1
+\newcommand{\tehole}[1]{\mathtt{hole}{({#1})}}
+\newcommand{\ehole}[1]{\tehole{\anfh{#1}}}
+
+%% Closure Conversion:
+\newcommand{\absccslang}{ECC$^{D}$\xspace}
+\newcommand{\abscctlang}{ECC$^{CC}$\xspace}
+\newcommand{\absccmodel}[1]{\sembrace{#1}^{\circ}}
+\newcommand{\modelsym}{\leadsto_{\circ}}
+\newcommand{\mjudg}[4]{\judg{#1}{#2}{#3 \mathbin{\modelsym} #4}}
+
+\newcommand{\sNat}{\sfont{Nat}}
+\newcommand{\sS}{\sfont{S}}
+
+\makeatletter
+\renewcommand{\@existty}[3]{
+  \kwopen{\langsymfont{\exists}}%
+  {#1} \mathbin{:} {#2}%
+  \mathclose{.}%
+  \mathpunct{}#3%
+}
+\makeatother
+
+\newcommand{\codety}[4]{
+  \kwopen{#2{Code}}(#3)\mathpunct{.}#4%
+}
+
+\newcommand{\cloe}[4]{
+  #2{\langle\!\langle}#3\mathpunct{#2{,}}#4#2{\rangle\!\rangle}%
+}
+
+\newcommand{\mcloe}[2]{\langle\!\langle#1,#2\rangle\!\rangle}
+
+\newlanguage{\tcolor}{\tfont}{\tfontsym}{t}
+{n,t}
+{alpha/\alpha,subst/\gamma}
+{unit,pair,nsigma,exist,npi,code}
+{unit,npair,dnpair,nfun,clo,pack,npack,npacko,unpack,alet}
+
+\newcommand{\tstarty}{\tpropty}
+\newcommand{\tboxty}{\ttypety{}}
+
+\newcommand{\DFV}[2]{\metafont{FV}{(#2, #1)}}
+
+\newcommand{\cctrans}[1]{\sembrace{#1}}
+\newcommand{\ccsym}{\leadsto}
+\newcommand{\ccenvjudg}[2]{\wf{}{#1\mathbin{\ccsym}#2}}
+\newcommand{\ccjudg}[4]{\judg{#1}{#2}{#3 \mathbin{\ccsym} #4}}
+
+%% Parametric Closure Conversion:
+
+% Translucent functions
+
+\makeatletter
+
+\newcommand{\trlufunarrow}{\Rightarrow}
+
+% trlufunty formats a translucent function type.
+%
+% #1 : The pre-formatted argument to the function
+% #2 : The pre-formatted result of the function
+\newtype{trlufun}{2}{#1 \mathbin{\langsymfont{\trlufunarrow}} #2}
+
+\renewcommand{\@nexistty}[2]{\kwopen{\langsymfont{\exists}}#1\mathclose{.}\mathpunct{}#2}
+
+\makeatother
+
+\newcommand{\tr}[1]{{#1}^+}
+\newcommand{\pccslang}{\cpsslang}
+\newcommand{\pcctlang}{CoC$^{CC}$\xspace}
+\newcommand{\pccwf}{\swf}
+\newcommand{\pcctyjudg}{\styjudg}
+\newcommand{\pccstepjudg}{\sstepjudg}
+\newcommand{\pccequivjudg}{\sequivjudg}
+\newcommand{\pccsubtyjudg}{\ssubtyjudg}
+
+\newcommand{\pcccolor}{\tcolor}
+\newcommand{\pccfont}{\tfont}
+\newcommand{\pccfontsym}{\tfontsym}
+\newcommand{\pccfonttext}{\tfonttext}
+\newlanguage{\pcccolor}{\pccfont}{\pccfontsym}{pcc}
+{k,x,y,e,t,U,f,A,B,b,v,a,n,c}
+{alpha/\alpha,lenv/\Gamma,subst/\gamma}
+{pi,npi,nsigma,exist,unit,trlufun,pair,nexist,sigma,bool,box,star,fun}
+{nfun,app,alet,if,dnpair,fst,snd,prj,pack,unpack,unit,packo,dpair,npair,let,nunpack,npack,npacko,pair,true,false}
+
+% Allow currying pcccode
+\newcommand{\pcccodety}[2]{
+  \kwopen{\pccfont{Code}}#1\mathpunct{.}#2%
+}
+
+\newcommand{\pccsym}{\leadsto}
+\newcommand{\pccenvjudg}[2]{\wf{}{#1\mathbin{\pccsym}#2}}
+\newcommand{\pccjudg}[4]{\judg{#1}{#2}{#3 \mathbin{\pccsym} #4}}
+
+\newcommand{\pccsubstok}{\ssubstok}

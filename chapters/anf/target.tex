@@ -1,0 +1,468 @@
+\newcommand{\FigECCASyntax}[1][t]{
+  \begin{figure}[#1]
+    \begin{bnfgrammar}
+      \bnflabel{Universes} &
+      \tU & \!\!\bnfdef & \tpropty \bnfalt \ttypety{i}
+      \bnfnewline
+
+      \bnflabel{Values} & \tV & \bnfdef & \tx \bnfalt \tU \bnfalt \tpity{\tx}{\tM}{\tM} \bnfalt \tfune{\tx}{\tM}{\tM} \bnfalt \tsigmaty{\tx}{\tM}{\tM}
+      \\&& \bnfalt & \tdpaire{\tV}{\tV}{\tM}
+      \bnfnewline
+
+      \bnflabel{Computations} & \tN & \bnfdef & \tV \bnfalt \tappe{\tV}{\tV} \bnfalt \tfste{\tV} \bnfalt \tsnde{\tV}
+      \bnfnewline
+
+      \bnflabel{Configurations} & \tM,\tA,\tB & \bnfdef & \tN \bnfalt \tlete{\tx}{\tN}{\tM}
+      \bnfnewline
+
+      \bnflabel{Continuations} & \tK  & \bnfdef & \hole \bnfalt \tlete{\tx}{\hole}{\tM}
+    \end{bnfgrammar}
+    \caption{\tlang Syntax}
+    \label{fig:anf:ecca:syntax}
+  \end{figure}
+}
+
+\newcommand{\FigECCARed}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\tM \mapsto \tMpr}
+    \begin{reductionrules}
+      \tK\hw{\tappe{(\tfune{\tx}{\tA}{\tM})}{\tV}} & \mapsto_{\beta} & \tK\hhw{\subst{\tM}{\tV}{\tx}}
+      \stepnewline
+
+      \tK\hw{\tfste{\tpaire{\tVone}{\tVtwo}}} & \mapsto_{\pi_{1}} & \tK\hw{\tVone}
+      \stepnewline
+
+      \tK\hw{\tsnde{\tpaire{\tVone}{\tVtwo}}} & \mapsto_{\pi_{2}} & \tK\hw{\tVtwo}
+      \stepnewline
+
+      \tlete{\tx}{\tV}{\tM} & \mapsto_{\zeta} & \subst{\tM}{\tV}{\tx}
+    \end{reductionrules}
+    \judgshape{\tstepjudg[\mapsto^*]{}{\tM}{\tMpr}}
+    \begin{mathpar}
+      \inferrule*[right=\defrule{RedA-Refl}]
+      {~}
+      {\tstepjudg[\mapsto^*]{}{\tM}{\tM}}
+
+      \inferrule*[right=\defrule{RedA-Trans}]
+      {\tM \mapsto \tMone \\
+       \tstepjudg[\mapsto^*]{}{\tMone}{\tMpr}}
+      {\tstepjudg[\mapsto^*]{}{\tM}{\tMpr}}
+    \end{mathpar}
+    \judgshape{\teval{\tM} = \tV}
+    \begin{displaymath}
+      \begin{array}{rcll}
+        \teval{\tM} & = & \tV & \text{if \im{\wf{}{\tM}} and \im{\tM \mapsto^* \tV} and \im{\tV \not\mapsto \tVpr}}
+      \end{array}
+    \end{displaymath}
+    \caption{\tlang Evaluation}
+    \label{fig:anf:ecca:red}
+  \end{figure}
+}
+
+\newcommand{\FigECCAHetero}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\tK\hhw{\tM} = \tM}
+    \begin{displaymath}
+      \begin{array}{rcl}
+        \tK\hhw{\tN} &\defeq& \tK\hw{\tN} \\
+        \tK\hhw{\tlete{\tx}{\tNpr}{\tM}} &\defeq& \tlete{\tx}{\tNpr}{\tK\hhw{\tM}} \\
+      \end{array}
+    \end{displaymath}
+    \judgshape{\tK\hhw{\tK} = \tK}
+    \begin{displaymath}
+      \begin{array}{rcl}
+        \tK\hhw{\hole} &\defeq& \tK \\
+        \tK\hhw{\tlete{\tx}{\hole}{\tM}} &\defeq& \tlete{\tx}{\hole}{\tK\hhw{\tM}} \\
+      \end{array}
+    \end{displaymath}
+    \judgshape{\hsubst{\tM}{\tMpr}{\tx} = \tM}
+    \begin{displaymath}
+      \begin{array}{rcl}
+        \hsubst{\tM}{\tMpr}{\tx} &\defeq& (\tlete{\tx}{\hole}{\tM})\hhw{\tMpr}
+      \end{array}
+    \end{displaymath}
+    \caption{\tlang Composition of Configurations}
+    \label{fig:anf:ecca:hsubst}
+  \end{figure}
+}
+
+\newcommand{\FigECCAStackTypes}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\styjudg{\tlenv}{\tK}{(\tN : \tA)} \Rightarrow \tB}
+    \begin{mathpar}
+      \inferrule*[right=\defrule{K-Empty}]
+      {~}
+      {\styjudg{\tlenv}{\hole}{(\tN : \tA) \Rightarrow \tA}}
+
+      \inferrule*[right=\defrule{K-Bind}]
+      {\styjudg{\tlenv}{\tN}{\tA} \\
+       \styjudg{\tlenv,\ty=\tN}{\tM}{\tB}}
+      {\styjudg{\tlenv}{\tlete{\ty}{\hole}{\tM}}{(\tN : \tA) \Rightarrow \tB}}
+    \end{mathpar}
+    \caption{\tlang Continuation Typing}
+    \label{fig:anf:ecca:stack-types}
+  \end{figure}
+}
+
+\newcommand{\FigStackExports}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\tedefs{\tM} = \tlenv}
+    \begin{displaymath}
+      \tedefs{\tM} = \txone=\tNone,\dots,\txin{n}=\tNin{n} \hspace{-1em}\qquad \where{\tM = \tlete{\txone}{\tNone}{\dots\tlete{\txin{n}}{\tNin{n}}{\tNin{n+1}}}}
+    \end{displaymath}
+    \judgshape{\tehole{\tM} = \tN}
+    \begin{displaymath}
+      \tehole{\tM} = \tNin{n+1} \qquad \where{\tM = \tlete{\txone}{\tNone}{\dots\tlete{\txin{n}}{\tNin{n}}{\tNin{n+1}}}}
+    \end{displaymath}
+    \caption{\tlang Continuation Exports}
+    \label{fig:anf:ecca:exports}
+  \end{figure}
+}
+
+\section{{{ANF}} Intermediate Language}
+\label{sec:anf:target}
+
+\FigECCASyntax
+The target language, \tlang, is an ANF-restricted subset of \slang.
+For now, I exclude \techs{dependent conditional} from \slang and from \tlang; I
+return to them in \fullref[]{sec:anf:discuss}.
+I continue to use the same typing and conversion rules as \slang, which are
+permitted to break \tech{ANF} when computing term equivalence during type
+checking.
+However, I define an \tech{ANF}-preserving machine-like semantics for
+evaluation of program configurations.
+Note that this means the definitional equivalence is not suitable for equational
+reasoning about run-time terms (\eg, reasoning about optimizations), without
+\tech{ANF} translation afterwards.\footnote{This ability to break \tech{ANF}
+  locally to support reasoning is similar to the language \(F_J\) of
+  \citet{maurer2017}, which does not enforce \tech{ANF} syntactically, but is
+  meant to support \tech{ANF} transformation and optimization with join points.}
+
+\begin{typographical}
+Although \tlang is a restriction of \slang, I typeset it as separate language for
+clarity, and use the shift in fonts to indicate an explicit shift in how I am
+treating terms, \ie, as either \tech{ANF}-restricted terms still suitable for
+evaluation, or as unrestricted terms that we can type check but cannot run in
+the \tech{ANF} semantics any longer.
+\end{typographical}
+
+I give the syntax for \tlang in \fullref[]{fig:anf:ecca:syntax}.
+As discussed in \fullref[]{chp:type-pres}, the goal is to make an explicit
+distinction between values and computations.
+In \tlang, I do this by imposing a syntactic distinction between
+\deftech*{value,values}{values} \im{\tV} which do not reduce,
+\deftech*{comp,computation,computations}{computations} \im{\tN} which
+eliminate values and can be composed
+using \deftech*{continuation,continuation}{continuations} \im{\tK}, and
+\deftech*{config,configuration,configurations}{configurations} \im{\tM} which
+intuitively represent whole programs ready to be executed.
+A continuation \im{\tK} is a program with a hole, and is composed
+\im{\tK\hw{\tN}} with a computation \im{\tN} to form a configuration \im{\tM}.
+For example, \im{(\tlete{\tx}{\hole}{\tsnde{\tx}})\hw{\tN} =
+  \tlete{\tx}{\tN}{\tsnde{\tx}}}.
+Since continuations are not first-class objects in the language, we cannot
+express control effects---continuations are syntactically guaranteed to be used
+linearly.
+%
+\footnote{The reader familiar with proof theory
+  may wish to consider configurations and continuations as the same term under a
+  \emph{stoup}~\cite{girard1991}, an environment expressing either zero or one
+  linear computation variables \im{\hole}; when the stoup is empty, we have a
+  configuration and otherwise we have a continuation.}
+%
+Note that despite the syntactic distinction, I still do not enforce a
+\tech{phase distinction}---\tech*{anf:config}{configurations} (programs) can
+appear in \techs{type}.
+
+\FigECCAHetero
+In \tech{ANF}, all \tech{continuations} are left associated, so substitution can
+break \tech{ANF}.
+Note that \(\beta\)-reduction takes an \tech{ANF} \tech{configuration}
+\im{\tK\hw{\tappe{(\tfune{\tx}{\tA}{\tM})}{\tV}}} but would na\"ively produce
+\im{\tK\hw{\subst{\tM}{\tV}{\tx}}}.
+While the substitution \im{\subst{\tM}{\tV}{\tx}} is well-defined, substituting
+the resulting term, itself a \emph{\tech{configuration}}, into the
+\tech{continuation} \im{\tK} could result in the non-\tech{ANF} term
+\im{\tlete{\tx}{\tM}{\tMpr}}.
+In \tech{ANF}, \tech{continuations} cannot be nested.
+
+To ensure \tech{reduction} preserves \tech{ANF}, I define composition of a
+\tech{continuation} \im{\tK} and a \tech{configuration} \im{\tM},
+\fullref[]{fig:anf:ecca:hsubst}, typically called \emph{renormalization} in the
+literature~\cite{sabry1997:on-cbv,kennedy2007}.
+When composing a \tech{continuation} with a \tech{configuration},
+\im{\tK\hhw{\tM}}, we essentially unnest all continuations so they remain
+left-associated.%
+\footnote{
+  Some work uses an append notation, \eg, \im{\tM ::
+    \tK}~\cite{sabry1997:on-cbv}, suggesting we are appending \im{\tK} onto the
+  continuation for \im{\tM}; I prefer notation that evokes composition.
+}
+Note that these definitions are simplified because I am ignoring
+capture-avoiding substitution.
+
+\paragraph{Digression on composition in ANF}
+In the literature, the composition operation \im{\tK\hhw{\tM}} is usually
+introduced as \emph{renormalization}, as if the only intuition for why it exists
+is ``well, it happens that \tech{ANF} is not preserved under \(\beta\)-reduction''.
+It is not mere coincidence; the intuition for this operation is composition, and
+having a syntax for composing terms is not only useful for stating
+\(\beta\)-reduction, but useful for all reasoning about \tech{ANF}!
+This should not come as a surprise---compositional reasoning is useful.
+The only surprise is that the composition operation is not the usual
+one used in programming language semantics, \ie, substitution.
+In \tech{ANF}, as in monadic normal form, substitution can be used to compose
+any \tech{expression} with a \emph{\tech{value}}, since names are
+\tech{values} and \tech{values} can always be replaced by \tech{values}.
+But substitution cannot just replace a name, which is a \emph{\tech{value}},
+with a \emph{\tech{computation}} or \emph{\tech{configuration}}.
+That wouldn't be well-typed.
+So how do we compose \tech{computations} with \tech{configurations}?
+We can use \tfonttext{let}, as in \im{\tlete{\ty}{\tN}{\tM}}, which we can
+imagine as an explicit substitution.
+In monadic form, there is no distinction between \tech{computations} and
+\tech{configurations}, so the same term works to compose \tech{configurations}.
+But in \tech{ANF}, we have no object-level term to compose \emph{configurations}
+or \emph{continuations}.
+We cannot substitute a \tech{configuration} \im{\tM} into a \tech{continuation}
+\im{\tlete{\ty}{\hole}{\tMpr}}, since this would result in the non-ANF (but
+valid monadic) expression \im{\tlete{\ty}{\tM}{\tMpr}}.
+Instead, ANF requires a new operation to compose configurations:
+\im{\tK\hhw{\tM}}.
+This operation is more generally known as \emph{hereditary
+  substitution}~\cite{watkins2003:clf}, a form of substitution that maintains
+canonical forms.
+So we can think of it as a form of substitution, or, simply, as composition.
+
+\FigECCARed
+I present the call-by-value (\deftech{CBV}) evaluation semantics for \tlang in
+\fullref[]{fig:anf:ecca:red}.
+It is essentially standard, but recall that \(\beta\)-reduction produces a
+\tech{configuration} \im{\tM} which must be composed with the
+current \tech{continuation} \im{\tK}.
+This semantics is only for the evaluation of \tech*{anf:config}{configurations};
+during type checking, we continue to use the type system and conversion relation
+defined in \fullref[]{chp:source}.
+
+\subsection{The Essence of Dependent Continuation Typing}
+\FigECCAStackTypes
+I define \tech{continuation} typing in \fullref[]{fig:anf:ecca:stack-types}.
+The type \im{(\tN : \tA) \Rightarrow \tB} of a \tech{continuation} expresses that this
+\tech{continuation} expects to be composed with a term equal (syntactically) to the
+\tech*{anf:comp}{computation} \im{\tN} of type \im{\tA} and returns a
+result of type \im{\tB} when completed.
+This is the formal statement that \im{\tN} is \tech{depended upon} (in the sense
+introduced in \fullref[]{chp:source}) in the rest of the \tech{computation}, and
+is key to recovering the dependency disrupted during \tech{ANF} translation.
+For the empty \tech{continuation} \im{\hole}, \im{\tN} is arbitrary since an empty
+\tech{continuation} has no ``rest of the program'' that could depend on anything.
+
+Intuitively, what we want from \tech{continuation} typing is a compositionality
+property---that we can reason about the types of
+\tech*{anf:config}{configurations} \im{\tK\hw{\tN}} by composing the typing
+derivations for \im{\tK} and \im{\tN}.
+To get this property, a \tech{continuation} type must express not merely the
+\emph{\tech{type}} of its hole \im{\tA}, but exactly \emph{which \tech{term}}
+\im{\tN} will be bound in the hole.
+We see this formally from the typing rule \refrule[anfapp]{Let} (the same for \tlang as
+for \slang in \fullref[]{chp:source}), since showing that
+\im{\tlete{\ty}{\tN}{\tM}} is well-typed requires showing that \im{\ty = \tN
+  \vdash \tM}, that is, requires knowing the definition \im{\ty = \tN}.
+If we omit the expression \im{\tN} from the type of \tech{continuations}, we know there
+are some \tech{configurations} \im{\tK\hw{\tN}} that we cannot type check
+\emph{compositionally}.
+Intuitively, if all we knew about \im{\ty} was its \tech{type}, we would be in
+exactly the situation of trying to type check a continuation that has
+abstracted some dependent type that depends on the \emph{specific} \im{\tN} into
+one that depends on an \emph{arbitrary} \im{\ty}.
+I prove that \tech{continuation} typing is compositional in this way,
+\fullref{lem:anf:ecca:cut}.
+
+Note that the type of the result in a \tech{continuation} type cannot depend on
+the term that will be plugged in for the hole, \ie, for a \tech{continuation}
+\im{\tK : (\tN : \tA) \Rightarrow \tB}, \im{\tB} does not depend on \im{\tN}.
+This is not important for \tech{ANF} translation, but is interesting as it
+provides insight into related work as I discuss in \fullref[]{sec:anf:discuss}.
+The restriction is not necessary, and is not true in all systems, but turns out
+to be true in ANF.
+To see this, first note that the initial \tech{continuation} must be empty and
+thus \emph{cannot} have a result type that depends on its hole.
+The ANF translation will take this initial empty continuation and compose it
+with intermediate continuations \im{\tKpr}.
+Since composing any continuation \im{\tK : (\tN : \tA) \Rightarrow \tB} with any
+continuation \im{\tKpr} results in a new continuation with the final result type
+\im{\tB}, then the composition of any two continuations cannot depend on the
+type of the hole.
+This is similar to how, in CPS, the answer type doesn't matter and might as well
+be \im{\bot}.
+
+\subsection{Meta-theory}
+{
+\allowdisplaybreaks % Let latex break proofs on a page boundary
+Since \tlang is a syntactic discipline in \slang, we inherit most of the
+meta-theory from \slang, notably: logical consistency, type safety, and
+decidability~\cite{luo1989,severi1994:dpts}.
+There are some new meta-theoretic questions to answer, though, such as: Is
+\tech{ANF} evaluation sound? Does \tech{continuation} typing make sense?
+
+First, I prove that \tech{ANF} evaluation semantics is sound with respect to
+definitional equivalence.
+That is, running in the \tech{ANF} evaluation semantics produces an equivalent
+value to normalization in the equivalence relation.
+The heart of this proof is actually \emph{\tech{naturality}}, a property found
+in the literature on continuations that essentially expressed freedom from
+control effects.
+
+When computing definitional equivalence, we end up with terms that are not in
+ANF, and can no longer be used in the ANF evaluation semantics.
+This is not a problem; we could always ANF translate the resulting term if needed.
+To make it clear which terms are in ANF, and which are not, I leave terms and subterms that are
+in ANF in the \tfonttext{target language font}, and write terms or subterms that are not in ANF
+in the \sfonttext{source language font}.
+Meta-operations like substitution may be applied to ANF (\tfonttext{red}) terms,
+but result in non-ANF (\sfonttext{blue}) terms.
+Since substitution leaves no visual trace of its blueness, I wrap such terms in
+a distinctive language boundary such as \im{\sbound{\subst{\tM}{\tMpr}{\tx}}}
+and \im{\sbound{\tK\hw{\tM}}}.
+The boundary indicates the term is a target (\(\mathcal{T}\)) term on the inside
+but a source (\(\mathcal{S}\)) term on the outside.
+The boundary is only meant to communicate with the reader that a term is no
+longer in \tech{ANF}; it has no meaning operationally.
+
+First, I prove that composing \tech{continuation} in \tech{ANF} is sound with
+respect to substitution.
+This is an expression of \tech{naturality} in \tech{ANF}: composing a term
+\im{\tM} with its \tech{continuation} \im{\tK} in \tech{ANF} is equivalent to running
+\im{\tM} to a value and substituting the result into the \tech{continuation} \im{\tK}.
+\begin{lemma}[Naturality]
+  \label{lem:anf:tgt:het-sound}
+  \im{\tK\hhw{\tM} \equiv \sbound{\tK\hw{\tM}}}
+\end{lemma}
+\begin{proof}
+  By induction on the structure of \im{\tM}
+  \begin{proofcases}
+    \item \im{\tM = \tN} trivial
+    \item \im{\tM = \tlete{\tx}{\tNpr}{\tMpr}}.
+
+      Must show that \im{\tlete{\tx}{\tNpr}\tK\hhw{\tMpr} \equiv \sbound{\tK\hw{\tlete{\tx}{\tNpr}{\tM}}}}.
+      Note that this requires breaking \tech{ANF} while computing equivalence.
+      \begin{align}
+        &\tlete{\tx}{\tNpr}\tK\hhw{\tMpr} \nonumber \\
+        \step_{\zeta}~& \sbound{\subst{\tK\hhw\tMpr}{\tNpr}{\tx}} \\
+        &\text{note that this substitution is undefined in \tech{ANF}} \nonumber \\
+        =~& \tK\hhw{\sbound{\subst{\tMpr}{\tNpr}{\tx}}} \\
+        &\text{by ignoring capture-avoiding substitution} \nonumber \\
+        \vartriangleleft^*~& \sbound{\tK\hw{\tlete{\tx}{\tNpr}{\tM}}} \\
+        & \text{by \(\zeta\)-reduction and congruence} \nonumber \qedhere
+      \end{align}
+  \end{proofcases}
+\end{proof}
+
+Next I show that the \tech{ANF} evaluation semantics is sound with respect to
+definitional equivalence.
+This is also central to my later proof of compiler correctness.
+To do that, I first show that the small-step semantics is sound.
+Then I show soundness of the evaluation function.
+\begin{lemma}[Small-step soundness]
+  \label{lem:anf:tgt:step-sound}
+  If \im{\tstepjudg[\mapsto]{}{\tM}{\tMpr}} then \im{\sequivjudg{}{\tM}{\tMpr}}
+\end{lemma}
+\begin{proof}
+  By cases on \im{\tstepjudg[\mapsto]{}{\tM}{\tMpr}}.
+  Most cases follow easily from the \slang reduction relation and congruence.
+  I give representative cases.
+  \begin{proofcases}
+    \item \im{\tK\hw{\tappe{(\tfune{\tx}{\tA}{\tMone})}{\tV}} \mapsto_{\beta} \tK\hhw{\subst{\tMone}{\tV}{\tx}}}
+
+      Must show that \im{\tK\hw{\tappe{(\tfune{\tx}{\tA}{\tMone})}{\tV}} \equiv \tK\hhw{\subst{\tMone}{\tV}{\tx}}}
+      \begin{align}
+        & \tK\hw{\tappe{(\tfune{\tx}{\tA}{\tMone})}{\tV}} \nonumber \\
+        \stepstar~& \sbound{\tK\hw{\subst{\tMone}{\tV}{\tx}}} & \text{by \(\beta\) and congruence} \\
+        \equiv~& \tK\hhw{\subst{\tMone}{\tV}{\tx}}  & \text{by \fullref[]{lem:anf:tgt:het-sound}}
+      \end{align}
+
+    \item \im{\tK\hw{\tfste{\tpaire{\tVone}{\tVtwo}}} \mapsto_{\pi_1} \tK\hw{\tVone}}
+
+      Must show that \im{\tK\hw{\tfste{\tpaire{\tVone}{\tVtwo}}} \equiv
+        \tK\hw{\tVone}}, which follows by \im{\step_{\pi_1}} and congruence. \qedhere
+  \end{proofcases}
+\end{proof}
+
+\begin{theorem}[Evaluation soundness]
+  \label{thm:anf:tgt:eval-sound}
+  \im{\sequivjudg{}{\teval{\tM}}{\tM}}
+\end{theorem}
+\begin{proof}
+  By induction on the length \im{n} of the reduction sequence given by \im{\teval{\tM}}.
+  Note that, unlike \tech{conversion}, the \tech{ANF} evaluation semantics
+  have no congruence rules, so this \emph{can} be proved on the length of reduction sequences.
+  \begin{proofcases}
+    \item \im{n = 0} By \refrule[anfapp]{Red-Refl} and \refrule*[anfapp]{eqv}{\im{\equiv}}.
+    \item \im{n = i+1} Follows by \fullref[]{lem:anf:tgt:step-sound} and the induction hypothesis. \qedhere
+  \end{proofcases}
+\end{proof}
+
+I prove that plugging a well-typed term into a well-typed \tech{continuation} results
+in a well-typed term of the expected type.
+This theorem corresponds to the Rule \rulename{Cut} rule from sequent calculus, and
+tells us that \tech{continuation} typing allows for compositional reasoning about
+\tech{configurations} \im{\tK\hw{\tN}} whose result types do not
+depend on \im{\tN}.
+\begin{lemma}[Cut]
+  \label{lem:anf:ecca:cut}
+  If \im{\styjudg{\tlenv}{\tK}{(\tN : \tA) \Rightarrow \tB}} and
+  \im{\styjudg{\tlenv}{\tN}{\tA}} then \im{\styjudg{\tlenv}{\tK\hw{\tN}}{\tB}}.
+\end{lemma}
+\begin{proof}
+  By cases on \im{\styjudg{\tlenv}{\tK}{(\tN : \tA) \Rightarrow \tB}}
+  \begin{proofcases}
+    \item \im{\styjudg{\tlenv}{\hole}{(\tN : \tA) \Rightarrow \tA}}, trivial
+    \item \im{\styjudg{\tlenv}{\tlete{\ty}{\hole}{\tM}}{(\tN : \tA) \Rightarrow \tB}}
+
+      We must show that \im{\styjudg{\tlenv}{\tlete{\ty}{\tN}{\tM}}{\tB}}, which
+      follows directly from \refrule[anfapp]{Let} since, by the continuation typing
+      derivation, we have that \im{\styjudg{\tlenv,\ty=\tN}{\tM}{\tB}} and \im{\ty \not\in \FV(\tB)}. \qedhere
+  \end{proofcases}
+\end{proof}
+
+\FigStackExports
+To reason inductively about ANF terms, we need to separate a configuration
+\im{\tM} into its exported definitions \im{\edefs{\tM}} and its underlying
+computation \im{\ehole{\tM}}.
+In \fullref[]{fig:anf:ecca:exports}, I define \im{\edefs{\tM}} to be the
+definitions exported by the ANF term \im{\tM}.
+These are the definitions that will be in scope for a continuation \im{\tK} when
+composed with \im{\tM}, \ie, in scope for \im{\tK} in \im{\tK\hhw{\tM}}.
+I define this as \im{\ehole{\tM}}, also in \fullref[]{fig:anf:ecca:exports}.
+Note that \im{\ehole{\tM}} will only be well typed in the environment for
+\im{\tM} extended with the definitions \im{\edefs{\tM}}.
+
+I show that a configuration is nothing more than its exported definitions and
+underlying computation, \ie, that in a context with the exports of
+\im{\edefs{\tM}}, \im{\ehole{\tM} \equiv \tM}.
+In essence, this lemma shows how ANF converts a dependency on a
+\emph{configuration} \im{\tM} into a series of dependencies on \emph{values},
+\ie, the names
+\im{\txin{0},\dots,\txin{n+1}} in \im{\edefs{\tM}}.
+Note that the ANF guarantees that all dependent typing rules, like
+\im{\tappe{\tV}{\tVpr} : \subst{\tB}{\tVpr}{\tx}}, only depend on
+\tech*{anf:value}{values}.
+This lemma allows us to recover the dependency on a
+\tech*{anf:config}{configuration}.
+\begin{lemma}
+  \label{lem:anf:export-equal}
+  \im{\sequivjudg{\tedefs{\tM}}{\tehole{\tM}}{\tM}}
+\end{lemma}
+\begin{proof}
+  Note that the exports \im{\tedefs{\tM}} are exactly the definitions from
+  the syntax of \im{\tM}.
+  Inlining those definitions via \(\delta\)-reduction is the same as reducing
+  \im{\tM} via \(\zeta\)-reduction.
+  \begin{align}
+    \tM =~&(\tlete{\txone}{\tNone}{\dots\tlete{\txin{n}}{\tNin{n}}{\tNin{n+1}}}) \\
+    \step_{\zeta}^n~& \subst{\tNin{n+1}}{\tNone\dots\tNin{n}}{\txone\dots\txin{n}}
+    \end{align}
+
+  And \im{\tehole{\tM} = \tNin{n+1} \step_{\delta}^n \subst{\tNin{n+1}}{\tNone\dots\tNin{n}}{\txone\dots\txin{n}}}
+\end{proof}
+}

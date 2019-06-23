@@ -1,0 +1,58 @@
+\begin{titlepage}
+    \pdfbookmark[1]{\myTitle}{titlepage}
+    % if you want the titlepage to be centered, uncomment and fine-tune the line below (KOMA classes environment)
+    \begin{addmargin}[-1cm]{-3cm}
+    \begin{center}
+        \large
+
+        \hfill
+
+        \vfill
+
+        \begingroup
+            \color{CTtitle}\spacedallcaps{\myTitle} \\ \bigskip
+        \endgroup
+
+        \spacedlowsmallcaps{\myName}
+
+        \vfill
+
+%        \mySubtitle \\ \medskip
+        \myDegree \\
+        \myDepartment \\
+%        \myFaculty \\
+        \myUni \\ \bigskip
+
+        \myTime%\ -- \myVersion
+
+        \vfill
+
+    \end{center}
+  \end{addmargin}
+\end{titlepage}
+
+\thispagestyle{empty}
+
+\hfill
+
+\vfill
+
+\noindent\myName: \textit{\myTitle,} \myDegree,
+\textcopyright\ \myTime
+
+%\bigskip
+%
+%\noindent\spacedlowsmallcaps{Supervisors}: \\
+%\myProf \\
+%\myOtherProf \\
+%\mySupervisor
+%
+%\medskip
+%
+%\noindent\spacedlowsmallcaps{Location}: \\
+%\myLocation
+%
+%\medskip
+%
+%\noindent\spacedlowsmallcaps{Time Frame}: \\
+%\myTime

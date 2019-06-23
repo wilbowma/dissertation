@@ -1,0 +1,340 @@
+\section{Main Ideas}
+\label{sec:cps:cps:ideas}
+\label{sec:cps:ideas}
+
+Intuitively, in a \tech{dependently typed} language, the power of the type
+system comes from the ability to express decidable equality between
+\tech{terms} and \tech{types}.
+These equalities are decided by reducing \tech{expressions} to canonical forms
+and checking that the resulting \emph{values} are syntactically identical.
+In the source language---\ie, before \tech{CPS} translation---since the language
+is effect-free, every term can be thought of as a \tech{value} since every
+\tech{expression} reduces to a \tech{value}.
+But \tech{CPS} translation converts source \tech{expressions} into
+\tech{computations} of type \im{(A \rightarrow \bot) \rightarrow \bot}.
+This changes the \emph{interface} to the \tech{values}---now we can only access
+the \tech{value} indirectly, by providing a \tech{computation} that will do
+something with the \tech{value}.
+In essence, ensuring \tech{CPS} translations are \tech{type-preserving} is hard
+because every source \tech{value} has turned into a \tech{computation} whose
+\tech{underlying value} isn't directly accessible for purposes of deciding
+equivalence.
+In particular, with the \tech{double-negation translation}, one cannot recover
+the \tech{underlying value}, because every \tech{continuation} must return
+\im{\False}.
+
+This description in terms of interfaces is just a shallow description
+of the problem.
+At a deeper level, the problem is that \tech{dependently typed} languages rely
+on the ability of the type system to copy \tech{expressions} from a \emph{term-level}
+context into a \emph{type-level} context, but \tech{CPS} transforms
+\tech{expressions} into \emph{computations} whose meaning, or \tech{underlying
+  value}, depends on its term-level context.
+This copying happens in particular in the elimination rules for features related
+to \tech{dependency}---\ie, \tech{dependent functions}, \tech{dependent pairs},
+and \tech{dependent conditionals}---hence these features are at the heart of
+past negative results.
+After \tech{CPS}, we no longer copy an \tech{expression}, whose meaning is self-contained; instead we copy a \tech{computation}, whose meaning depends on its
+term-level context.
+Not only do we ``forget'' part of the meaning of \tech{computations}, but as we
+discussed before, a \tech{computation} cannot run in a type-level context---it requires
+a term-level context.
+As I describe next, the solution to these problems will be to record part of
+the term-level contexts during type checking and to provide an interface that
+allows \tech{types} to run {computations}.
+
+To make this intuition concrete, I present two examples.
+I focus on two cases of the \tech{double-negation translation} that fail to type
+check: the \tech{CBN} translation of \im{\ssnde{\se}} (reported
+by~\citet{barthe2002}) and the \tech{CBV} translation of
+\im{\sappe{\se}{\sepr}}.
+
+Consider the \tech{CBN} \tech{CPS} translation.
+We translate a term \im{\se} of type \im{\sA} into a \tech{CPS'd}
+\tech{computation}, written \im{{\se}^\div}, of type \im{{\sA}^\div}.
+Given a type \im{\sA}, we define its \deftech{computation translation}
+\im{{\sA}^\div} and its \deftech{value translation} \im{{\sA}^+}.
+Below, I define the translations for \tech{dependent pairs} and \tech{dependent functions}.
+As in \fullref[]{chp:abs-cc}, the translations are defined by induction on
+typing derivations, but I present them less formally in this section.
+\begin{mathpar}
+\sA^\div \defeq \cpsfunty{(\cpsfunty{\sA^+}{\tfont{\bot}})}{\tfont{\bot}}
+
+(\ssigmaty{\sx}{\sA}{\sB})^+ \defeq \cpssigmaty{\cpsx}{\sA^\div}{\sB^\div}
+
+(\spity{\sx}{\sA}{\sB})^+ \defeq \cpspity{\cpsx}{\sA^\div}{\sB^\div}
+\end{mathpar}
+Note that since this is the \tech{CBN} translation, the translated argument type
+for \tech{dependent functions} is a \tech{computation} type \im{\sA^\div}
+instead of a \tech{value} type \im{\sA^+}, and the translated component types
+for \tech{dependent pairs} are \tech{computation} types \im{\sA^\div} and \im{\sB^\div}.
+
+As a warm-up, consider the \tech{CBN} translation of \im{\sfste{\se}}
+(where \im{\se : \ssigmaty{\sx}{\sA}{\sB}}):
+\begin{displaymath}
+  (\sfste{\se} : \sA)^\div \defeq
+  \begin{stackTL}
+     \cpsfune{\cpsk}{\cpsfunty{\sA^+}{\tfont{\bot}}}{
+          \\\quad\!\cpsappe{\se^\div}{\begin{stackTL}(\cpsfune{\cpsy}{(\cpssigmaty{\cpsx}{\sA^{\div}}{\sB^{\div}})}{
+                \\\quad\,\cpslete{\cpsz}{(\cpsfste{\cpsy}):\sA^\div}{\cpsappe{\cpsz}{\cpsk}}})}
+            \end{stackTL}}
+  \end{stackTL}
+\end{displaymath}
+It is easy to see that the above type checks (checking the types of
+\im{\cpsy}, \im{\cpsz}, and \im{\cpsk}).
+
+Next, consider the \tech{CBN} translation of \im{\ssnde{\se}}:
+\begin{displaymath}
+  (\ssnde{\se} : \subst{\sB}{\sfste{\se}}{\sx})^\div \defeq
+  \begin{stackTL}
+     \cpsfune{\cpsk}{\cpsfunty{\subst{\sB^+}{(\sfste{\se})^{\div}}{\cpsx}}{\tfont{\bot}}}{
+    \\\quad\!\cpsappe{\se^\div}{\begin{stackTL}(\cpsfune{\cpsy}{(\cpssigmaty{\cpsx}{\sA^\div}{\sB^\div})}{
+                                \\\quad\cpslete{\cpsz}{(\cpssnde{\cpsy}):\subst{\sB^\div}{\cpsfste{\cpsy}}{\cpsx}}{\cpsappe{\cpsz}{\cpsk}}})}
+                              \end{stackTL}}
+  \end{stackTL}
+\end{displaymath}
+
+The above does not type check because the \tech{computation} \im{\cpsz} expects
+a \tech{continuation} of type
+\im{\cpsfunty{\subst{\sB^+}{\cpsfste{\cpsy}}{\cpsx}}{\tfont{\bot}}} but
+\im{\cpsk} has type
+\im{\cpsfunty{\subst{\sB^+}{(\sfste{\se})^{\div}}{\cpsx}}{\tfont{\bot}}}.
+Somehow we need to show that \im{\cpsfste{\cpsy} \equiv (\sfste{\se})^{\div}}.
+But what is the relationship between \im{\cpsy} and \im{\se}?
+Intuitively, \im{\se^\div : \sA^\div} is a \tech{computation} that will pass its
+result---\ie, the \tech{underlying value} of type \im{\sA^+} inside
+\im{\se^\div}, which corresponds to the value produced by evaluating the source
+term \im{\se}---to its \tech{continuation}.
+So when \im{\se^\div}'s \tech{continuation} is called, its argument \im{\cpsy}
+will always be equal to the unique \tech{underlying value} inside \im{\se^\div}.
+However, since we have used a \emph{function} to describe a \tech{continuation},
+we must type check the body of the \tech{continuation} assuming that \im{\cpsy}
+is \emph{any} value of the appropriate type instead of the \emph{exactly one}
+\tech{underlying value} from \im{\se^\div}.
+
+Even if we could communicate that \im{\cpsy} is equal to exactly one value, we
+have no way to extract the underlying \im{\sA^+} value from \im{\se^\div} since
+the latter takes a \tech{continuation} that \tech{never returns} (since it must
+return a term of type \im{\tFalse}).
+To extract the \tech{underlying value} from a \tech{computation}, we need a
+means of converting from \im{\sA^\div} to \im{\sA^+}.
+In essence, after \tech{CPS}, we have an \emph{interoperability} problem between
+the \tech{term} language (where \tech{computations} have type \im{\sA^\div})
+and the \tech{type} language (which needs \tech{values} of type \im{\sA^+}).
+In the source language, before \tech{CPS}, we are able to pretend that the
+\tech{term} and \tech{type} languages are the same because all
+\tech{computations} of type \im{\sA} reduce to \tech{values} of type \im{\sA}.
+However, the \tech{CPS} translation creates a gap between the \tech{term} and
+\tech{type} languages; it changes the \emph{interface} to \tech{terms} so that
+the only way to get a value out of a \tech{computation} is to have a
+\tech{continuation}, which can \tech{never return}, ready to receive that
+\tech{value}.
+
+The \tech{locally polymorphic answer type translation} solves both of the above problems.
+We change the \tech{computation} translation to \im{ \sA^\div =
+  \cpspity{\cpsalpha}{\cpsstarty}{\cpsfunty{(\cpsfunty{\sA^+}{\cpsalpha})}{\cpsalpha}}}.
+Now, to extract the \tech{underlying value} of type \im{\sA^+} from \im{\se^\div
+  : \sA^\div}, we can run \im{\se^\div} with the identity \tech{continuation} as
+follows: \im{\cpsappe{\se^\div}{\sA^+~\cpsidk}}.
+Moreover, we can now justify type checking the body of \im{\se^\div}'s
+\tech{continuation} under the assumption that \im{\cpsy \equiv
+  \cpsappe{\se^\div}{\sA^+~\cpsidk}} thanks to a \emph{free theorem} we get from
+the type \im{\sA^\div}.
+The free theorem says that running some \im{\cpse : \sA^\div} with
+\tech{continuation} \im{\cpsk : \cpsfunty{\cpsA}{\cpsB}} is equivalent to
+running \im{\cpse} with the identity \tech{continuation} and then passing the
+result to \im{\cpsk}, \ie, \im{\cpsappe{\cpse}{\cpsB~\cpsk} \equiv
+  \cpsappe{\cpsk}{(\cpsappe{\cpse}{\cpsA~\cpsidk})}}.
+
+To formalize this intuition in the target language, I first add new syntax for
+the application of a \tech{computation} to its answer type and \tech{continuation}:
+\im{\cpscappe{\cpse}{\cpsA}{\cpsepr}}.
+Next, I internalize the aforementioned free theorem by adding two rules to the
+target language.
+The first is the following typing rule which records (a representation of) the
+\tech{value} of a \tech{computation} while type checking a \tech{continuation}.
+That is, it allows us to assume \im{\cpsy \equiv \cpsappe{\se^\div}{\sA^+~\cpsidk}} when
+type checking the body of \im{\se^\div}'s \tech{continuation}.
+\begin{mathpar}
+  \inferrule*[right={\refrule{T-Cont}}]
+  {\cpstyjudg{\cpslenv}{\cpse}{\cpspity{\cpsalpha}{\cpsstarty}{\cpsfunty{(\cpsfunty{\cpsA}{\cpsalpha})}{\cpsalpha}}} \\
+   \cpstyjudg{\cpslenv}{\cpsB}{\cpsstarty} \\
+   \cpstyjudg{\cpslenv,\cpsx = \cpsappe{\cpse}{\cpsA~\cpsidk}}{\cpsepr}{\cpsB}}
+  {\cpstyjudg{\cpslenv}{\cpscappe{\cpse}{\cpsB}{(\cpsfune{\cpsx}{\cpsA}{\cpsepr})}}{\cpsB}}
+\end{mathpar}
+The second is the following \tech{equivalence} rule, which is justified by the
+free theorem.
+Intuitively, this rule normalizes \tech{CPS'd} \tech{computations} to the
+``\tech{value}'' \im{\cpsappe{\se^\div}{\sA^+~\cpsidk}}.
+{
+\vspace{-2ex}
+\begin{mathpar}
+  \inferrule*[right={\refrule*{eqv-cont}{\inlinemath{\equiv}-Cont}}]
+  {~}
+  {\cpsequivjudg{\cpslenv}{{(\cpscappe{\cpseone}{\cpsB}{(\cpsfune{\cpsx}{\cpsA}{\cpsetwo})})}}{\cpsappe{(\cpsfune{\cpsx}{\cpsA}{\cpsetwo})}{(\cpsappe{\cpseone}{\cpsA~\cpsidk})}}}
+\end{mathpar}
+}
+I prove these rules admissable in \fullref[]{sec:cps:ecccps}.
+
+Here is the updated \tech{CPS} translation \im{(\ssnde{\se} :
+\subst{\sB}{\sfste{\se}}{\sx})^\div} that leverages \tech{answer-type
+  polymorphism}:
+\begin{displaymath}
+  {\cpsfune{\cpsalpha}{\cpsstarty}{
+      \begin{stackTL}\cpsfune{\cpsk}{\cpsfunty{\subst{\sB^+}{(\sfste{\se})^{\div}}{\cpsx}}{\cpsalpha}}{
+        \\\quad\cpscappe{\se^\div}{\cpsalpha}{\begin{stackTL}(\cpsfune{\cpsy}{(\cpssigmaty{\cpsx}{\sA^\div}{\sB^\div})}{
+                                                \cpslete{\cpsz}{(\cpssnde{\cpsy}):\subst{\sB^\div}{\cpsfste{\cpsy}}{\cpsx}}{\cpsappe{\cpsz}{\cpsalpha~\cpsk}}})
+                                                \end{stackTL}}}}
+     \end{stackTL}}
+\end{displaymath}
+{
+    \allowdisplaybreaks
+To type check \im{\cpscappe{\se^\div}{\cpsalpha}{\tfontsym{\dots}}} we use
+\refrule{T-Cont}.
+When type checking the body of \im{\se^\div}'s \tech{continuation}, we have that
+\im{\cpsy \equiv
+  \cpsappe{\se^\div}{(\cpssigmaty{\cpsx}{\sA^\div}{\sB^\div})~\cpsidk}} and
+recall that we need to show that \im{\cpsfste{\cpsy} \equiv
+  (\sfste{\se})^{\div}}.
+This requires expanding \im{(\sfste{\se})^{\div}} and making use of the
+\refrule*{eqv-cont}{\im{\equiv}-Cont} rule we now have available in
+the target language.
+Here is an informal sketch of the proof---I give the detailed proof in
+\fullref[]{sec:cps:cbn:proof}.
+\begin{align}
+  (\sfste{\se})^{\div} & \equiv \cpscappe{\se^\div}{\cpsalphapr}{(\cpsnfune{\cpsy}{\cpsfste{\cpsy}})}
+                       & \text{by (roughly) the translation} \\
+                       & \equiv \cpsappe{(\cpsnfune{\cpsy}{\cpsfste{\cpsy}})}{(\cpsappe{\se^\div}{(\cpssigmaty{\cpsx}{\sA^\div}{\sB^\div})~\cpsidk})}
+                       & \text{by \refrule*{eqv-cont}{\im{\equiv}-Cont}} \\
+                       & \equiv \cpsfste{(\cpsappe{\se^\div}{(\cpssigmaty{\cpsx}{\sA^\div}{\sB^\div})~\cpsidk})}
+                       & \text{by reduction} \\
+                       & \equiv \cpsfste{\cpsy}
+                       & \text{since \im{\cpsy \equiv \cpsappe{\se^\div}{(\cpssigmaty{\cpsx}{\sA^\div}{\sB^\div})~\cpsidk}}}
+\end{align}
+}
+
+Notice that the {CPS} translation---as well as the new rules \refrule{T-Cont}
+and \refrule*{eqv-cont}{\im{\equiv}-Cont}---only uses the new
+\im{\tfontsym{@}} syntax for certain applications.
+Intuitively, we only need to use \im{\tfontsym{@}} only when type checking
+requires the free theorem.
+This happens when \tech{CPS} translating a \tech{depended-upon}
+\tech{computation}, such as for \im{\se} in \im{\ssnde{\se}}.
+
+%%%%%%%%%%%%%%
+Next, let's look at the translation of \tech{dependent function} types.
+Again, we start with a warm-up; consider the following \tech{CBN}
+\tech{double-negation translation} of \im{\sappe{\se}{\sepr}} (where \im{\se:
+  \spity{\sx}{\sA}{\sB}} and \im{\sepr : \sA}):
+\begin{displaymath}
+      (\sappe{\se}{\sepr} : \subst{\sB}{\sepr}{\sx})^\div =
+        {\cpsfune{\cpsk}{\cpsfunty{(\subst{\sB^+}{\se^{\sprime\div}}{\cpsx})}{\tfont{\bot}}}{
+              \cpsappe{\se^\div}{(\cpsfune{\cpsf}{\cpspity{\cpsx}{\sA^\div}{\sB^\div}}{
+                  \cpsappe{(\cpsappe{\cpsf}{\se^{\sprime\div}})}{\cpsk})}}}}
+\end{displaymath}
+The above type checks (as seen by inspecting the types of \im{\cpsf} and
+\im{\cpsk}).  Notice that \im{\se^{\sprime\div}} appears as an
+argument to \im{\cpsf} so the type of
+\im{\cpsappe{\cpsf}{{\sepr}^\div} : \subst{\sB^\div}{{\sepr}^\div}{\cpsx}}.
+
+Now consider the \tech{CBV} \tech{CPS} translation based on
+\deftech*{double-negation,double negation}{double negation}, which fails to type
+check.
+We define the \tech{CBV} \tech{computation} translation \im{{\sA}^\div} and
+\tech{value} translation \im{{\sA}^+} as follows.
+\begin{mathpar}
+\sA^\div = \cpsfunty{(\cpsfunty{\sA^+}{\tfont{\bot}})}{\tfont{\bot}}
+
+(\ssigmaty{\sx}{\sA}{\sB})^+ = \cpssigmaty{\cpsx}{\sA^+}{\sB^+}
+
+(\spity{\sx}{\sA}{\sB})^+ = \cpspity{\cpsx}{\sA^+}{\sB^\div}
+\end{mathpar}
+Since this is a \tech{CBV} translation, the translated argument for the
+\tech{dependent function} is a \tech{value} of type \im{\sA^+} and the
+translated component types for \tech{dependent pairs} are \tech{values} of types
+\im{\sA^+} and \im{\sB^+}.
+
+Here is the \tech{CBV} \tech{CPS} translation \im{\sappe{\se}{\sepr}} (where
+\im{\se: \spity{\sx}{\sA}{\sB}} and \im{\sepr : \sA}):
+\begin{displaymath}
+  (\sappe{\se}{\sepr} : \subst{\sB}{\sepr}{\sx})^\div =
+{           \begin{stackTL}
+            \cpsfune{\cpsk}{\cpsfunty{(\subst{\sB^+}{\se^{\sprime+}}{\cpsx})}{\tfont{\bot}}}{
+              \cpsappe{\se^\div}{(\cpsfune{\cpsf}{\cpspity{\cpsx}{\sA^+}{\sB^{\div}}}{
+                    {\cpsappe{\se^{\sprime\div}}{(\cpsfune{\cpsx}{\sA^+}{
+                        \cpsappe{(\cpsappe{\cpsf}{\cpsx})}{\cpsk}})}})
+                }}}
+            \end{stackTL}
+}
+\end{displaymath}
+For the moment, ignore that our type annotation on \im{\cpsk},
+\im{(\subst{\sB^+}{\se^{\sprime+}}{\cpsx})}, seems to require a \tech{value}
+translation of \tech{terms} \im{\se^{\sprime+}}, which we can't normally define.
+Instead, notice that unlike in the \tech{CBN} translation, we now evaluate the
+argument \im{{\sepr}^\div} before calling \im{\cpsf}, so in \tech{CBV} we have
+the application \im{\cpsappe{\cpsf}{\cpsx} : \subst{\sB^\div}{\cpsx}{\cpsx}}.
+This translation fails to type check since the \tech{computation}
+\im{\cpsappe{\cpsf}{\cpsx}} expects a \tech{continuation} of type
+\im{\cpsfunty{(\subst{\sB^+}{\cpsx}{\cpsx})}{\tfont{\bot}}} but \im{\cpsk}
+has type \im{\cpsfunty{(\subst{\sB^+}{\se^{\sprime+}}{\cpsx})}{\tfont{\bot}}}.
+Somehow we need to show that \im{\cpsx \equiv {\sepr}^+}.
+This situation is almost identical to what we saw with the failing \tech{CBN}
+translation of \im{\ssnde{\se}}.
+Analogously, this time we ask what is the relationship between \im{\cpsx} and
+\im{{\sepr}^\div}, or \im{{\sepr}^+}?
+As before, note that the only \tech{value} that can flow into \im{\cpsx} is the
+unique \tech{underlying value} in \im{{\sepr}^\div}.
+
+Hence, fortunately, the solution is again to do what we did for the \tech{CBN}
+translation: adopt a \tech{CPS} translation based on \tech{answer-type
+  polymorphism}.
+As before, we change the \tech{computation} translation to \im{ \sA^\div =
+  \cpspity{\cpsalpha}{\cpsstarty}{\cpsfunty{(\cpsfunty{\sA^+}{\cpsalpha})}{\cpsalpha}}}.
+Here is the updated \tech{CBV} \tech{CPS} translation of \im{(\sappe{\se}{\sepr}
+: \subst{\sB}{\sepr}{\sx})^\div}:
+\begin{displaymath}
+  \cpsfune{\cpsalpha}{\cpsstarty}{
+    \begin{stackTL}
+      \cpsfune{\cpsk}{\cpsfunty{(\subst{\sB^+}{(\cpsappe{{\sepr}^\div}{\sA^+~\cpsidk})}{\cpsx})}{\cpsalpha}}{
+        \\\quad\!\cpsappe{\se^\div}{\cpsalpha~\begin{stackTL}(\cpsfune{\cpsf}{\cpspity{\cpsx}{\sA^+}{\sB^{\div}}}{
+              \\\quad{\cpscappe{\se^{\sprime\div}}{\cpsalpha}{(\cpsfune{\cpsx}{\sA^+}{
+                    \cpsappe{(\cpsappe{\cpsf}{\cpsx})}{\cpsalpha~\cpsk}})}})
+            \end{stackTL}}}}
+    \end{stackTL}}
+\end{displaymath}
+First, notice that this uses the new \im{\tfontsym{@}} form when evaluating the
+argument \im{{\sepr}^\div}, which tells us we're using our new typing rule to
+record the \tech{value} of \im{\se^{\sprime\div}} while we type check its
+\tech{continuation}.
+Second, notice the type annotation on \im{\cpsk}.
+Earlier I observed that the type annotation for \im{\cpsk},
+\im{(\subst{\sB^+}{\se^{\sprime+}}{\cpsx})}, seemed to require a \tech{value}
+translation on \tech{terms} \im{{\sepr}^+} that cannot normally be defined.
+The translation gives us a sensible way of modeling the \tech{value} translation
+of a term by invoking a \tech{computation} with the identity
+\tech{continuation}---so \im{{\sepr}^+} is just the underlying value in
+\im{{\sepr}^\div}, \ie, \im{(\cpsncappe{{\sepr}^\div}{\sA^+}{\cpsidk})}.
+This is an important point to note: unlike \tech{CBN} \tech{CPS}, where we can
+substitute \tech{computations} for variables, in \tech{CBV} \tech{CPS} we must
+find a way to extract the \tech{underlying value} from \tech{computations} of
+type \im{\sA^\div} since variables expect \tech{values} of type \im{\sA^+}.
+Without \tech{answer-type polymorphism}, \tech{CBV} \tech{CPS} is, in some
+sense, much more broken than \tech{CBN} \tech{CPS}!
+Indeed,~\citet{barthe1999} already gave a \tech{CBN} \tech{double-negation
+  translation} for \tech{dependent functions}, but typed \tech{CBV}
+\tech{double-negation translation} for \tech{dependent function} fails.
+
+Using the new typing rule and \tech{equivalence} rules from earlier, we are able
+to type check the above translation of \im{\sappe{\se}{\sepr}} in essentially
+the same way as for the \tech{CBN} translation of \im{\ssnde{\se}}.
+I show the detailed proof in \fullref[]{sec:cps:cbv:proof}.
+
+The reader may worry that our \tech{CBV} \tech{CPS} translation produces many
+terms of the form \im{\cpsappe{\cpsk}{(\sappe{\se^\div}{\sA^+~\cpsidk})}}, which
+aren't really in \tech{CPS} since \im{\sappe{\se^\div}{\sA^+~\cpsidk}} must return.
+However, notice that these only appear in \tech{types}, not \tech{terms}.
+That is, we only run a \tech{computation} with the identity \tech{continuation}
+to convert a \tech{CPS} \tech{computation} into a \tech{value} \emph{in the
+  types} for deciding \tech{equivalence}.
+The run-time \tech{terms} are all in \tech{CPS} and can be run in a machine-like
+semantics in which \tech{computations} \tech{never return}.

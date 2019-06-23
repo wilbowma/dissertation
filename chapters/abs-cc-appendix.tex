@@ -1,0 +1,117 @@
+\renewcommand{\techprefix}{refabscc}
+\renewcommand{\tlang}{\abscctlang}
+\renewcommand{\slang}{\absccslang}
+
+\newcommand{\FigcCCObs}[1][t]{
+  \begin{figure}[#1]
+    \begin{bnfgrammar}
+      \bnflabel{\abscctlang Observations} &
+      \tv & \bnfdef & \ttruee \bnfalt \tfalsee
+    \end{bnfgrammar}
+    \caption{\abscctlang Observations}
+    \label{fig:cccc:obs}
+  \end{figure}
+}
+
+\newcommand{\FigCCObsRel}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\sv \approx \tv}
+    \begin{mathpar}
+      \struee \approx \ttruee
+
+      \sfalsee \approx \tfalsee
+    \end{mathpar}
+    \caption{Observation Relation between \slang and \tlang}
+    \label{fig:cccc:obs}
+  \end{figure}
+}
+
+\chapter{Reference for \abscctlang}
+\label{sec:abs-cc:appendix}
+This appendix contains the complete definitions for \abscctlang.
+All \abscctlang figures from \fullref[]{chp:abs-cc} are reproduced and completed
+with elided parts here, and elided figures are presented here.
+In particular, additional figures regarding the ANF variant of \abscctlang are
+included here.
+
+\begin{typographical}
+  In this appendix, I typeset \abscctlang in a \emph{\tfonttext{bold, red, serif
+      font}}, and typeset the model language \slang in a \emph{\sfonttext{blue,
+      non-bold, sans-serif font}}.
+\end{typographical}
+
+\begingroup
+\let\label\discard
+
+\FigCCCCSyntax[ht]
+
+\endgroup
+
+\FigCCCCSugar[ht]
+\FigCCCCRedFull[ht]
+\FigCCCCConv[ht]
+
+\begingroup
+\let\label\discard
+
+\FigCCCCEqv[ht]
+\FigCCCCSub[ht]
+
+\endgroup
+
+\FigCCCCTypingFullOne[ht]
+\FigCCCCTypingFullTwo[ht]
+\FigCCCCWF[ht]
+
+\begingroup
+\let\label\discard
+\let\sfont\tfont
+\let\sfontsym\tfontsym
+\let\scolor\tcolor
+\renewcommand{\slang}{\abscctlang}
+
+\FigcCCObs
+\FigECCProg[ht]
+\FigCCCCEval[ht]
+\FigLinking[ht]
+
+\endgroup
+
+\FigCCCCModelFull[ht]
+
+\FloatBarrier
+
+Note that the following ANF definitions for \abscctlang exclude dependent
+conditionals, since the ANF translation for dependent conditionals presented in
+\fullref[]{chp:anf} is incomplete.
+
+\FigCCANFFull[ht]
+\FigCCCCAHetero[ht]
+\FigCCANFRed[ht]
+
+\cleardoublepage
+\chapter{Reference for Abstract Closure Conversion}
+\label{sec:abs-cc:cc:appendix}
+This appendix contains the complete definitions for the abstract closure
+conversion translation from \fullref[]{chp:abs-cc}.
+All figures related to the translation are reproduced and completed with
+elided parts here, and elided figures are presented here.
+
+\begin{typographical}
+  In this appendix, I typeset the source language, \slang, in a
+  \emph{\sfonttext{blue, non-bold, sans-serif font}}, and the target language,
+  \abscctlang, in a \emph{\tfonttext{bold, red, serif font}}.
+\end{typographical}
+
+\FigCCObsRel[ht]
+
+\begingroup
+\let\label\discard
+
+\FigDFVs[ht]
+
+\endgroup
+
+\FigCCTermNotation[ht]
+\FigCCTermFullOne[ht]
+\FigCCTermFullTwo[ht]

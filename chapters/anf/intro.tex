@@ -1,0 +1,38 @@
+In this chapter, I develop the first of the two front-end translations for a
+\tech{type-preserving} compiler for \slang: \tech{ANF} translation.
+The target language for this translation is \tlang, a variant of \slang
+syntactically restricted to \tech{ANF}.
+Recall from \fullref[]{chp:type-pres} that the first translation in the model
+compiler imposes a distinction between \tech{computation} and \tech{values}.
+A-normal form (\tech{ANF}) translation accomplishes this goal and can take the
+place of \tech{CPS} translation in the model compiler.
+(In fact, \tech{ANF} was introduced as the essence of
+\tech{CPS}~\cite{flanagan1993}.)
+
+\begin{digression}
+  The \emph{A} in A-normal form has no further meaning.
+  The \emph{A} comes from the set of axioms and reductions introduced by
+  \citet{sabry1992} to reason about CPS.
+  \citet{flanagan1993} use the \emph{A} as a label in a commutative diagram,
+  observing that there should exist a direct translation that produces a normal
+  form equivalent to the CPS/optimization/un-CPS process found in practice.
+  The programs produced by this translation are in normal form with respect to
+  the \emph{A}-reductions of \citeauthor{sabry1992}, \ie,
+  in \emph{A}-normal form.
+\end{digression}
+
+I start by explaining the key problems that arise when preserving dependent
+types through \tech{ANF} translation and the main idea to my solution.
+I then move on to the formal development of the target language, the
+translation, and proofs of \tech{type preservation} and \tech{compiler
+correctness}.
+I conclude with a discussion of related problems, and a brief comparison
+of \tech{CPS} and \tech{ANF} in the context of dependent-type preservation, but
+leave a full discussion of \tech{CPS} until \fullref[]{chp:cps}.
+
+\begin{typographical}
+ In this chapter, I define fixed source and target languages.
+ I typeset the source language, \slang, in a \emph{\sfonttext{blue, non-bold,
+ sans-serif font}}, and the target language, \tlang, in a
+ \emph{\tfonttext{bold, red, serif font}}.
+\end{typographical}

@@ -1,0 +1,1263 @@
+\newcommand{\FigCCCCSyntax}[1][t]{
+  \begin{figure}[#1]
+    \begin{bnfgrammar}
+        \bnflabel{Universes} & \tU & \bnfdef & \tpropty \bnfalt \ttypety{i}
+        \bnfnewline
+        \bnflabel{Expressions} & \te,\tA,\tB & \bnfdef &
+                                                         \tx
+                                                         \bnfalt \tU
+                                                         \bnfalt \tcodety{\txpr:\tApr,\tx:\tA}{\tB}
+                                                         \bnfalt \tnfune{(\txpr:\tApr,\tx:\tA)}{\te}
+                                                         \\ && \bnfalt &
+                                                         \tpity{\tx}{\tA}{\tB}
+                                                         \bnfalt \tcloe{\te}{\tepr}
+                                                         \bnfalt \tappe{\te}{\tepr}
+                                                         \bnfalt \tsigmaty{\tx}{\tA}{\tB}
+                                                         \\ && \bnfalt &
+                                                         \tdpaire{\teone}{\tetwo}{\tsigmaty{\tx}{\tA}{\tB}}
+                                                         \bnfalt \tfste{\te}
+                                                         \bnfalt \tsnde{\te}
+                                                         \bnfalt \tboolty
+                                                         \bnfalt \ttruee
+                                                         \\ && \bnfalt & \tfalsee
+                                                         \bnfalt \tife{\te}{\teone}{\tetwo}
+
+                                                         \bnfalt \tlete{\tx}{\te}{\te}
+                                                         \bnfalt \tunitty
+                                                         \bnfalt \tunite
+    \end{bnfgrammar}
+    \caption{\tlang Syntax}
+    \label{fig:abs-cc:cc-cc:syntax}
+  \end{figure}
+}
+
+\newcommand{\FigCCCCSugar}[1][t]{
+  \begin{figure}[#1]
+    \begin{displaymath}
+      \begin{array}{rcl}
+        \tpaire{\teone}{\tetwo} & = & \tdpaire{\teone}{\tetwo}{\tsigmaty{\tx}{\tA}{\tB}}
+        \\ && \text{where \im{\teone:\tA} and \im{\tetwo : \tB} are inferred from context} \\
+        \tnpaire{\tei...} & = & \tpaire{\tein{0}}{\tpaire{\tein{1}}{...\tpaire{\tein{n}}{\tunite}}} \\
+        \tnsigmaty{(\txi:\tAi...)} & = & \tsigmaty{\txin{0}}{\tAin{0}}{\tsigmaty{\txin{1}}{\tAin{1}}{...\tsigmaty{\txin{n}}{\tAin{n}}{\tunitty}}} \\
+        \tlete{\tnpaire{\txi...}}{\te}{\tepr} & = & \begin{stackTL}\tlete{\txin{0}}{\tfste{\te}}{\\\quad\tlete{\txin{1}}{\tfste{\tsnde{\te}}}{...\\\qquad\tlete{\txin{n}}{\tfste{\tsnde{...\tsnde{\te}}}}{\tepr}}}\end{stackTL} \\
+      \end{array}
+    \end{displaymath}
+    \caption{\tlang Syntactic Sugar}
+    \label{fig:abs-cc:cc-cc:sugar}
+  \end{figure}
+}
+
+\newcommand{\FigCCCCRedFull}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\tstepjudg[\step]{\tlenv}{\te}{\tepr}}
+    \begin{reductionrules}
+      \tlenv \vdash\tappe{\tcloe{\tnfune{\txpr:\tApr,\tx:\tA}{\teone}}{\tepr}}{\te}
+      & \step_{\beta} & \subst{\subst{\teone}{\tepr}{\txpr}}{\te}{\tx}
+      \stepnewline
+
+      \tlenv \vdash \tfste{\tpaire{\teone}{\tetwo}} & \step_{\pi_{1}} & \teone
+      \stepnewline
+
+      \tlenv \vdash \tsnde{\tpaire{\teone}{\tetwo}} & \step_{\pi_{2}} & \tetwo
+      \stepnewline
+
+      \tlenv \vdash \tife{\ttruee}{\teone}{\tetwo} & \step_{\iota_{1}} & \teone
+      \stepnewline
+
+      \tlenv \vdash \tife{\tfalsee}{\teone}{\tetwo} & \step_{\iota_{2}} & \tetwo
+      \stepnewline
+
+      \tlenv \vdash \tx & \step_{\delta} & \te & \where{\tx = \te \in \tlenv}
+      \stepnewline
+
+      \tlenv \vdash \tlete{\tx}{\te}{\teone} & \step_{\zeta} & \subst{\teone}{\te}{\tx}
+    \end{reductionrules}
+    \caption{\tlang Reduction}
+    \label{fig:abs-cc:cc-cc:red-full}
+  \end{figure}
+}
+
+\newcommand{\FigCCCCEval}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\teval{\te} = \tv}
+    \begin{displaymath}
+      \begin{array}{rcll}
+        \teval{\te} & = & \tv & \text{if \im{\twf{}{\te}} and \im{\te \stepstar \tv}}
+      \end{array}
+    \end{displaymath}
+    \caption{\tlang Evaluation}
+    \label{fig:abs-cc:cc-cc:eval}
+  \end{figure}
+}
+
+\newcommand{\FigCCCCRed}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\tstepjudg[\step]{\tlenv}{\te}{\tepr}}
+    \begin{reductionrules}
+      & \vdots &
+      \stepnewline
+
+      \tlenv \vdash\tappe{\tcloe{\tnfune{\txpr:\tApr,\tx:\tA}{\teone}}{\tepr}}{\te}
+      & \step_{\beta} & \subst{\subst{\teone}{\tepr}{\txpr}}{\te}{\tx}
+      \stepnewline
+    \end{reductionrules}
+    \caption{\tlang Reduction (excerpts)}
+    \label{fig:abs-cc:cc-cc:red}
+  \end{figure}
+}
+
+\newcommand{\FigCCCCConv}[1][t]{
+  \begin{figure}[#1]
+    \begin{mathpar}
+      \inferrule*[right=\defrule{Red-Refl}]
+      {~}
+      {\tstepjudg[\stepstar]{\tlenv}{\te}{\te}}
+
+      \inferrule*[right=\defrule{Red-Trans}]
+      {\tstepjudg{\tlenv}{\te}{\teone} \\
+       \tstepjudg[\stepstar]{\tlenv}{\teone}{\tepr}}
+      {\tstepjudg[\stepstar]{\tlenv}{\te}{\tepr}}
+
+      \inferrule*[right=\defrule{Red-Cong-T-Code}]
+      {\tstepjudg[\stepstar]{\tlenv}{\tAone}{\tAonepr} \\
+       \tstepjudg[\stepstar]{\tlenv,\tn:\tAonepr}{\tAtwo}{\tAtwopr} \\
+       \tstepjudg[\stepstar]{\tlenv,\tn:\tAonepr,\tx:\tAtwopr}{\tB}{\tBpr}}
+      {\tstepjudg[\stepstar]{\tlenv}{\tcodety{\tn:\tAone,\tx:\tAtwo}{\tB}}{\tcodety{\tn:\tAonepr,\tx:\tAtwopr}{\tBpr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Code}]
+      {\tstepjudg[\stepstar]{\tlenv}{\tAone}{\tAonepr} \\
+       \tstepjudg[\stepstar]{\tlenv,\tn:\tAonepr}{\tAtwo}{\tAtwopr} \\
+       \tstepjudg[\stepstar]{\tlenv,\tn:\tAonepr,\tx:\tAtwopr}{\te}{\tepr}}
+      {\tstepjudg[\stepstar]{\tlenv}{\tnfune{(\tn:\tAone,\tx:\tAtwo)}{\te}}{\tnfune{(\tn:\tAonepr,\tx:\tAtwopr)}{\tepr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Pi}]
+      {\tstepjudg[\stepstar]{\tlenv}{\tA}{\tApr} \\
+       \tstepjudg[\stepstar]{\tlenv,\tx:\tApr}{\te}{\tepr}}
+      {\tstepjudg[\stepstar]{\tlenv}{\tpity{\tx}{\tA}{\te}}{\tpity{\tx}{\tApr}{\tepr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Clo}]
+      {\tstepjudg[\stepstar]{\tlenv}{\teone}{\teonepr} \\
+       \tstepjudg[\stepstar]{\tlenv}{\tetwo}{\tetwopr}}
+      {\tstepjudg[\stepstar]{\tlenv}{\tcloe{\teone}{\tetwo}}{\tcloe{\teonepr}{\tetwopr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-App}]
+      {\tstepjudg[\stepstar]{\tlenv}{\teone}{\teonepr} \\
+       \tstepjudg[\stepstar]{\tlenv}{\tetwo}{\tetwopr}}
+      {\tstepjudg[\stepstar]{\tlenv}{\tappe{\teone}{\tetwo}}{\tappe{\teonepr}{\tetwopr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Sig}]
+      {\tstepjudg[\stepstar]{\tlenv}{\tA}{\tApr} \\
+       \tstepjudg[\stepstar]{\tlenv,\tx:\tApr}{\te}{\tepr}}
+      {\tstepjudg[\stepstar]{\tlenv}{\tsigmaty{\tx}{\tA}{\te}}{\tsigmaty{\tx}{\tApr}{\tepr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Pair}]
+      {\tstepjudg[\stepstar]{\tlenv}{\teone}{\teonepr} \\
+       \tstepjudg[\stepstar]{\tlenv}{\tetwo}{\tetwopr} \\
+       \tstepjudg[\stepstar]{\tlenv}{\tA}{\tApr}}
+      {\tstepjudg[\stepstar]{\tlenv}{\tdpaire{\teone}{\tetwo}{\tA}}{\tdpaire{\teonepr}{\tetwopr}{\tApr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Fst}]
+      {\tstepjudg[\stepstar]{\tlenv}{\te}{\tepr}}
+      {\tstepjudg[\stepstar]{\tlenv}{\tfste{\te}}{\tfste{\tepr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Snd}]
+      {\tstepjudg[\stepstar]{\tlenv}{\te}{\tepr}}
+      {\tstepjudg[\stepstar]{\tlenv}{\tsnde{\te}}{\tsnde{\tepr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-If}]
+      {\tstepjudg[\stepstar]{\tlenv}{\te}{\tepr} \\
+       \tstepjudg[\stepstar]{\tlenv}{\teone}{\teonepr} \\
+       \tstepjudg[\stepstar]{\tlenv}{\tetwo}{\tetwopr}}
+      {\sstepjudg[\stepstar]{\tlenv}{\tife{\te}{\teone}{\tetwo}}{\tife{\tepr}{\teonepr}{\tetwopr}}}
+
+
+      \inferrule*[right=\defrule{Red-Cong-Let}]
+      {\tstepjudg[\stepstar]{\tlenv}{\teone}{\teonepr} \\
+       \tstepjudg[\stepstar]{\tlenv,\tx = \tepr}{\tetwo}{\tetwopr}}
+      {\tstepjudg[\stepstar]{\tlenv}{\tlete{\tx}{\teone}{\tetwo}}{\tlete{\tx}{\teonepr}{\tetwopr}}}
+    \end{mathpar}
+    \caption{\tlang Conversion}
+    \label{fig:abs-cc:cc-cc:red-cong}
+  \end{figure}
+}
+
+\newcommand{\FigCCCCEqv}[1][t]{
+  \begin{figure}[#1]
+    \begin{mathpar}
+      \inferrule*[right=\defrule*{eqv}{\im{\equiv}}]
+        {\tstepjudg[\stepstar]{\tlenv}{\teone}{\te} \\
+         \tstepjudg[\stepstar]{\tlenv}{\tetwo}{\te}}
+        {\tequivjudg{\tlenv}{\teone}{\tetwo}}
+
+      \inferrule*[right=\defrule*{eqv-eta1}{\im{\equiv}-Clo\im{_1}}]
+      {\tstepjudg[\stepstar]{\tlenv}{\teone}{\tcloe{\tnfune{(\txpr:\tApr,\tx:\tA)}{\teonepr}}{\tepr}}
+        \\
+        \tstepjudg[\stepstar]{\tlenv}{\tetwo}{\tetwopr} \\
+        \tequivjudg{\tlenv,\tx:\tA}{\subst{\teone}{\tepr}{\txpr}}{\tappe{\tetwopr}{\tx}}}
+        {\tequivjudg{\tlenv}{\teone}{\tetwo}}
+
+      \inferrule*[right=\defrule*{eqv-eta2}{\im{\equiv}-Clo\im{_2}}]
+      {\tstepjudg[\stepstar]{\tlenv}{\tetwo}{\tcloe{\tnfune{(\txpr:\tApr,\tx:\tA)}{\tetwopr}}{\tepr}}
+        \\
+        \tstepjudg[\stepstar]{\tlenv}{\teone}{\teonepr} \\
+        \tequivjudg{\tlenv,\tx:\tA}{\tappe{\teonepr}{\tx}}{\subst{\tetwopr}{\tepr}{\txpr}}}
+      {\tequivjudg{\tlenv}{\teone}{\tetwo}}
+    \end{mathpar}
+    \caption{\tlang Equivalence}
+    \label{fig:abs-cc:cc-cc:eqv}
+  \end{figure}
+}
+
+\newcommand{\FigCCCCSub}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\tsubtyjudg{\tlenv}{\tA}{\tB}}
+    \begin{mathpar}
+      \inferrule*[right=\defrule*{sub-equiv}{\im{\subtypesym}-\im{\equiv}}]
+      {\tequivjudg{\tlenv}{\tA}{\tB}}
+      {\tsubtyjudg{\tlenv}{\tA}{\tB}}
+
+      \inferrule*[right=\defrule*{sub-trans}{\im{\subtypesym}-Trans}]
+      {\tsubtyjudg{\tlenv}{\tA}{\tApr} \\
+       \tsubtyjudg{\tlenv}{\tApr}{\tB}}
+      {\tsubtyjudg{\tlenv}{\tA}{\tB}}
+
+      \inferrule*[right=\defrule*{sub-prop}{\im{\subtypesym}-Prop}]
+      {~}
+      {\tsubtyjudg{\tlenv}{\tpropty}{\ttypety{0}}}
+
+      \inferrule*[right=\defrule*{sub-cum}{\im{\subtypesym}-Cum}]
+      {~}
+      {\tsubtyjudg{\tlenv}{\ttypety{i}}{\ttypety{i+1}}}
+
+      \inferrule*[right=\defrule*{sub-code}{\im{\subtypesym}-Code}]
+      {\tequivjudg{\tlenv}{\tAone}{\tAtwo} \\
+       \tequivjudg{\tlenv,\tnone:\tAone}{\tAonepr}{\tAtwopr} \\
+       \tsubtyjudg{\tlenv,\tnone:\tAone,\txone:\tAonepr}{\tBone}{\subst{\subst{\tBtwo}{\tnone}{\tntwo}}{\txone}{\txtwo}}}
+      {\tsubtyjudg{\tlenv}{\tcodety{\tnone:\tAone,\txone:\tAonepr}{\tBone}}{\tcodety{\tntwo:\tAtwo,\txtwo:\tAtwopr}{\tBtwo}}}
+
+      \inferrule*[right=\defrule*{sub-pi}{\im{\subtypesym}-Pi}]
+      {\tequivjudg{\tlenv}{\tAone}{\tAtwo} \\
+       \tsubtyjudg{\tlenv,\txone:\tAone}{\tBone}{\subst{\tBtwo}{\txone}{\txtwo}}}
+      {\tsubtyjudg{\tlenv}{\tpity{\txone}{\tAone}{\tBone}}{\tpity{\txtwo}{\tAtwo}{\tBtwo}}}
+
+      \inferrule*[right=\defrule*{sub-sig}{\im{\subtypesym}-Sig}]
+      {\tsubtyjudg{\tlenv}{\tAone}{\tAtwo} \\
+       \tsubtyjudg{\tlenv,\txone:\tAtwo}{\tBone}{\subst{\tBtwo}{\txone}{\txtwo}}}
+      {\tsubtyjudg{\tlenv}{\tsigmaty{\txone}{\tAone}{\tBone}}{\tsigmaty{\txtwo}{\tAtwo}{\tBtwo}}}
+    \end{mathpar}
+    \caption{\tlang Subtyping}
+    \label{fig:abs-cc:cc-cc:sub}
+  \end{figure}
+}
+
+\newcommand{\UnitTypingRules}[1][\defrule]{
+  \inferrule*[right=#1{T-Unit}]
+  {\twf{\tlenv}}
+  {\ttyjudg{\tlenv}{\tunitty}{\tpropty}}
+
+  \inferrule*[right=#1{Unit}]
+  {\twf{\tlenv}}
+  {\ttyjudg{\tlenv}{\tunite}{\tunitty}}
+  \makeatother
+}
+
+\newcommand{\ClosureTypingRules}[1][\defrule]{
+  \inferrule*[right=#1{T-Code-Prop}]
+  {\ttyjudg{\tlenv,\txpr:\tApr,\tx:\tA}{\tB}{\tpropty}}
+  {\ttyjudg{\tlenv}{\tcodety{\txpr:\tApr,\tx:\tA}{\tB}}{\tpropty}}
+
+  \inferrule*[right=#1{T-Code-Type}]
+  {\ttyjudg{\tlenv,\txpr:\tApr,\tx:\tA}{\tB}{\ttypety{i}}}
+  {\ttyjudg{\tlenv}{\tcodety{\tx:\tA,\txpr:\tApr}{\tB}}{\ttypety{i}}}
+
+  \inferrule*[right=#1{Code}]
+  {\ttyjudg{\cdot,\txpr:\tApr,\tx:\tA}{\te}{\tB}}
+  {\ttyjudg{\tlenv}{\tnfune{(\txpr:\tApr,\tx:\tA)}{\te}}{\tcodety{\txpr:\tApr,\tx:\tA}{\tB}}}
+
+  \inferrule*[right=#1{Clo}]
+  {\ttyjudg{\tlenv}{\te}{\tcodety{\txpr:\tApr,\tx:\tA}{\tB}} \\
+   \ttyjudg{\tlenv}{\tepr}{\tApr}}
+  {\ttyjudg{\tlenv}{\tcloe{\te}{\tepr}}{\tpity{\tx}{\subst{\tA}{\tepr}{\txpr}}{\subst{\tB}{\tepr}{\txpr}}}}
+}
+
+\newcommand{\FigCCCCTypingNew}[1][t]{
+  \begin{figure}[#1]
+    \begin{mathpar}
+      \cdots
+
+      \ClosureTypingRules
+
+      \UnitTypingRules
+    \end{mathpar}
+    \caption{\tlang Typing (excerpts)}
+    \label{fig:abs-cc:cc-cc:type}
+  \end{figure}
+}
+
+\newcommand{\FigCCCCTypingFullTwo}[1][t]{
+  \begin{figure}[#1]
+    \begin{mathpar}
+      \ClosureTypingRules[\rulename]
+
+      \UnitTypingRules[\rulename]
+    \end{mathpar}
+    \caption{\tlang Typing (2/2)}
+    \label{fig:abs-cc:cc-cc:type2}
+  \end{figure}
+}
+
+\newcommand{\FigCCCCTypingFullOne}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\ttyjudg{\tlenv}{\te}{\tt}}
+    \begin{mathpar}
+      \inferrule*[right=\defrule{Var}]
+      {\tx : \tA \in \tlenv \\
+       \twf{\tlenv}}
+      {\ttyjudg{\tlenv}{\tx}{\tA}}
+
+      \inferrule*[right=\defrule{Prop}]
+      {\twf{\tlenv}}
+      {\ttyjudg{\tlenv}{\tpropty}{\ttypety{1}}}
+
+      \inferrule*[right=\defrule{Type}]
+      {\twf{\tlenv}}
+      {\ttyjudg{\tlenv}{\ttypety{i}}{\ttypety{i+1}}}
+
+      \inferrule*[right=\defrule{Pi-Prop}]
+      {\ttyjudg{\tlenv}{\tA}{\tU} \\
+       \ttyjudg{\tlenv,\tx:\tA}{\tB}{\tpropty}}
+      {\ttyjudg{\tlenv}{\tpity{\tx}{\tA}{\tB}}{\tpropty}}
+
+      \inferrule*[right=\defrule{Pi-Type}]
+      {\ttyjudg{\tlenv}{\tA}{\ttypety{i}} \\
+       \ttyjudg{\tlenv,\tx:\tA}{\tB}{\ttypety{i}}}
+      {\ttyjudg{\tlenv}{\tpity{\tx}{\tA}{\tB}}{\ttypety{i}}}
+
+      \inferrule*[right=\defrule{App}]
+      {\ttyjudg{\tlenv}{\te}{\tpity{\tx}{\tApr}{\tB}} \\
+        \ttyjudg{\tlenv}{\tepr}{\tApr}}
+      {\ttyjudg{\tlenv}{\tappe{\te}{\tepr}}{\subst{\tB}{\tepr}{\tx}}}
+
+      \inferrule*[right=\defrule{Sig}]
+      {\ttyjudg{\tlenv}{\tA}{\ttypety{i}} \\
+        \ttyjudg{\tlenv,\tx:\tA}{\tB}{\ttypety{i}}}
+      {\ttyjudg{\tlenv}{\tsigmaty{\tx}{\tA}{\tB}}{\ttypety{i}}}
+
+      \inferrule*[right=\defrule{Pair}]
+      {\ttyjudg{\tlenv}{\teone}{\tA} \\
+       \ttyjudg{\tlenv}{\tetwo}{\subst{\tB}{\teone}{\tx}}}
+      {\ttyjudg{\tlenv}{\tdpaire{\teone}{\tetwo}{\tsigmaty{\tx}{\tA}{\tB}}}{\tsigmaty{\tx}{\tA}{\tB}}}
+
+      \inferrule*[right=\defrule{Fst}]
+      {\ttyjudg{\tlenv}{\te}{\tsigmaty{\tx}{\tA}{\tB}}}
+      {\ttyjudg{\tlenv}{\tfste{\te}}{\tA}}
+
+      \inferrule*[right=\defrule{Snd}]
+      {\ttyjudg{\tlenv}{\te}{\tsigmaty{\tx}{\tA}{\tB}}}
+      {\ttyjudg{\tlenv}{\tsnde{\te}}{\subst{\tB}{\tfste{\te}}{\tx}}}
+
+      \inferrule*[right=\defrule{Bool}]
+      {\twf{\tlenv}}
+      {\ttyjudg{\tlenv}{\tboolty}{\tpropty}}
+
+      \inferrule*[right=\defrule{True}]
+      {\twf{\tlenv}}
+      {\ttyjudg{\tlenv}{\ttruee}{\tboolty}}
+
+      \inferrule*[right=\defrule{False}]
+      {\twf{\tlenv}}
+      {\ttyjudg{\tlenv}{\tfalsee}{\tboolty}}
+
+      \inferrule*[right=\defrule{If}]
+      {\ttyjudg{\tlenv,\ty:\tboolty}{\tB}{\tU} \\
+       \ttyjudg{\tlenv}{\teone}{\subst{\tB}{\ttruee}{\ty}} \\
+       \ttyjudg{\tlenv}{\tetwo}{\subst{\tB}{\tfalsee}{\ty}}}
+      {\ttyjudg{\tlenv}{\tife{\te}{\teone}{\tetwo}}{\subst{\tB}{\te}{\ty}}}
+
+      \inferrule*[right=\defrule{Let}]
+      {\ttyjudg{\tlenv}{\te}{\tA} \\
+        \ttyjudg{\tlenv,\tx:\tA,\tx=\te}{\tepr}{\tB}}
+      {\ttyjudg{\tlenv}{\tlete{\tx}{\te}{\tepr}}{\subst{\tB}{\te}{\tx}}}
+
+      \inferrule*[right=\defrule{Conv}]
+      {\ttyjudg{\tlenv}{\te}{\tA} \\
+       \ttyjudg{\tlenv}{\tB}{\tU} \\
+       \tsubtyjudg{\tlenv}{\tA}{\tB}}
+      {\ttyjudg{\tlenv}{\te}{\tB}}
+    \end{mathpar}
+    \caption{\tlang Typing (1/2)}
+    \label{fig:abs-cc:cc-cc:type1}
+  \end{figure}
+}
+
+\newcommand{\FigCCCCWF}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\twf{\tlenv}}
+    \begin{mathpar}
+      \inferrule*[right=\defrule{W-Empty}]
+      {~}
+      {\twf{\cdot}}
+
+      \inferrule*[right=\defrule{W-Assum}]
+      {\twf{\tlenv} \\
+       \ttyjudg{\tlenv}{\tA}{\tU}}
+      {\twf{\tlenv,\tx:\tA}}
+
+      \inferrule*[right=\defrule{W-Def}]
+      {\twf{\tlenv} \\
+       \ttyjudg{\tlenv}{\te}{\tA}}
+      {\twf{\tlenv,\tx = \te}}
+    \end{mathpar}
+    \caption{\tlang Well-formed Environments}
+    \label{fig:abs-cc:cc-cc:wf}
+  \end{figure}
+}
+
+\newcommand{\FigCCCCModelPartOne}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\mjudg{\tlenv}{\te}{\tA}{\se}}
+    \begin{mathpar}
+      \inferrule*[right=\defrule{M-T-Unit}]
+      {~}
+      {\mjudg{\tlenv}{\tunitty}{\tpropty}{\spity{\salpha}{\spropty}{\spity{\sx}{\salpha}{\salpha}}}}
+
+      \inferrule*[right=\defrule{M-Unit}]
+      {~}
+      {\mjudg{\tlenv}{\tunite}{\tunitty}{\sfune{\salpha}{\spropty}{\sfune{\sx}{\salpha}{\sx}}}}
+
+      \inferrule*[right=\defrule{M-T-Code-Prop}]
+      {\mjudg{\tlenv}{\tApr}{\tUpr}{\sApr} \\
+       \mjudg{\tlenv,\txpr:\tApr}{\tA}{\tU}{\sA} \\
+      \mjudg{\tlenv,\txpr:\tApr,\tx:\tA}{\tB}{\tpropty}{\sB}}
+      {\mjudg{\tlenv}{\tcodety{\txpr:\tApr,\tx:\tA}{\tB}}{\tpropty}{\spity{\sxpr}{\sApr}{\spity{\sx}{\sA}{\sB}}}}
+
+      \inferrule*[right=\defrule{M-T-Code-Type}]
+      {\mjudg{\tlenv}{\tApr}{\tUpr}{\sApr} \\
+       \mjudg{\tlenv,\txpr:\tApr}{\tA}{\tU}{\sA} \\
+      \mjudg{\tlenv,\txpr:\tApr,\tx:\tA}{\tB}{\ttypety{i}}{\sB}}
+      {\mjudg{\tlenv}{\tcodety{\txpr:\tApr,\tx:\tA}{\tB}}{\ttypety{i}}{\spity{\sxpr}{\sApr}{\spity{\sx}{\sA}{\sB}}}}
+
+      \inferrule*[right=\defrule{M-Code}]
+      {\mjudg{\tlenv}{\tApr}{\tUpr}{\sApr} \\
+       \mjudg{\tlenv,\txpr:\tApr}{\tA}{\tU}{\sA} \\
+       \mjudg{\tlenv,\txpr:\tApr,\tx:\tA}{\tB}{\tU}{\sB} \\
+       \mjudg{\tlenv,\txpr:\tApr,\tx:\tA}{\te}{\tB}{\se}}
+      {\mjudg{\tlenv}{\tnfune{(\txpr:\tApr,\tx:\tA)}{\te}}{\tcodety{\txpr:\tApr,\tx:\tA}{\tB}}
+        {\sfune{\sxpr}{\sApr}{\sfune{\sx}{\sA}{\se}}}}
+
+      \inferrule*[right=\defrule{M-Clo}]
+      {\mjudg{\tlenv}{\te}{\tcodety{\txpr:\tApr,\tx:\tA}{\tB}}{\se} \\
+       \mjudg{\tlenv}{\tepr}{\tApr}{\sepr}}
+      {\mjudg{\tlenv}{\tcloe{\te}{\tepr}}{\tpity{\tx}{\subst{\tA}{\tepr}{\tx}}{\subst{\tB}{\tepr}{\tx}}}{\sappe{\se}{\sepr}}}
+
+      \inferrule*[right=\defrule{M-App}]
+      {\mjudg{\tlenv}{\te}{\tpity{\tx}{\tA}{\tB}}{\se} \\
+       \mjudg{\tlenv}{\tepr}{\tA}{\sepr}}
+      {\mjudg{\tlenv}{\tappe{\te}{\tepr}}{\subst{\tB}{\tepr}{\tx}}{\sappe{\se}{\sepr}}}
+    \end{mathpar}
+    \caption{Model for \tlang in \slang (Part 1/2)}
+    \label{fig:abs-cc:model1}
+  \end{figure}
+}
+\newcommand{\FigCCCCModelPartTwo}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\mjudg{\tlenv}{\te}{\tA}{\se}}
+    \begin{mathpar}
+      \inferrule*[right=\defrule{M-Prop}]
+      {~}
+      {\mjudg{\tlenv}{\tpropty}{\ttypety{1}}{\spropty}}
+
+      \inferrule*[right=\defrule{M-Type}]
+      {~}
+      {\mjudg{\tlenv}{\ttypety{i}}{\ttypety{i+1}}{\stypety{i}}}
+
+      \inferrule*[right=\defrule{M-Var}]
+      {~}
+      {\mjudg{\tlenv}{\tx}{\tA}{\sx}}
+
+      \inferrule*[right=\defrule{M-Let}]
+      {\mjudg{\tlenv}{\te}{\tA}{\se} \\
+       \mjudg{\tlenv,\tx:\tA,\tx=\te}{\tepr}{\tB}{\sepr}}
+      {\mjudg{\tlenv}{\tlete{\tx}{\te}{\tepr}}{\subst{\tB}{\te}{\tx}}{\slete{\sx}{\se}{\sepr}}}
+
+      \inferrule*[right=\defrule{M-Pi-Prop}]
+      {\mjudg{\tlenv}{\tA}{\tU}{\sA} \\
+       \mjudg{\tlenv,\tx:\tA}{\tB}{\tpropty}{\sB}}
+      {\mjudg{\tlenv}{\tpity{\tx}{\tA}{\tB}}{\tpropty}{\spity{\sx}{\sA}{\sB}}}
+
+      \inferrule*[right=\defrule{M-Pi-Type}]
+      {\mjudg{\tlenv}{\tA}{\tU}{\sA} \\
+       \mjudg{\tlenv,\tx:\tA}{\tB}{\ttypety{i}}{\sB}}
+      {\mjudg{\tlenv}{\tpity{\tx}{\tA}{\tB}}{\ttypety{i}}{\spity{\sx}{\sA}{\sB}}}
+
+      \inferrule*[right=\defrule{M-Bool}]
+      {~}
+      {\mjudg{\tlenv}{\tboolty}{\tpropty}{\sboolty}}
+
+      \inferrule*[right=\defrule{M-True}]
+      {~}
+      {\mjudg{\tlenv}{\ttruee}{\tboolty}{\struee}}
+
+      \inferrule*[right=\defrule{M-False}]
+      {~}
+      {\mjudg{\tlenv}{\tfalsee}{\tboolty}{\sfalsee}}
+
+      \inferrule*[right=\defrule{M-If}]
+      {\mjudg{\tlenv}{\te}{\tboolty}{\se} \\
+       \mjudg{\tlenv}{\teone}{\subst{\tB}{\ttruee}{\ty}}{\seone} \\
+       \mjudg{\tlenv}{\tetwo}{\subst{\tB}{\tfalsee}{\ty}}{\setwo}}
+      {\mjudg{\tlenv}{\tife{\te}{\teone}{\tetwo}}{\subst{\tB}{\te}{\ty}}{\sife{\se}{\seone}{\setwo}}}
+
+      \inferrule*[right=\defrule{M-Sig}]
+      {\mjudg{\tlenv}{\tA}{\ttypety{i}}{\sA} \\
+       \mjudg{\tlenv,\tx:\tA}{\tB}{\ttypety{i}}{\sB}}
+      {\mjudg{\tlenv}{\tsigmaty{\tx}{\tA}{\tB}}{\ttypety{i}}{\ssigmaty{\sx}{\sA}{\sB}}}
+
+      \inferrule*[right=\defrule{M-Pair}]
+      {\mjudg{\tlenv}{\teone}{\tA}{\seone} \\
+       \mjudg{\tlenv}{\tetwo}{\subst{\tB}{\teone}{\tx}}{\setwo} \\
+       \mjudg{\tlenv}{\tA}{\ttypety{i}}{\sA} \\
+       \mjudg{\tlenv,\tx:\tA}{\tB}{\ttypety{i}}{\sB}}
+      {\mjudg{\tlenv}{\tdpaire{\teone}{\tetwo}{\tsigmaty{\tx}{\tA}{\tB}}}{\tsigmaty{\tx}{\tA}{\tB}}{\sdpaire{\seone}{\setwo}{\ssigmaty{\sx}{\sA}{\sB}}}}
+
+      \inferrule*[right=\defrule{M-Fst}]
+      {\mjudg{\tlenv}{\te}{\tsigmaty{\tx}{\tA}{\tB}}{\se}}
+      {\mjudg{\tlenv}{\tfste{\te}}{\tA}{\sfste{\se}}}
+
+      \inferrule*[right=\defrule{M-Snd}]
+      {\mjudg{\tlenv}{\te}{\tsigmaty{\tx}{\tA}{\tB}}{\se}}
+      {\mjudg{\tlenv}{\tsnde{\te}}{\tA}{\ssnde{\se}}}
+
+      \inferrule*[right=\defrule{M-Conv}]
+      {\mjudg{\tlenv}{\te}{\tB}{\se}}
+      {\mjudg{\tlenv}{\te}{\tA}{\se}}
+    \end{mathpar}
+    \caption{Model of \tlang in \slang (Part 2/2)}
+    \label{fig:abs-cc:model2}
+  \end{figure}
+}
+
+\newcommand{\FigCCCCModelShort}[1][t]{
+  \begin{figure}
+    \judgshape[\im{\where{\ttyjudg{\tlenv}{\te}{\tA}}}]{\absccmodel{\te} = \se}
+    \begin{displaymath}
+      \begin{array}{rcl}
+        \absccmodel{\tunitty} & \defeq &
+        \spity{\salpha}{\spropty}{\spity{\sx}{\salpha}{\salpha}}
+        \\
+
+        \absccmodel{\tunite} & \defeq &
+        \sfune{\salpha}{\spropty}{\sfune{\sx}{\salpha}{\sx}}
+        \\
+
+        \absccmodel{\tcodety{\txpr:\tApr,\tx:\tA}{\tB}} & \defeq &
+        \spity{\sxpr}{\absccmodel{\tApr}}{\spity{\sx}{\absccmodel{\tA}}{\absccmodel{\tB}}}
+        \\
+
+        \absccmodel{\tnfune{(\txpr:\tApr,\tx:\tA)}{\te}} & \defeq &
+        \sfune{\sxpr}{\absccmodel{\tApr}}{\sfune{\sx}{\absccmodel{\tA}}{\absccmodel{\te}}}
+        \\
+
+        \absccmodel{\tcloe{\te}{\tepr}} & \defeq & \sappe{\absccmodel{\te}}{\absccmodel{\tepr}}
+        \\
+
+        \absccmodel{\tappe{\te}{\tepr}} & \defeq & \sappe{\absccmodel{\te}}{\absccmodel{\tepr}}
+        \\
+        \vdots
+      \end{array}
+    \end{displaymath}
+    \caption{Model of \tlang in \slang (excerpts)}
+    \label{fig:abs-cc:model-short}
+  \end{figure}
+}
+
+\newcommand{\FigCCCCModelFull}[1][t]{
+  \begin{figure}
+    \judgshape[\im{\where{\ttyjudg{\tlenv}{\te}{\tA}}}]{\absccmodel{\te} = \se}
+    \begin{displaymath}
+      \begin{array}{rcl}
+        \absccmodel{\tpropty} & \defeq & \spropty
+        \\
+
+        \absccmodel{\ttypety{i}} & \defeq & \stypety{i}
+        \\
+
+        \absccmodel{\tx} & \defeq & \sx
+        \\
+
+        \absccmodel{\tunitty} & \defeq &
+        \spity{\salpha}{\spropty}{\spity{\sx}{\salpha}{\salpha}}
+        \\
+
+        \absccmodel{\tunite} & \defeq &
+        \sfune{\salpha}{\spropty}{\sfune{\sx}{\salpha}{\sx}}
+        \\
+
+        \absccmodel{\tlete{\tx}{\te}{\tepr}} & \defeq & \slete{\sx}{\absccmodel{\te}}{\absccmodel{\tepr}}
+        \\
+
+        \absccmodel{\tpity{\tx}{\tA}{\tB}} & \defeq & \spity{\sx}{\absccmodel{\tA}}{\absccmodel{\tB}}
+        \\
+
+        \absccmodel{\tcloe{\te}{\tepr}} & \defeq & \sappe{\absccmodel{\te}}{\absccmodel{\tepr}}
+        \\
+
+        \absccmodel{\tcodety{\txpr:\tApr,\tx:\tA}{\tB}} & \defeq &
+        \spity{\sxpr}{\absccmodel{\tApr}}{\spity{\sx}{\absccmodel{\tA}}{\absccmodel{\tB}}}
+        \\
+
+        \absccmodel{\tnfune{(\txpr:\tApr,\tx:\tA)}{\te}} & \defeq &
+        \sfune{\sxpr}{\absccmodel{\tApr}}{\sfune{\sx}{\absccmodel{\tA}}{\absccmodel{\te}}}
+        \\
+
+        \absccmodel{\tappe{\te}{\tepr}} & \defeq & \sappe{\absccmodel{\te}}{\absccmodel{\tepr}}
+        \\
+
+        \absccmodel{\tboolty} & \defeq & \sboolty
+        \\
+
+        \absccmodel{\ttruee} & \defeq & \struee
+        \\
+
+        \absccmodel{\tfalsee} & \defeq & \sfalsee
+        \\
+
+        \absccmodel{\tife{\te}{\teone}{\tetwo}} & \defeq & \sife{\absccmodel{\te}}{\absccmodel{\teone}}{\absccmodel{\tetwo}}
+        \\
+
+        \absccmodel{\tsigmaty{\tx}{\tA}{\tB}} & \defeq & \ssigmaty{\sx}{\absccmodel{\tA}}{\absccmodel{\tB}}
+        \\
+
+        \absccmodel{\tdpaire{\teone}{\tetwo}{\tsigmaty{\tx}{\tA}{\tB}}} & \defeq &
+        \sdpaire{\absccmodel{\teone}}{\absccmodel{\tetwo}}{\ssigmaty{\sx}{\absccmodel{\tA}}{\absccmodel{\tB}}}
+        \\
+
+        \absccmodel{\tfste{\te}} & \defeq & \sfste{\absccmodel{\te}}
+        \\
+
+        \absccmodel{\tsnde{\te}} & \defeq & \ssnde{\absccmodel{\te}}
+      \end{array}
+    \end{displaymath}
+    \caption{Model of \tlang in \slang}
+    \label{fig:abs-cc:model-full}
+  \end{figure}
+}
+
+\newcommand{\FigCCCCAHetero}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\tK\hhw{\tM} = \tM}
+    \begin{displaymath}
+      \begin{array}{rcl}
+        \tK\hhw{\tN} &\defeq& \tK\hw{\tN} \\
+        \tK\hhw{\tlete{\tx}{\tNpr}{\tM}} &\defeq& \tlete{\tx}{\tNpr}{\tK\hhw{\tM}} \\
+      \end{array}
+    \end{displaymath}
+    \judgshape{\tK\hhw{\tK} = \tK}
+    \begin{displaymath}
+      \begin{array}{rcl}
+        \tK\hhw{\hole} &\defeq& \tK \\
+        \tK\hhw{\tlete{\tx}{\hole}{\tM}} &\defeq& \tlete{\tx}{\hole}{\tK\hhw{\tM}} \\
+      \end{array}
+    \end{displaymath}
+    \judgshape{\hsubst{\tM}{\tMpr}{\tx} = \tM}
+    \begin{displaymath}
+      \begin{array}{rcl}
+        \hsubst{\tM}{\tMpr}{\tx} &\defeq& (\tlete{\tx}{\hole}{\tM})\hhw{\tMpr}
+      \end{array}
+    \end{displaymath}
+    \caption{\tlang Composition of Configurations}
+    \label{fig:abs-cc:hsubst}
+  \end{figure}
+}
+
+
+\newcommand{\FigCCANFRed}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\tM \mapsto \tMpr}
+    \begin{reductionrules}
+      \tK\hw{\tappe{\tcloe{(\tnfune{(\tn:\tMpr_{\tcolor{A}},\tx:\tMin{A})}{\tM})}{\tVpr}}{\tV}} & \mapsto_{\beta} & \tK\hhw{\subst{\subst{\tM}{\tVpr}{\tn}}{\tV}{\tx}}
+      \stepnewline
+
+      \tK\hw{\tfste{\tpaire{\tVone}{\tVtwo}}} & \mapsto_{\pi_{1}} & \tK\hw{\tVone}
+      \stepnewline
+
+      \tK\hw{\tsnde{\tpaire{\tVone}{\tVtwo}}} & \mapsto_{\pi_{2}} & \tK\hw{\tVtwo}
+      \stepnewline
+
+      \tlete{\tx}{\tV}{\tM} & \mapsto_{\zeta} & \subst{\tM}{\tV}{\tx}
+    \end{reductionrules}
+    \judgshape{\tstepjudg[\mapsto^*]{}{\tM}{\tMpr}}
+    \begin{mathpar}
+      \inferrule*[right=\defrule{RedA-Refl}]
+      {~}
+      {\tstepjudg[\mapsto^*]{}{\tM}{\tM}}
+
+      \inferrule*[right=\defrule{RedA-Trans}]
+      {\tM \mapsto \tMone \\
+       \tstepjudg[\mapsto^*]{}{\tMone}{\tMpr}}
+      {\tstepjudg[\mapsto^*]{}{\tM}{\tMpr}}
+    \end{mathpar}
+    \judgshape{\teval{\tM} = \tV}
+    \begin{displaymath}
+      \begin{array}{rcll}
+        \teval{\tM} & = & \tV & \text{if \im{\wf{}{\tM}} and \im{\tM \mapsto^* \tV} and \im{\tV \not\mapsto \tVpr}}
+      \end{array}
+    \end{displaymath}
+    \caption{\tlang ANF Machine Evaluation}
+    \label{fig:abs-cc:cc-cc:anf-eval}
+  \end{figure}
+}
+
+\section{Closure-Converted Intermediate Language}
+\label{sec:abs-cc:target}
+
+\FigCCCCSyntax
+The target language \tlang is based on \slang, but first-class functions are
+replaced by closed \tech{code} and \tech{closures}.
+I add a primitive unit type \im{\tunitty} to support encoding
+\tech{environments}.
+In \fullref[]{fig:abs-cc:cc-cc:syntax}, I extend the syntax of expressions with a
+unit \tech{expression} \im{\tnpaire{}} and its \tech{type} \im{\tunitty}, closed
+\tech{code} expressions \im{\tnfune{\tn:\tApr,\tx:\tA}{\te}} and dependent
+\tech{code} \tech{types} \im{\tcodety{\tn:\tApr,\tx:\tA}{\tB}}, and \tech{closure}
+expressions \im{\tcloe{\te}{\tepr}} and dependent \tech{closure} \tech{types}
+\im{\tpity{\tx}{\tA}{\tB}}.
+The closed code expressions will eventually be separated from closures, lifted
+to the top-level and heap allocated, as described in \fullref[]{chp:type-pres}.
+The syntax of application \im{\tappe{\te}{\tepr}} is unchanged, but it now
+applies \tech{closures} instead of functions.
+
+I define additional syntactic sugar for sequences of \tech{expressions}, to
+support writing \tech{environments} whose length is arbitrary.
+A sequence of \tech{expressions} \im{\tei\dots} represents a sequence of length
+\im{\len{i}} of \tech{expressions} \im{\tein{i_0},\dots,\tein{i_n}}.
+I extend the notation to patterns such as \im{\txi:\tAi\dots}, which implies two
+sequences \im{\txin{i_0},\dots,\txin{i_n}} and \im{\tAin{0},\dots,\tAin{i_n}}
+each of length \im{\len{i}}.
+I define \tech{environments} as dependent n-tuples, written
+\im{\tdnpaire{\tei\dots}{\tnsigmaty{(\txi:\tAi\dots)}}}.
+I encode dependent n-tuples using \tech{dependent
+  pairs}---\im{\tpaire{\tein{0}}{\tpaire{\dots}{\tpaire{\tein{i}}{\tunite}}}}---
+\ie, as nested \tech{dependent pairs} followed by a unit \tech{expression} to
+represent the empty n-tuple.
+Similarly, the type of a dependent n-tuple is a nested \tech{dependent pair}
+type; \im{\tnsigmaty{(\txi:\tAi\dots)}} is syntactic sugar for
+\im{\tsigmaty{\txin{0}}{\tAin{0}}{\dots\tsigmaty{\txin{i}}{\tAin{i}}{\tunitty}}}.
+
+As with \tech{dependent pairs}, I omit the annotation on n-tuples
+\im{\tnpaire{\tei\dots}} when it is obvious from context.
+I also define pattern matching on n-tuples, written
+\im{\tlete{\tnpaire{\txi\dots}}{\tepr}{\te}}, to perform the necessary nested
+projections, \ie,
+\im{\tlete{\txin{0}}{\tfste{\tepr}}{\dots\tlete{\txi}{\tfste{\tsnde{\dots \tsnde{\tepr}}}}{\te}}}, as described in \fullref[]{sec:abs-cc:ideas}.
+
+\FigCCCCRed
+In \fullref[]{fig:abs-cc:cc-cc:red}, I present the reduction rules for
+\tech{closures}.
+The conversion relation \im{\tstepjudg[\stepstar]{\tlenv}{\te}{\tepr}}, and
+evaluation function \im{\teval{\te}} are essentially unchanged from \slang, and
+are given in full in \fullref[]{sec:abs-cc:appendix}.
+Note that \(\beta\)-reduction only applies to \tech{closures}.
+\tech{Code} cannot be applied directly, but must be part of a \tech{closure}.
+\tech{Closures} applied to an argument \(\beta\)-reduce, applying the underlying
+\tech{code} to the \tech{environment} and the argument.
+All the other reduction rules remain unchanged.
+
+\FigCCCCEqv
+In \fullref[]{fig:abs-cc:cc-cc:eqv}, I present \tech{equivalence} for \tlang.
+The key difference is that I replace the \(\eta\)-equivalence rules for
+functions by \(\eta\)-equivalence for \tech{closures}.
+Even when \(\eta\)-equivalence for functions is excluded from the source
+language, \(\eta\)-equivalence for \tech{closures} is necessary for proving
+\fullref{lem:anf:subst}.
+
+\FigCCCCSub
+In \fullref[]{fig:abs-cc:cc-cc:sub}, I define subtyping.
+As usual, subtyping extends \tech{equivalence} to include \tech{cumulativity}.
+The subtyping rules for \tech{code} types are essentially the same as for
+\tech{dependent function} types.
+
+\FigCCCCTypingNew[h!]
+I give the new typing rules for \tlang in \fullref[]{fig:abs-cc:cc-cc:type}; the
+full rules are given in \fullref[]{sec:abs-cc:appendix},
+\fullref[]{fig:abs-cc:cc-cc:type1} and \fullref[]{fig:abs-cc:cc-cc:type2}.
+Most rules are unchanged from the source language.
+The most interesting rule is \refrule{Code}, which guarantees that \tech{code}
+only type checks when it is closed.
+This rule captures the goal of typed \tech{closure conversion} and gives us
+static machine-checked guarantees that our translation produces closed
+\tech{code}.
+\refrule{Clo} for \tech{closures} \im{\tcloe{\te}{\tepr}} substitutes the
+\tech{environment} \im{\tepr} into the type of the \tech{closure}, as discussed
+in \fullref[]{sec:abs-cc:ideas}.
+This is similar to \refrule[srcapp]{App} from \slang, which
+substitutes a function argument into the result type of a function.
+As discussed in \fullref[]{sec:abs-cc:ideas}, this is also critical to \tech{type
+preservation}, since the translation must generate \tech{closure} \tech{types}
+with free variables and then synchronize the \tech{closure} \tech{type}
+containing free variables with a closed \tech{code} type.
+As with \im{\sfontsym{\Pi}} types in \slang, we have two rules for well-typed
+\im{\tfont{Code}} types.
+\refrule{T-Code-Prop} allows \tech{impredicativity} in \im{\tpropty}, while
+\refrule{T-Code-Type} is \tech{predicative.}
+
+Note that the \tech{impredicative} rule, \refrule{T-Code-Prop}, is not necessary
+for \tech{type preservation}; we only need to include it if the source language
+has \tech{impredicative} functions.
+
+\subsection{Meta-theory}
+\label{sec:abs-cc:consistency}
+I prove \tech{type safety} and \tech{consistency} of \tlang following the
+standard architecture presented in \fullref[]{chp:type-pres}.
+
+\FigCCCCModelShort
+The essence of the \tech{model} translation from \tlang to \slang is given in
+\fullref[]{fig:abs-cc:model-short}.
+The translation is defined inductively on the syntax of \tech{expressions}.
+This includes only the key translation rules.
+The translation \im{\absccmodel{\te} = \se} models the \tlang expression
+\im{\te} as the \slang expression \im{\se}.
+The remaining rules are given in \fullref[]{sec:abs-cc:appendix}, in
+\fullref[]{fig:abs-cc:model-full}.\footnote{In the previous version of
+  this work~\cite{bowman2018:cccc}, this translation was defined by induction on
+  typing derivations.
+  That presentation is verbose and not necessary for constructing a model
+  of \tlang.}
+As described in \fullref[]{chp:type-pres}, I always assume I only translate
+well-typed \tech{expressions}, so the typing derivation for \im{\te} is always
+an implicit parameter whenever we have \im{\absccmodel{\te}}.
+
+I \tech{model} \tech{code} \im{\tnfune{\tn:\tApr,\tx:\tA}{\te}}
+as a curried function
+\im{\sfune{\sn}{\absccmodel{\tApr}}{\sfune{\sx}{\absccmodel{\tA}}{\absccmodel{\te}}}},
+and a \tech{code} \tech{type} \im{\tcodety{\tn:\tApr,\tx:\tA}{\tB}} via the
+curried \tech{dependent function} type
+\im{\spity{\sn}{\absccmodel{\tApr}}{\spity{\tx}{\absccmodel{\tA}}{\absccmodel{\tB}}}}.
+Observe that the inner function produced in \slang is not closed, but that is
+not a problem since the \tech{model} only exists to prove \tech{type safety} and
+\tech{consistency}.
+It is only in \tlang programs that \tech{code} must be closed.
+I \tech{model} \tech{closures} \im{\tcloe{\te}{\tepr}}
+as the application \im{\sappe{\absccmodel{\te}}{\absccmodel{\tepr}}}---\ie, the application
+of the function \im{\absccmodel{\te}} to its \tech{environment} \im{\absccmodel{\tepr}}.
+I \tech{model} \im{\tunite} with the standard Church-encoding as the
+polymorphic identity function, since \slang does not include a unit expression.
+(We could just as well add a unit expression to \slang.)
+All other rules simply recursively translate subterms.
+
+As discussed in \fullref[]{chp:type-pres}, we first must prove preservation of
+falseness~\fullref[]{sec:m:false-pres}.
+I encode the empty type, or invalid specification, \im{\tFalse} in \tlang as
+\im{\tpity{\tA}{\tpropty}{\tA}}.
+This type describes a function that takes any arbitrary \tech{specification}
+\im{\tA} and returns a \tech{proof} of \im{\tA}.
+There is only a \tech{proof} of \im{\tFalse} if \tlang is not \tech{consistent}.
+Similar, we encode \im{\sFalse} in \slang as
+\im{\spity{\sA}{\spropty}{\sA}}.
+It is clear from the translation of \tech{dependent function types} that the
+translation preserves falseness.
+I use \im{=} as the terms are not just \tech{definitionally equivalent}, but
+syntactically identical.
+
+\begin{lemma}[Preservation of Falseness]
+  \label{sec:m:false-pres}
+  \im{\absccmodel{\tFalse} = \sFalse}
+\end{lemma}
+
+To prove \tech{type preservation}, I use the standard architecture from
+\fullref[]{chp:type-pres}.
+The proofs are straightforward, since the typing rules in \tlang essentially
+correspond to partial application already.
+
+\tech{Compositionality} is an important lemma since the type system and
+\tech{conversion} are defined by substitution.
+\begin{lemma}[Compositionality]
+  \label{lem:abs-cc:m:subst}
+  \im{\absccmodel{(\subst{\te}{\tepr}{\tx})} = \subst{\absccmodel{\te}}{\absccmodel{\te}}{\sx}}
+\end{lemma}
+\begin{proof}
+  The proof is by induction on the structure of \im{\te}.
+  I give the key proof cases.
+  \begin{proofcases}
+  \item \im{\te = \tpropty}
+
+    Trivial, since \im{\te = \tpropty} cannot have free variables.
+
+  \item \im{\te = \txpr}.
+
+    There are two sub-cases:
+    \begin{enumerate}[label={\bfseries Sub-case:},itemindent=2.5em]
+      \item \im{\txpr = \tx}
+      Then the proof follows since \im{\absccmodel{(\subst{\tx}{\tepr}{\tx})} =
+        \absccmodel{\tepr} = \subst{\sx}{\absccmodel{\te}}{\sx}}
+
+      \item \im{\txpr \neq \tx}
+      Then the proof follows since \im{\absccmodel{(\subst{\txpr}{\tepr}{\tx})} = \sxpr
+        = \subst{\sxpr}{\absccmodel{\tepr}}{\sx}}
+    \end{enumerate}
+
+  \item \im{\te = \tlete{\tx}{\teone}{\tetwo}}
+
+    Follows easily by the inductive hypotheses, since both the translation of
+    \im{\tfont{let}} and the definition of substitution are structural, except
+    for the capture avoidance reasoning.
+
+  \item \im{\te = \tpity{\tx}{\tA}{\tB}}
+
+    Follows easily by the inductive hypotheses, since both the translation of
+    \im{\tfontsym{\Pi}} and the definition of substitution are structural,
+    except for the capture avoidance reasoning.
+
+  \item \im{\te = \tcloe{\teone}{\tetwo}}
+
+    Must show that \im{\absccmodel{\subst{\tcloe{\teone}{\tetwo}}{\tepr}{\tx}} =
+      \subst{\absccmodel{\tcloe{\teone}{\tetwo}}}{\absccmodel{\tepr}}{\tx}}.
+    \begin{align}
+      & \absccmodel{\subst{\tcloe{\teone}{\tetwo}}{\tepr}{\tx}} \nonumber \\
+      =~&  \absccmodel{\tcloe{\subst{\teone}{\tepr}{\tx}}{\subst{\tetwo}{\tepr}{\tx}}} \\
+      & \text{by definition of substitution} \nonumber \\
+      =~&  \sappe{\absccmodel{\subst{\teone}{\tepr}{\tx}}}{\absccmodel{\subst{\tetwo}{\tepr}{\tx}}} \\
+      & \text{by definition of translation} \nonumber \\
+      =~&
+      \sappe{\subst{\absccmodel{\teone}}{\absccmodel{\tepr}}{\tx}}{\subst{\absccmodel{\tetwo}}{\absccmodel{\tepr}}{\tx}} \\
+      & \text{by the induction hypothesis applied to \im{\teone} and \im{\tetwo}} \nonumber \\
+      =~&
+      \subst{\absccmodel{\tcloe{\teone}{\tetwo}}}{\absccmodel{\tepr}}{\tx} \\
+      & \text{by substitution} \nonumber
+    \end{align}
+  \end{proofcases}
+\end{proof}
+
+Next I show that the model preserves \tech{reduction}, or that our
+\tech{model} in \slang weakly simulates \tech{reduction} in \tlang.
+This is used both to show that \tech{equivalence} is preserved, since
+\tech{equivalence} is defined by \tech{conversion}, and to show \tech{type
+  safety}.
+\begin{lemma}[Preservation of Reduction]
+  \label{lem:abs-cc:m:red}
+  If \im{\te \step \tepr} then \im{\absccmodel{\te} \stepstar \absccmodel{\tepr}}
+\end{lemma}
+\begin{proof}
+  By cases on \im{\te \step \tepr}.
+  The only interesting case is for the reduction of \tech{closures}.
+  \begin{proofcases}
+  \item \im{\tappe{\tcloe{(\tnfune{\txpr:\tApr,\tx:\tA}{\tein{b}})}{\tepr}}{\te} \step_\beta \subst{\subst{\tein{b}}{\tepr}{\txpr}}{\te}{\tx}}
+
+    \noindent We must show that
+
+    \im{\absccmodel{(\tappe{\tcloe{(\tnfune{\txpr:\tApr,\tx:\tA}{\tein{b}})}{\tepr}}{\te})} \stepstar
+      \absccmodel{(\subst{\subst{\tein{b}}{\tepr}{\txpr}}{\te}{\tx})}}
+    \begin{align}
+      & \absccmodel{(\tappe{\tcloe{(\tnfune{\txpr:\tApr,\tx:\tA}{\tein{b}})}{\tepr}}{\te})} \nonumber \\
+      =~&
+      \sappe{(\sappe{(\sfune{\sxpr}{\absccmodel{\tApr}}{\sfune{\sx}{\absccmodel{\tA}}}{\absccmodel{\tein{b}}})}{\absccmodel{\tepr}})}{\absccmodel{\te}}
+      & \text{by definition} \\
+      \step_\beta^2~&
+      \subst{\subst{\absccmodel{\tein{b}}}{\absccmodel{\tepr}}{\sxpr}}{\absccmodel{\te}}{\sx}
+      \\
+      =~& \absccmodel{(\subst{\subst{\tein{b}}{\tepr}{\txpr}}{\te}{\tx})} & \text{by \fullref[]{lem:abs-cc:m:subst}}
+    \end{align}
+  \end{proofcases}
+\end{proof}
+
+Now I show that \tech{conversion} is preserved.
+This essentially follows from preservation of reduction, \fullref[]{lem:abs-cc:m:red}.
+\begin{lemma}[Preservation of Conversion]
+  \label{lem:abs-cc:m:red*}
+  If \im{\tlenv \vdash \te \stepstar \tepr} then \im{\absccmodel{\tlenv} \vdash
+    \absccmodel{\te} \stepstar \absccmodel{\tepr}}
+\end{lemma}
+\begin{proof}
+  The proof is by induction on derivation
+  \im{\tstepjudg[\stepstar]{\tlenv}{\te}{\tepr}}.\footnote{In the prior version
+    of this work~\cite{bowman2018:cccc}, this proof was incorrectly stated as by
+    induction on the length of the reduction sequence.
+    This version is corrected.}
+  Each case is essentially uninteresting, but we give a few representative cases.
+  \begin{proofcases}
+    \item \refrule[refabscc]{Red-Refl}
+
+      Trivial.
+
+    \item \refrule[refabscc]{Red-Trans}
+
+      We have that \im{\te \step \teone} and \im{\teone \stepstar \tepr}.
+      We must show that \im{\absccmodel{\te} \stepstar \absccmodel{\tepr}}.
+
+      By \fullref[]{lem:abs-cc:m:red} applied to \im{\te \stepstar \teone}, we know
+      that \im{\absccmodel{\te} \stepstar \absccmodel{\teone}}, and by the
+      induction hypothesis applied to \im{\teone \stepstar \tepr} we know
+      that \im{\absccmodel{\teone} \stepstar \absccmodel{\tepr}}.
+
+      By \slang \refrule[src]{Red-Trans}, we conclude that \im{\absccmodel{\te}
+        \stepstar \absccmodel{\tepr}}.
+
+    \item \refrule[refabscc]{Red-Cong-Let}
+
+      We have
+      \im{
+      \inferrule*[right=\rulename{Red-Cong-Let}]
+      {\tstepjudg[\stepstar]{\tlenv}{\teone}{\teonepr} \\
+       \tstepjudg[\stepstar]{\tlenv,\tx = \tepr}{\tetwo}{\tetwopr}}
+      {\tstepjudg[\stepstar]{\tlenv}{\tlete{\tx}{\teone}{\tetwo}}{\tlete{\tx}{\teonepr}{\tetwopr}}}
+      }
+
+      We must show that \im{\absccmodel{\tlete{\tx}{\teone}{\tetwo}} \stepstar
+        \absccmodel{\tlete{\tx}{\teonepr}{\tetwopr}}}, which follows easily by
+      the induction hypothesis and by \slang \refrule[src]{Red-Cong-Let}.
+
+    \item \refrule[refabscc]{Red-Cong-Code}
+
+      We have
+      \im{
+        \inferrule*[right=\rulename{Red-Cong-Code}]
+        {\tstepjudg[\stepstar]{\tlenv}{\tAone}{\tAonepr} \\
+         \tstepjudg[\stepstar]{\tlenv,\tn:\tAonepr}{\tAtwo}{\tAtwopr} \\
+         \tstepjudg[\stepstar]{\tlenv,\tn:\tAonepr,\tx:\tAtwopr}{\te}{\tepr}}
+        {\tstepjudg[\stepstar]{\tlenv}{\tnfune{(\tn:\tAone,\tx:\tAtwo)}{\te}}{\tnfune{(\tn:\tAonepr,\tx:\tAtwopr)}{\tepr}}}
+      }
+
+      We must show that \im{\absccmodel{\tnfune{(\tn:\tAone,\tx:\tAtwo)}{\te}}
+        \stepstar \absccmodel{{\tnfune{(\tn:\tAonepr,\tx:\tAtwopr)}{\tepr}}}}.
+
+      By definition of the translation, we must show that
+      \im{\sfune{\sn}{\absccmodel{\tAone}}{\sfune{\tx}{\absccmodel{\tAtwo}}{\absccmodel{\te}}}
+        \stepstar
+        \sfune{\sn}{\absccmodel{\tAonepr}}{\sfune{\sx}{\absccmodel{\tAtwopr}{\absccmodel{\tepr}}}}}.
+
+      By the induction hypothesis, we know that
+      \begin{enumerate}
+        \item \im{\absccmodel{\tAone} \stepstar \absccmodel{\tAonepr}}
+        \item \im{\absccmodel{\tAtwo} \stepstar \absccmodel{\tAtwopr}}
+        \item \im{\absccmodel{\te} \stepstar \absccmodel{\tepr}}
+      \end{enumerate}
+
+      The goal follows by two applications of \slang \refrule[srcapp]{Red-Cong-Lam}.
+
+    \item \refrule[refabscc]{Red-Cong-Clo}
+
+      We must show that \im{\absccmodel{{\tcloe{\teone}{\tetwo}}} \stepstar
+        \absccmodel{\tcloe{\teonepr}{\tetwopr}}}, given that \im{\teone
+        \stepstar \teonepr} and \im{\tetwo \stepstar \tetwopr}, which follows
+      easily by the induction hypothesis and by the \slang
+      \refrule[srcapp]{Red-Cong-App}.
+  \end{proofcases}
+\end{proof}
+
+Next, I show that the translation preserves \tech{equivalence}.
+The proof essentially follows from \fullref[]{lem:abs-cc:m:red*}, but we must
+show that the \(\eta\)-equivalence for \tech{closures} is preserved.
+\begin{lemma}[Preservation of Equivalence]
+  \label{lem:abs-cc:m:coherence}
+  If \im{\teone \equiv \tetwo} then \im{\absccmodel{\teone} \equiv \absccmodel{\tetwo}}
+\end{lemma}
+\begin{proof}
+  The proof is by induction on the derivation \im{\te \equiv \tepr}.
+  The only interesting case is for \(\eta\) equivalence of closures.
+  \begin{proofcases}
+    \item \refrule*{eqv}{\im{\equiv}}
+      Follows by \fullref{lem:abs-cc:m:red*}.
+
+    \item \refrule*{eqv-eta1}{\im{\equiv}-Clo\im{_1}}
+
+    By assumption, we have the following.
+    \begin{enumerate}
+    \item \im{\teone \stepstar {\tcloe{\tnfune{(\txpr:\tApr,\tx:\tA)}{\teonepr}}{\tepr}}}
+    \item \im{\tetwo \stepstar \tetwopr}
+    \item \im{\subst{\teone}{\tepr}{\txpr} \equiv \tappe{\tetwopr}{\tx}}
+    \end{enumerate}
+    %
+    We must show that \im{\absccmodel{\teone} \equiv \absccmodel{\tetwo}}.
+    By \refrule*[src]{eqv-eta1}{\im{\equiv}-\im{\eta_1}}, it suffices to show:
+    %
+    \begin{enumerate}
+    \item \im{\absccmodel{\teone} \stepstar
+      \sfune{\sx}{\subst{\absccmodel{\tA}}{\absccmodel{\tepr}}{\sxpr}}{\subst{\absccmodel{\teonepr}}{\absccmodel{\tepr}}{\sxpr}}},
+      which follows since:
+      %
+      \begin{align}
+        \qquad\absccmodel{\teone} &~\stepstar \absccmodel{(\tcloe{\tnfune{(\txpr:\tApr,\tx:\tA)}{\teonepr}}{\tepr})} & \text{by \fullref[]{lem:abs-cc:m:red*}}\\
+        &~= \sappe{(\sfune{\sxpr}{\absccmodel{\tApr}}{\sfune{\sx}{\absccmodel{\tA}}}{\absccmodel{\teonepr}})}{\absccmodel{\tepr}} \\
+        &~\step {\sfune{\sx}{\subst{\absccmodel{\tApr}}{\absccmodel{\tepr}}{\sxpr}}
+          {\subst{\absccmodel{\teonepr}}{\absccmodel{\tepr}}{\sxpr}}}
+      \end{align}
+
+    \item \im{\absccmodel{\tetwo} \stepstar \absccmodel{\tetwopr}} which follows by \fullref[]{lem:abs-cc:m:red*}.
+
+    \item \im{{\subst{\absccmodel{\teonepr}}{\absccmodel{\tepr}}{\sxpr}} \equiv
+      \sappe{\absccmodel{\tetwopr}}{\sx}}, which follows by the inductive hypothesis
+      applied to \im{\subst{\teone}{\tepr}{\txpr} \equiv \tappe{\tetwopr}{\tx}} and \fullref[]{lem:abs-cc:m:subst}.
+    \end{enumerate}
+
+    \item \refrule*{eqv-eta2}{\im{\equiv}-Clo\im{_2}} is symmetric.
+  \end{proofcases}
+\end{proof}
+
+\begin{lemma}[Preservation of Subtyping]
+  \label{lem:abs-cc:m:subtype-pres}
+  If \im{\tsubtyjudg{\tlenv}{\tA}{\tB}} then \im{\ssubtyjudg{\absccmodel{\tlenv}}{\absccmodel{\tA}}{\absccmodel{\tB}}}
+\end{lemma}
+\begin{proof}
+  The proof is by induction on the derivation of \im{\tsubtyjudg{\tlenv}{\tA}{\tB}}.
+  All cases are completely uninteresting, but I give a few representative
+  cases anyway.
+  \begin{proofcases}
+    \item \refrule*{sub-equiv}{\im{\subtypesym}-\im{\equiv}}
+
+      Follows by \fullref[]{lem:abs-cc:m:coherence}.
+
+    \item \refrule*{sub-cum}{\im{\subtypesym}-Cum}
+
+      Must show \im{\absccmodel{\ttypety{i}} \subtypesym
+        \absccmodel{\ttypety{i+1}}}.
+      By translation, we must show that \im{\stypety{i} \subtypesym
+        \stypety{i+1}} which follows by the \slang
+      \refrule*[src]{sub-cum}{\im{\subtypesym}-Cum}.
+
+    \item \refrule*{sub-code}{\im{\subtypesym}-Code}
+
+      Must show \im{\absccmodel{\tcodety{\tnone:\tAone,\txone:\tAonepr}{\tBone}} \subtypesym
+        \absccmodel{\tcodety{\tntwo:\tAtwo,\txtwo:\tAtwopr}{\tBtwo}}}.
+      By translation, we must show that
+      \im{\spity{\snone}{\absccmodel{\tAone}}{\spity{\sxone}{\absccmodel{\tAonepr}}{\absccmodel{\tBone}}}
+          \subtypesym
+          \spity{\sntwo}{\absccmodel{\tAtwo}}{\spity{\sxtwo}{\absccmodel{\tAtwopr}}{\absccmodel{\tBtwo}}}}
+      By \fullref{lem:abs-cc:m:coherence}, we know that
+      \im{\absccmodel{\tAone} \equiv \absccmodel{\tAonepr}} and
+      \im{\absccmodel{\tAtwo \equiv \tAtwopr}}.
+      By the induction hypothesis, we know that \im{\absccmodel{\tBone} \subtypesym \absccmodel{\tBtwo}}.
+      The goal follows by two applications of the \slang \refrule*[src]{sub-pi}{\im{\subtypesym}-Pi}.
+  \end{proofcases}
+\end{proof}
+
+We can now show the final lemma for type safety and consistency.
+\begin{lemma}[Type and Well-formedness Preservation]
+  ~
+  \label{lem:abs-cc:m:type-pres}
+  \begin{enumerate}
+    \item If \im{\twf{\tlenv}} then \im{\swf{\absccmodel{\tlenv}}}
+    \item If \im{\ttyjudg{\tlenv}{\te}{\tA}} then \im{\styjudg{\absccmodel{\tlenv}}{\absccmodel{\te}}{\absccmodel{\tA}}}
+  \end{enumerate}
+\end{lemma}
+\begin{proof}
+  I prove parts 1 and 2 by simultaneous induction on the mutually defined judgments
+  \im{\twf{\tlenv}} and \im{\ttyjudg{\tlenv}{\te}{\tA}}.
+  Most cases follow easily by the induction hypothesis.
+  \begin{proofcases}
+  \item \refrule[refabscc]{W-Empty}
+
+    Trivial.
+
+  \item \refrule[refabscc]{W-Def}
+
+    We must show that \im{\swf{\absccmodel{(\tlenv,\tx = \te)}}}.
+    By \refrule[src]{W-Def} in \slang and part 1 of the inductive hypothesis, it
+    suffices to show that \im{\styjudg{\absccmodel{\tlenv}}{\absccmodel{\te}}{\absccmodel{\tA}}},
+    which follows by part 2 of the inductive hypothesis applied to
+    \im{\ttyjudg{\tlenv}{\te}{\tA}}.
+
+  \item \refrule[refabscc]{W-Assum}
+
+    We must show that \im{\swf{\absccmodel{(\tlenv,\tx : \tA)}}}.
+    By \refrule[src]{W-Assum} in \slang and part 1 of the inductive hypothesis,
+    it suffices to show that \im{\styjudg{\absccmodel{\tlenv}}{\absccmodel{\tA}}{\absccmodel{\tU}}},
+    which follows by part 2 of the inductive hypothesis applied to
+    \im{\ttyjudg{\tlenv}{\tA}{\tU}}.
+
+  \item \refrule[refabscc]{Prop}
+
+    It suffices to show that \im{\swf{\absccmodel{\tlenv}}}, since \im{\absccmodel{\tpropty} =
+      \spropty}, which follows by part 1 of the inductive hypothesis.
+
+  \item[\vdots]
+  \item \refrule{T-Code-Prop}
+
+    We have that
+    \begin{displaymath}
+      \inferrule
+      {\ttyjudg{\tlenv}{\tApr}{\tUpr} \\
+        \ttyjudg{\tlenv,\txpr:\tApr}{\tA}{\tU} \\
+        \ttyjudg{\tlenv,\txpr:\tApr,\tx:\tA}{\tB}{\tpropty}}
+      {\ttyjudg{\tlenv}{\tcodety{\txpr:\tApr,\tx:\tA}{\tB}}{\tpropty}}
+    \end{displaymath}
+    We must show that
+    \im{\styjudg{\absccmodel{\tlenv}}{\spity{\sxpr}{\absccmodel{\tApr}}{\spity{\sx}{\absccmodel{\tA}}{\absccmodel{\tB}}}}{\spropty}}
+
+    \noindent By two applications of \refrule[srcapp]{Pi-Prop}, it suffices to
+    show
+    \begin{itemize}
+      \item \im{\styjudg{\absccmodel{\tlenv}}{\absccmodel{\tApr}}{\absccmodel{\tUpr}}}, which follows by part
+        2 of the inductive hypothesis.
+      \item \im{\styjudg{\absccmodel{\tlenv},\sxpr:\absccmodel{\tApr}}{\absccmodel{\tA}}{\absccmodel{\tU}}},
+        which follows by part 2 of the inductive hypothesis.
+      \item \im{\styjudg{\absccmodel{\tlenv},\sxpr:\absccmodel{\tApr}}{\absccmodel{\tB}}{\spropty}},
+        which follows by part 2 of the inductive hypothesis and by definition
+        that \im{\absccmodel{\tpropty} = \spropty}
+    \end{itemize}
+
+    \item \refrule{Code}
+
+    We have:
+    \begin{displaymath}
+      \inferrule
+      {\ttyjudg{\tlenv,\txpr:\tApr,\tx:\tA}{\te}{\tB}}
+      {\ttyjudg{\tlenv}{\tnfune{\txpr:\tApr,\tx:\tA}{\te}}{\tcodety{\txpr:\tApr,\tx:\tA}{\tB}}}
+    \end{displaymath}
+    By definition of the translation, we must show
+    \im{\styjudg{\absccmodel{\tlenv}}{\sfune{\sxpr}{\absccmodel{\tApr}}{\sfune{\sx}{\absccmodel{\tA}}{\absccmodel{\te}}}}
+      {\spity{\sxpr}{\absccmodel{\tApr}}{\spity{\sx}{\absccmodel{\tA}}{\absccmodel{\tB}}}}},
+    which follows by two uses of \refrule[srcapp]{Lam} in \slang and part 2 of the
+    inductive hypothesis.
+
+    \item \refrule{Clo}
+
+    We have:
+    \begin{displaymath}
+      \inferrule
+      {\ttyjudg{\tlenv}{\te}{\tcodety{\txpr:\tApr,\tx:\tA}{\tB}} \\
+        \ttyjudg{\tlenv}{\tepr}{\tApr}}
+      {\ttyjudg{\tlenv}{\tcloe{\te}{\tepr}}{\tpity{\tx}{\subst{\tA}{\tepr}{\txpr}}{\subst{\tB}{\tepr}{\txpr}}}}
+    \end{displaymath}
+    By definition of the translation, we must show that
+
+    \im{\styjudg{\absccmodel{\tlenv}}{\sappe{\absccmodel{\te}}{\absccmodel{\tepr}}}{\absccmodel{({\tpity{\tx}{\subst{\tA}{\tepr}{\txpr}}{\subst{\tB}{\tepr}{\txpr}}})}}}.
+
+    By \fullref{lem:abs-cc:m:subst}, it suffices to show that
+
+    \im{\styjudg{\absccmodel{\tlenv}}{\sappe{\absccmodel{\te}}{\absccmodel{\tepr}}}{\spity{\sx}{\subst{\absccmodel{\tA}}{\absccmodel{\tepr}}{\sxpr}}{\subst{\absccmodel{\tB}}{\absccmodel{\tepr}}{\sxpr}}}}.
+
+    By \refrule[srcapp]{App} in \slang, it suffices to show that
+    \begin{itemize}
+    \item
+      \im{\styjudg{\absccmodel{\tlenv}}{\absccmodel{\te}}{\spity{\sxpr}{\sApr}{\spity{\sx}{\absccmodel{\tA}}{\absccmodel{\tB}}}}},
+      which follows with \im{\sApr = \absccmodel{\tApr}} by part 2 of the inductive hypothesis.
+    \item \im{\styjudg{\absccmodel{\tlenv}}{\absccmodel{\tepr}}{\sApr}}, which follows by part 2 of the
+      inductive hypothesis.
+    \end{itemize}
+
+    \item \refrule[refabscc]{App}
+
+      Similar to the case for \refrule{Clo}.
+
+    \item \refrule[refabscc]{Conv}
+
+      Follows by part 2 of the inductive hypothesis and \fullref{lem:abs-cc:m:subtype-pres}.
+  \end{proofcases}
+\end{proof}
+
+The \tech{model} of \tlang in \slang implies the desired \tech{consistency} and
+\tech{type safety} theorems, as discussed earlier.
+
+\tech{Consistency} tells us that we can only write \tech{proofs} of \tech{valid}
+\tech{specifications}.
+\begin{theorem}[Logical Consistency of \tlang]
+  \label{thm:abs-cc:m:sound}
+  There does not exist a closed expression \im{\te} such that \im{\ttyjudg{\cdot}{\te}{\tFalse}}.
+\end{theorem}
+
+\tech{Type safety} tells us that there is no undefined behavior that causes a
+\tech{program} to get stuck before it produces an \tech{observation}.
+\begin{theorem}[Type Safety of \tlang]
+  \label{thm:abs-cc:m:safe}
+  If \im{\wf{}{\te}}, then \im{\teval{\te}} is well-defined.
+\end{theorem}

@@ -1,0 +1,136 @@
+\label{sec:cps:intro}
+In this chapter, I develop a \tech{type-preserving} \tech{CPS} translation for a
+subset of \slang.
+As mentioned in \fullref[]{chp:anf}, \tech{CPS} presents many challenges and
+does not scale well to all features of \tech{dependency}.
+However, by understanding the key problems that \tech{CPS} introduces into
+a \tech{dependent types} system, we can develop \tech{type
+preserving} \tech{CPS} for some \tech{dependently typed} languages, which is
+surprising given past impossibility results.
+
+I start with a brief discussion of the different uses of \tech{CPS} and discuss
+the past impossibility result for dependent-type-preserving \tech{CPS}.
+I then develop \cpsslang, a restriction of \slang suitable for translations that
+rely on \emph{parametricity}, before developing both \tech{CBN}
+and \tech{CBV} \tech{type-preserving} \tech{CPS} translations for \cpsslang.
+
+\begin{typographical}
+  In this chapter, I typeset the source language, \cpsslang, in a
+  \emph{\sfonttext{blue, non-bold, sans-serif font}}, and the target language,
+  \cpstlang, in a \emph{\tfonttext{bold, red, serif font}}.
+\end{typographical}
+
+\section{On {{CPS}}}
+The \tech{CPS} translation presented in this chapter allows
+implementing \tech{type-preserving} compilation for some \tech{dependently
+  typed} languages, but it will not allow implementing control effects, a common
+  use for \tech{CPS}.
+Many of the design decisions I make do not apply when implementing control
+effects, or specifically disallow implementing control effects.
+For example, my goal is to avoid restricting dependencies in the source
+language so that I can compile existing languages such as Coq.
+However, to allow mixing control effects and dependency, one must necessarily
+restrict certain \tech{dependencies}, at least for the effectful parts of the
+language.
+This requires different designs for the CPS language and translation; I discuss
+some related work in this vein in \fullref[]{sec:cps:related}.
+Before I present my CPS translation, I discuss the context of CPS translation as it
+applies to type preservation and the core features of dependency.
+
+Typically, type-preserving \tech{compilers} use one of two common type translations: (1)
+the \deftech{double-negation translation} that translates expressions of
+type \im{A} into a \tech{computation} of type \im{A^\div = (A^+ \to \False) \to \False} or
+\im{\lnot\lnot A^+} where \im{A^+} represents the \tech{value-type translation},
+or (2) the \deftech*{locally polymorphic answer type,answer-type
+polymorphism,polymorphic answer type translation,polymorphic answer
+type}{locally polymorphic answer type translation} that translates
+\tech{expressions} of type \im{A} into \tech{computations} of type \im{A^\div =
+  \forall \alpha. (A^+ \to \alpha) \to \alpha}.
+The value translation differs depending on whether the translation is
+encoding \tech{CBN} or \tech{CBV} evaluation order, but essentially recursively
+translates types that must be \tech{values} using the value translation \im{^+},
+and types that could be \tech{computations} using the computation
+translation \im{^\div}.
+In each translation, the \tech{computation} expects a \tech{continuation},
+either of type \im{A^+ \to \False} or \im{A^+ \to \alpha}.
+Intuitively, the computation is forced to call that \tech{continuation} with
+a \tech{value} of type \im{A^+}.
+The \tech{double-negation translation} represents the final result of a
+\tech{program} with the empty type \False to indicate that \tech{programs}
+\deftech{never return}, \ie, \tech{programs} no longer behave like mathematical
+functions that take inputs and produce output values but instead run to
+completion and end up in some final answer state.
+The \tech{locally polymorphic answer type} uses \tech{parametricity} to encode a
+similar idea: if the \tech{computation} behaves \tech{parametrically} in its
+answer type, then no \tech{computation} can do anything but call its
+\tech{continuation} with the \deftech{underlying value} that the
+\tech{computation} represents.
+At the level of a whole program, this is equivalent to a \tech{program}
+\tech{never returning}---each intermediate \tech{computation} cannot return
+because it must, by \tech{parametricity}, invoke its \tech{continuation}.
+
+These two translations admit different reasoning principles, however.
+
+The \tech{double-negation translation} supports encoding control
+effects but complicates compositional reasoning.
+A \tech{computation} is free to duplicate its \tech{continuation} and save it
+for later, or call a saved \tech{continuation}, since the type of
+\tech{computations} only requires that the \tech{computation} returns \im{\False} and
+every \tech{continuation} has the answer type \im{\False}.
+However, it becomes difficult to give a compositional interpretation
+of \tech{programs} compared to a standard \(\lambda\)-calculus.
+In \slang, for example, we define the meaning of \tech{expressions} simply by
+evaluation to a \tech{value}.
+Using the \tech{double-negation translation}, \tech{CPS} \tech{programs}
+\tech{never return}, so we cannot easily define the \tech{value} of an
+\tech{expression} by evaluation; we have to complete it first to get a whole
+program, then evaluate it, then look at the final state.
+
+The \tech{locally polymorphic answer type} translation makes it difficult to
+implement control effects, but easily supports compositional reasoning.
+Since each \tech{computation} is \tech{parametric} in its answer type, we are
+essentially forced to call the \tech{continuation} exactly once and as the final
+step in the \tech{computation}.
+If we want to encode control effects, this is a problem.
+However, it supports compositional reasoning.
+We can locally evaluate \tech{CPS}'d \tech{expressions} and get the meaning of
+that \tech{expression} as a \tech{value} by picking a meaningful answer type.
+For example, given the \tech{computation}
+\im{e : \forall \alpha. (Bool \to \alpha) \to \alpha}, we can either treat it
+as a \tech{program} and instantiate the answer type with \im{\False}
+(\im{e~\False : (Bool \to \False) \to \False}), or get the meaning of
+the \tech{underlying value} by instantiating the answer type with \im{Bool}, the
+type of the underlying value, and applying the identity function as
+the \tech{continuation} \im{e~Bool~\lambda x.x : Bool}.
+The \tech{expression} \im{e~Bool~\lambda x.x} will return the
+\tech{underlying value} of \im{e}, supporting compositional reasoning.
+
+The standard translation for \tech{type-preserving} compilation is
+the \tech{double-negation translation}~\cite{morrisett1998:ftotal}, but
+extending this translation to \tech{dependent types} has proven challenging.
+\citet{barthe1999} showed how to scale typed call-by-name
+(CBN) CPS translation to a large class of Pure Type Systems (PTSs), including
+the Calculus of Constructions (CC) without \(\Sigma\) types.
+To avoid certain technical difficulties (which I discuss
+in \fullref[]{sec:cps:cbn}), they consider only \emph{domain-free} PTSs, a
+variant of PTSs where \im{\lambda} abstractions do not carry the domain of their
+bound variable---\ie, they are of the form \im{\lambda x.\, e} instead
+of \im{\lambda x:A.\, e} as in the \emph{domain-ful} variant.
+\citet{barthe2002} tried to extend these results to the Calculus of
+Inductive Constructions (\tech{CIC}), but ended up reporting a negative
+result, namely that the \tech{CBN} \tech{CPS} \tech{double-negation translation}
+is \emph{not type preserving} for \tech{dependent pairs}.
+They go on to prove a general impossibility result: for \tech{dependent
+conditionals} (in particular, sum types with dependent case analysis)
+\tech{type preservation} is \emph{not possible} when the \tech{CPS}
+translation admits unrestricted control effects.
+
+In this chapter, I use the locally polymorphic CPS translation and prove type
+preservation for the core features of dependency that were proven ``impossible''
+by \citeauthor{barthe2002}.
+The key is that the polymorphic CPS uses parametricity to guarantee absence of
+control effects.
+This first step is an over-approximation; we only need to prevent control
+effects in the presence of certain dependencies.
+However, it allows us to ignore effects and focus only on dependent-type
+preservation.

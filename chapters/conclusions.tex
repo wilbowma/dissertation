@@ -1,0 +1,695 @@
+\renewcommand{\techprefix}{nopnopnop}
+
+\newcommand{\FigFutureDiagram}[1][t]{
+  \begin{figure}[#1]
+    \begin{center}
+    \begin{tikzcd}[ampersand replacement=\&]
+      \& \text{Coq} \arrow[d] \& \\
+      \& \text{ANF IL} \arrow[d] \& \text{Front end} \\
+      \& \text{Closure Conversion IL} \arrow[d, "-----------------------" description] \& \\
+      \& \text{Hoisted IL} \arrow[d] \& \\
+      \text{Back end} \& \text{Allocation IL} \arrow[d] \& \\
+      \& \text{Dependent Assembly} \&
+    \end{tikzcd}
+    \end{center}
+    \caption{Future Type-Preserving Compiler}
+    \label{fig:concl:f-to-tal}
+  \end{figure}
+}
+
+\newcommand{\FigViability}[1][t]{
+  \begin{figure}[#1]
+    \begin{center}
+    \begin{tabular}{|c|c|}
+      \hline
+      ANF (\fullref[]{chp:anf}) & CPS (\fullref[]{chp:cps}) \\
+      \hline
+      \parbox[t]{.4\textwidth}{\small{Viable: works with higher universes; orthogonal to
+        parametricity and impredicativity.}} &
+      \parbox[t]{.4\textwidth}{\small{Not Yet Viable: unknown how to scale to higher
+          universes; currently requires parametricity and impredicativity of all
+          computationally relevant functions.\vspace{3pt}}} \\
+      \hline
+      Abstract CC (\fullref[]{chp:abs-cc}) & Parametric CC (\fullref[]{chp:param-cc}) \\
+      \hline
+      \parbox[t]{.4\textwidth}{\small{Viable: works with higher universes; orthogonal to
+        parametricity and impredicativity.}} &
+      \parbox[t]{.4\textwidth}{\small{Not Yet Viable: unknown how to scale to higher
+          universes; currently requires parametricity and impredicativity of all
+          computationally relevant recursive closures.\vspace{3pt}}} \\
+      \hline
+    \end{tabular}
+    \end{center}
+    \caption{Viability of Translations}
+    \label{fig:concl:viability}
+  \end{figure}
+}
+
+\chapter{Conclusions}
+\label{chp:conclusions}
+In this chapter, I summarize the lessons of the four translations presented
+earlier in this dissertation and conjecture how to apply those lessons to
+complete the project described in \fullref[]{chp:intro}.
+In a sense, I consider the previous four chapters to be mathematical case
+studies.
+When this project began, I had no idea how hard any given type-preserving
+translation would be.
+The only prior work on dependent-type-preserving compilation for full-spectrum
+dependent types studied CPS, which proved difficult.
+I approached my thesis by attempting the standard type-preserving translations
+to see what worked and what failed.
+From these case studies, I conclude lessons about the individual translations,
+and general lessons about dependent-type preservation.
+I end by conjecturing how to apply these lessons to future work: completing the
+compiler from Coq to dependently typed assembly.
+
+\section{Viability of the Individual Translations}
+\FigViability
+Recall from \fullref[]{chp:intro} my stated thesis:
+\tech{type-preserving} compilation of \tech{dependent types} is a theoretically
+viable technique for eliminating \tech{miscompilation errors} and \tech{linking
+  errors}.
+The key word in this thesis is \emph{viable}, that is, ``capable of working
+successfully; feasible''.
+For type-preserving compilation to be, theoretically, capable of working
+successfully for eliminating errors, we must be able to apply the theory to real
+tools and languages used in practice.
+I summarize the ``viability'' of the translations in
+\fullref[]{fig:concl:viability}---describing which translations are most
+promising in the sense that they should scale to use in practice, and which
+need further work.
+
+Two of the translations---the ANF translation, \fullref[]{chp:anf}, and the
+abstract closure conversion, \fullref[]{chp:abs-cc}---should scale to languages
+used in practice, such as Coq.
+They support all the core features of dependency and are orthogonal to
+additional axioms such as parametricity and impredicativity, meaning they should
+scale to a variety of dependently typed languages used in practice.
+I consider these two the most promising for further development into a practical
+compiler for Coq.
+
+The other two translations---the CPS translation, \fullref[]{chp:cps}, and the
+parametric closure conversion, \fullref[]{chp:param-cc}---do not scale to Coq in
+their current form, although I conjecture that we can apply more advanced type
+theories to the target language to develop variants of these translations that
+do scale.
+In their current form, both these translations rely on parametricity and
+impredicativity for type preservation.
+The CPS translation relies on parametricity and impredicativity of all
+computationally relevant functions, since it encodes computations using
+parametric functions, and the type of computations require impredicativity.
+Similarly, the parametric closure type requires parametricity to justify the
+\(\eta\)-equivalence for closures, and would require impredicativity to express
+recursive closures.
+Unfortunately, using multiple impredicative universes in the same hierarchy
+is inconsistent in general, so we can't create a different impredicative
+universe for each computationally relevant universe in the source.
+Furthermore, the combination of impredicativity and computational relevance is
+inconsistent with some set-theoretic axioms that are used in Coq in practice;
+and parametricity is orthogonal to dependent type theory, so requiring it
+disallows some axioms that user programs or proofs could soundly rely on.
+
+However, I conjecture that both of these translations could be extended to scale
+to Coq by using more advanced type theories in the target language.
+For example, we could introduce a separate type for computations, instead of
+encoding them using the same function type that source functions are compiled to.
+It might be possible to safely allow impredicativity in this computation type,
+without requiring impredicativity in all functions.
+Unfortunately, I'm unfamiliar with any type theories that mix predicative and
+impredicative quantification at every universe level, as this idea would
+require.
+Similarly, we only require parametricity for computations and closures.
+If we could isolate parametricity in a modality, we might be able to use it
+without requiring it for all functions or closures.
+\citet{nuyts2018} develop a type theory with a modality for parametricity, but
+it does not yet support higher universes.
+
+\section{Lessons for Dependent-Type Preservation}
+In \fullref[]{chp:type-pres}, I describe the general proof recipe I use to prove
+dependent-type preservation, but there's a missing step before we can use that
+proof recipe: model the dependencies of the implicit semantic object from the
+high-level source as an explicit syntactic object in the low-level target.
+For example, CPS and ANF are encoding continuations in the syntax of the target,
+and closure conversion is encoding closures.
+In each of these translations, I had to come up with a typed encoding that
+preserved all the dependencies from the source language.
+This is the hard part in each of the translations I presented, but there is a
+pattern to come up with this encoding, which I describe in this section.
+
+\paragraph{The Pattern}
+\begin{enumerate}
+\item Model the semantic object as syntax.
+
+  For example, CPS and ANF model continuations.
+  In the source language, continuations are implicit, and the semantics ensure
+  they are used linearly.
+  When we model continuations explicitly in the syntax, we must preserve this
+  property; trying to preserve dependent types essentially forces us to.
+  The CPS translation modeled continuations by relying on parametricity, which
+  enforces linearity as long as there are no effects.
+  ANF modeled this by keeping continuations non-first-class, enforcing linearity
+  in the syntax.
+
+  Closure conversion models closures.
+  In the source closures have the following properties: a closure's environment
+  is not part of the type, types can refer to the environment, and no term can
+  modify a closure's environment.
+  Both the abstract closure and the closure modeled with existential types, via
+  parametricity, enforce all of these properties.
+\item Record machine steps in the typing derivation.
+
+  In a source dependently typed language, we compose by nesting expressions and
+  by substitution.
+  To compose an expression \im{\se : \ssigmaty{\sx}{\sA}{\sB}} with a second
+  projection \sfonttext{snd}, we just nest them as in \im{\ssnde{\se}}.
+  This shows up in the typing derivation in dependent typing rules like
+  \refrule[srcapp]{App} and \refrule[srcapp]{Snd}.
+  For example, \refrule[srcapp]{Snd} is reproduced below.
+  \newcommand{\tikzmark}[1]{\tikz[overlay,remember picture,xshift=-3pt,yshift=2pt] \node (#1) {};}
+  \begin{mathpar}
+    \inferrule
+    {\styjudg{\slenv}{\se}{\ssigmaty{\sx}{\sA}{\sB}}}
+    {\styjudg{\slenv}{\ssnde{\se{\tikzmark{a}}}}{\subst{\sB}{\sfste{\se{\tikzmark{b}}}}{\sx}}
+      \tikz[overlay,remember picture,bend right=30, -latex] {\draw[->] (a.south) to (b.south);}}
+  \end{mathpar}
+  Note how the expression \im{\se} is copied into the typing derivation, using
+  substitution to compose the expressions \im{\sB} and \im{\sfste{\se}}.
+
+  In a target language, we move away from a compositional expression-based
+  syntax and instead encode the steps of a machine (abstract or concrete)
+  directly in syntax.
+  In dependently typed languages, machine steps affect typing.
+  For example, the expression \im{\ssnde{\se}} in CPS is represented (roughly)
+  as \im{\se^\div~(\tnfune{\ty}{\tappe{\tk}{(\tsnde{\ty})}})}, where \im{\tk} is
+  the current continuation.
+  This represents three steps of computation, and should be read as ``the
+  machine first evaluates \im{\se^\div}, and then evaluates \im{\tsnde{\ty}},
+  and then continues the computation at \im{\tk}''.
+
+  In a dependently typed language, we need to recover dependencies on
+  expressions that have been decomposed into steps in a machine.
+  For example, na\"ively typing the above CPS expression gives us, roughly, the
+  following typing derivation.
+  \begin{mathpar}
+    \inferrule
+    {\inferrule
+     {~}
+     {\ttyjudg{\tlenv}{\se^\div\tikzmark{n0}}{\tfunty{\tfont{Cont}}{\tfont{R}}}}\\
+     \inferrule
+     {\ttyjudg{\tlenv,\ty:\tsigmaty{\tx}{\sA^+}{\sB^+}}{\tsnde{\ty\tikzmark{n1}}}{\subst{\sB^+}{\tfste{\ty\tikzmark{n2}}}{\tx}}
+       \tikz[overlay,remember picture,bend left=30, -latex] {\draw[->] (n1.north) to (n2.north);}}
+     {\vdots}}
+    {\ttyjudg{\tlenv}{\se^\div~(\tnfune{\ty}{\tappe{\tk}{(\tsnde{\ty})}})}{\tfont{R}}}
+  \end{mathpar}
+  Here, I ignore the types of the result \tfonttext{R} and the continuation
+  \tfonttext{Cont}.
+  Recall from \fullref[]{chp:cps} that this derivation fails.
+  In the source, \im{\ssnde{\se} : \subst{\sB}{\sfste{\se}}{\sx}}, that is,
+  \im{\ssnde{\se}} depends on \im{\se}.
+  However, after decomposing the expression \im{\ssnde{\se}} into three machine
+  steps, we end up type checking \im{\tsnde{\ty}}, forgetting the dependency on
+  \im{\se^\div}.
+  To fix this, we have to record all the machine steps that lead up to
+  \im{\tsnde{\ty}} so we can use them to re-establish the dependency on the
+  computations \im{\se^\div}.
+  This is essentially what both the CPS translation in \fullref[]{chp:cps} and the
+  ANF translation in \fullref[]{chp:anf}: record machine steps in typing
+  derivations.
+
+  Intuitively, the CPS typing derivation should look like the following.
+  \begin{mathpar}
+    \inferrule
+    {\inferrule{~}{\ttyjudg{\tlenv}{\se^\div}{\tfunty{\tfont{Cont}}{\tfont{R}}}}\\
+     \inferrule
+     {\ttyjudg{\tlenv,\ty:\tsigmaty{\tx}{\sA^+}{\sB^+},\ty\tikzmark{n-1}:=\se^\div\tikzmark{n0}}{\tsnde{\ty\tikzmark{n1}}}{\subst{\sB^+}{\tfste{\ty\tikzmark{n2}}}{\tx}}
+       \tikz[overlay,remember picture,bend right=30, -latex] {\draw[->] (n0.north) to (n-1.north);}
+       \tikz[overlay,remember picture,bend left=40, -latex] {\draw[->] (n-1.north) to (n1.north);}
+       \tikz[overlay,remember picture,bend left=30, -latex] {\draw[->] (n1.north) to (n2.north);}}
+     {\ttyjudg{\tlenv,\ty:\tsigmaty{\tx}{\sA^+}{\sB^+},\ty:=\se^\div}{\tappe{\tk}{(\tsnde{\ty})}}{\tfont{R}}}}
+    {\ttyjudg{\tlenv}{\se^\div~(\tnfune{\ty}{\tappe{\tk}{(\tsnde{\ty})}})}{\tfont{R}}}
+  \end{mathpar}
+  That is, when go up the derivation, we record the machine step \im{\ty:=\se^\div}.
+  We should read this as ``the machine step \im{\tsnde{\ty}} takes place after
+  the machine steps of \im{\se^\div}, which leave the value of those steps in
+  \im{\ty}''.
+  This records a dependency on \im{\se^\div}, allowing us to re-establish the
+  dependency from the source language.
+
+  Both CPS and ANF record machine steps going up the typing derivation, pushing
+  machine steps into the leaves.
+  This happens since CPS and ANF un-nest and sequence expressions.
+  In \fullref[]{chp:cps}, we encoded this machine step as a definition \im{\ty =
+    \tappe{\se^\div}{\tfont{id}}}, that is, as the computation applied to the halt
+  continuation.
+  In \fullref[]{chp:anf}, we encoded machine steps as the series of definitions
+  introduced by \tfonttext{let} bindings.
+  By recording the machine steps in the typing derivation, we can recover
+  dependencies that have been separated from a single expression into multiple
+  machine steps.
+
+  Closure conversion is simpler, since it does not sequence expressions and thus
+  does not need to push dependencies into the leaves of the derivation trees.
+  However, closure conversion still introduces a machine step, in particular,
+  creating a closure.
+  The typing rule for creating a closure records a machine step in the typing
+  derivation by substituting the closure's environment into the closure's type.
+  Recall the typing rule for closures, \refrule[abs-cc]{Clo}, from
+  \fullref[]{chp:abs-cc}, reproduced below.
+  \begin{mathpar}
+    \inferrule
+    {\ttyjudg{\tlenv}{\te}{\tcodety{\tn:\tApr,\tx:\tA}{\tB}} \\
+     \ttyjudg{\tlenv}{\tepr}{\tApr}}
+    {\ttyjudg{\tlenv}{\tcloe{\te}{\tepr}}{\tpity{\tx}{\subst{\tA}{\tepr}{\tn}}{\subst{\tB}{\tepr}{\tn}}}}
+  \end{mathpar}
+  Closure conversion introduces an explicit abstraction over the environment
+  \im{\tn}.
+  Creating a closure is the machine step that instantiates the environment.
+  For dependent types, the machine step of creating a closure must re-introduce
+  dependencies in the type, by substituting the environment \im{\tepr} for the
+  environment variable \im{\tn}.
+  With abstract closure conversion, \fullref[]{chp:abs-cc}, we model this
+  directly with a new syntactic form.
+  With parametric closure conversion, \fullref[]{chp:param-cc}, we model this by
+  encoding the machine step using singleton types.
+
+\item Interpret machine steps in definitional equivalence.
+
+  Definitional equivalence is key to deciding type equivalence, but after
+  expressions change into machine steps, we must interpret machine steps instead
+  of just normalizing expressions.
+  For example, in CPS we record the machine step \im{\ty := \se^\div} with the
+  particular encoding \im{\ty = \tappe{\se^\div~\tfont{id}}}.
+  The reason for this encoding, and for the equivalence rule \refrule[cps]{T-Cont},
+  reproduced below, is to interpret machine steps by turning CPS'd computations
+  back into expressions that we can simply normalize.
+  \begin{mathpar}
+    \inferrule
+    {~}
+    {\tequivjudg{\tlenv}{\te~\tA~(\tfune{\tx}{\tB}{\tepr})}{(\tfune{\tx}{\tepr})~(\te~\tB~\tfont{id})}}
+  \end{mathpar}
+  \refrule[cps]{T-Cont} allows rewriting any CPS'd expression into an expression
+  representation of a machine step, so we can normalize machine steps the way we
+  normalize expressions in the source language.
+  A CPS'd expression applied to the halt continuation simply runs to a value,
+  giving us an interpretation of machine steps as expressions.
+  In ANF, the lemma \fullref[]{lem:anf:export-equal} corresponds to the
+  interpretation of machine steps.
+  It tells us we can interpret the sequences of definitions given by an ANF term
+  as the original expression.
+  In closure conversion, the \(\eta\)-equivalence rule for closures gives us an
+  interpretation of machine steps.
+  Creating a closure is a machine step, and we interpret them as expressions by
+  simply inlining the environment.
+\end{enumerate}
+
+In each of the above steps, we have to consider two things: whether the
+encoding or interpretation requires additional axioms, or whether they
+reinterpret existing types.
+The reason that CPS and parametric closure conversion are problematic is that
+their encodings requires parametricity and impredicativity in order to model the
+machine objects and interpret machine steps.
+This would not be a big problem if the new axioms were somehow isolated from
+user code that could rely on conflicting axioms.
+The CPS translation also makes the mistake of reusing (and thus, reinterpreting)
+an existing type: the function type.
+This means that the new axioms are now required of pre-existing types, \ie, the
+function type is reinterpreted.
+This is a problem when we're trying to keep the translation as broadly
+applicable as possible.
+By contrast, the ANF and abstract closure conversion do not introduce new
+axioms, and the encodings in those translations do not reinterpret existing
+types.
+ANF does not introduce any new types at all, instead encoding machine steps
+in syntax.
+Abstract closure conversion introduces a new code type, and ensures that the
+dependent function type maintains its previous interpretation.
+
+\section{Future Work}
+\marginpar{This section is dedicated to Amal and Stephanie.}
+In this dissertation, I have only described translations in the front-end of the
+compiler---half of the compiler necessary to reach the dependently typed
+assembly language described in \fullref[]{chp:intro}.
+I have also ignored many related practical issues, such as computational
+relevance, code size of assembly with type and proof annotations, or linking
+with untyped and/or effectful code.
+In this section, I explain how the lessons just described will help us finish
+the compiler.
+I then speculate about related practical issues.
+
+\subsection{To Dependently Typed Assembly}
+\FigFutureDiagram
+Recall that the standard model type preserving compiler,
+\fullref[]{fig:type-pres:f-to-tal} from \fullref[]{chp:type-pres}, has five
+passes.
+Following this model, we want to eventually build the compiler described by
+\fullref[]{fig:concl:f-to-tal}.
+This figure replaces CPS from the model with ANF, following the lessons
+discussed earlier in this chapter.
+We still need three more translations: hoisting, allocation, and code
+generation.
+How do we get from here to there?
+The pattern described in the previous section informs us how to begin designing
+these three translations.
+
+\paragraph{Hoisting}
+\begin{typographical}
+  In this section, \abscctlang is the \sfonttext{source language} and
+  ECC$^{CC/H}$, a target language that I conjecture will be a
+  syntactically restricted version of \abscctlang but whose formal definition I
+  leave for future work, is the \tfonttext{target language}.
+\end{typographical}
+
+Hoisting will be a trivially type-preserving translation, and can be phrased as
+an intra-language transformation in \abscctlang (the closure conversion IL).
+It will require no new features and can be encoded using \tfonttext{let} and
+definitions.
+This is because, unlike ANF, CPS, and closure conversion, hoisting does not
+model a new semantic object; it is a syntactic change to accommodate a later
+pass that will introduce a new object (the heap).
+
+In this translation, we will lift all function definitions to be defined at the
+top-level.
+The next translation, explicit allocation, can then easily move functions from
+top-level definitions to heap-allocated code (labeled blocks).
+In general, hoisting is easy since closure conversion has already closed all
+functions, so they can be freely moved into a different scope.
+
+Dependent types introduce a minor complication: functions defined earlier can
+appear in the types of closures defined later.
+For instance, suppose we have a source function \im{\sf :
+  \scodety{\sn:\sAonepr,\sx:\sAone}{\sBone}} and a closure \im{\sg :
+  \spity{\sx}{\sAtwo}{\sBtwo}}, where \im{\sf} is defined before
+\im{\sg}.
+Due to dependency, \im{\sf} (as a literal value, or by name) could appear
+in the type of \im{\sg}, such as \im{\sg :
+  \spity{\sx}{(\sappe{(\scloe{\sf}{\snpr})}{\sepr})}{\sBtwopr}} (where
+\im{\snpr} is the environment for \im{\sf}) if \im{\sf} is a type constructor,
+or \im{\sg : \spity{\sx}{(\sappe{\sfont{IsCorrect}}{\sf})}{\sBtwopr}} if
+\im{\sg} requires a correctness proof for \im{\sf} before executing.
+This means when deciding type equivalence after hoisting, we will need to inline
+the definition of \im{\tf} into types.
+This is not a major complication; we can model top-level definitions using
+dependent \tfonttext{let} and \emph{definitions}.
+Since definitions can be inlined during type equivalence, type equivalence
+should be preserved easily.
+
+The syntax of programs after translation will look like the following,
+\begin{mathpar}
+  \begin{stackTL}
+  \kwopen{\tfont{let}}{\begin{stackTL}\tfin{0} = \tnfune{(\tn:\tAin{0}\tprime,\txin{0}:\tAin{0})}{\tein{0}}\\
+      \vdots\\
+      \tfin{n} = \tnfune{(\tn:\tAin{n}\prime,\txin{n}:\tAin{n})}{\tein{n}}\\
+  \end{stackTL}} \\
+  \kwbin{\tfont{in}}{\te}
+  \end{stackTL}
+\end{mathpar}
+where there are no function literals in any of
+\im{\tAin{0}\tprime,...,\tAin{n}\tprime,\tAin{0},...,\tAin{n}} or \im{\te}.
+The hoisting translation must propagate function bindings out to the top-level,
+similar to how the ANF translation propagates intermediate computations out.
+
+\paragraph{Explicit Allocation}
+\begin{typographical}
+  In this section, ECC$^{CC/H}$ is the \sfonttext{source language} and
+  ECC$^{H}$,
+  a target language that I conjecture will be like \abscctlang but with a model
+  of the heap and explicit allocation and dereference but whose formal
+  definition I leave for future work, is the \tfonttext{target language}.
+\end{typographical}
+
+Explicit allocation will be the primary challenge in the rest of the compiler.
+Like the previous passes, explicit allocation introduces a new semantic object, the
+heap, and new machine steps, allocation and dereference.
+Modeling these will require keeping track of the \emph{definitions} of
+heap-allocated values during type checking; prior work only required the
+\emph{types} of heap-allocated values during type
+checking~\cite{morrisett1998:ftotal}.
+We may also require some new mechanism to prevent cycles in the heap.
+
+The main problem for a dependent-type-preserving explicit-allocation pass is
+that the heap is necessarily unordered, which can admit cycles and thus
+inconsistency.
+A computation may jump to a function allocated early in the heap, but require a
+reference to a pair defined later in the heap.
+For example, suppose we have the following term.
+\begin{mathpar}
+  \ttyjudg{\tlenv;(\tfont{l_1} := (\tnfune{(\tn:\tfont{\&}\tApr,\tx:\tA)}{\te}),\tfont{l_2} := \tfont{null} : \tApr)}{\kwopen{\tfont{set}}\tfont{l_2} = \tein{env}; (\kwopen{\tfont{deref}}\tfont{l_1})~\tfont{l_2}~\tepr}{\tB}
+\end{mathpar}
+This term is calling the function at location \im{\tfont{l_1}}.
+That function expects a reference (\tfonttext{\&}) to its environment of type
+\im{\tApr}, and its usual argument of type \im{\tA}.
+To call the function, we first set the environment in location \im{\tfont{l_2}},
+then dereference and call \im{\tfont{l_1}} with the environment \im{\tfont{l_2}}
+and some argument \im{\tepr} of type \im{\tA}.
+This is a dependent function, so we need to compute the type \im{\tB} by
+instantiating the type of \im{\te} with values from the \emph{new} value of
+\im{\tfont{l_2}}, after machine step \im{\kwopen{\tfont{set}}\tfont{l_2}}.
+
+We must allow this to model the heap correctly, but we must also prevent cycles
+in the heap to maintain logical consistency.
+It is well-known that introducing a model of the heap like the above into a
+terminating typed language can enable encoding nontermination (Landin's Knot).
+Since our dependently typed programs can represent proofs, this would result in
+inconsistency.
+
+Prior work uses linear types to solve a similar problem, but it's unclear if
+this approach will scale to dependent types.
+\citet{ahmed2007:l3} allow cycles in the heap but rely on linear capabilities to
+still guarantee termination.
+Unfortunately, linear types do not integrate well with dependent types, since a
+dependent type requires references to a term during type checking, and
+references during run time.
+Both the type system and the run-time term will require a reference to the same
+object, but linear typing will restrict us to only one alias: we can either use
+the term, or type check it.
+Recent work does integrate the linear and dependent types~\cite{mcbride2016},
+by essentially allowing a type-level reference to a linear object but
+disallowing that reference from being used at run time.
+By making aliases linear-dependent in this way, we may be able to both restrict
+cycles and allow typing a dependent heap.
+Another recent approach integrates dependent types with graded modal types, a
+variant of linear types in which objects are restricted to a specific number of
+uses~\cite{orchard2017}\footnote{Dependent types are listed as future work in
+  that citation, but a prototype language now exists
+  \url{https://granule-project.github.io/index.html}.}.
+This could allow exactly two references, or an unbounded number of type-level
+references and exactly one run-time reference.
+
+This pass will also be made more complex by recursive functions.
+We will have to allow some cycles, but only the ``well-behaved'' ones.
+This may require an auxiliary judgment, like Coq's guard condition for
+termination checking, to check that all cycles in the heap are well-defined
+recursive functions.
+
+\paragraph{Code Generation}
+I conjecture that code generation will be an easy, but tedious,
+translation.
+This translation is responsible for making explicit the details such as word
+sizes, literal values, register values, and which instructions work over which
+kinds of values.
+The register file is the only new machine object, but I conjecture that
+modeling it will be less complex than modeling the heap.
+The most difficult part will be interpreting assembly code as expressions.
+We may need to build on recent work on interoperability between functional
+languages and assembly code~\cite{patterson2017:funtal}
+However, as the pattern that leads us to this path already forces us to
+represent individual machine steps in the syntax and typing derivations, it
+might be simple to translate machine steps into assembly code by this stage.
+
+\subsection{Practical Considerations}
+This dissertation has established a theory for type-preserving compilation, but
+ignored the practice.
+I have, however, had practical concerns in mind during this dissertation.
+The following are some considerations ignored earlier in this dissertation,
+but I believe will be important to make the mythical compiler describing in
+\fullref[]{chp:intro} a reality.
+
+\paragraph{Computational Relevance}
+All the translations presented in this dissertation act as if every expression
+is computationally relevant, but this is an over-approximation.
+Many of the expressions, terms and types, will be irrelevant at run time.
+Compiling them into a representation that is effective for a machine to execute
+is, therefore, a bit silly.
+For these irrelevant expressions, it would be better to adopt a representation
+that is small and efficient for type checking, but not necessarily for
+executing.
+
+There's two good reasons for ignoring computational relevance for now.
+First, it simplifies designing the prototype dependent-type-preserving compiler.
+While it's true that some expressions are computationally irrelevant, we still
+need to figure out how to compile the ones that are relevant.
+We should do that first, and not prematurely optimize the compiler before we
+have a fully worked out theory.
+Second, we don't yet have a good theory for computational relevance in dependent
+types that we can simply take, off the shelf, and apply to an arbitrary
+dependently typed (intermediate) language.
+Research on computational relevance has already produced one Ph.D.
+dissertation~\cite{mishra-linger2008:phd}, without solving the problem for
+inductive types and dependent pattern matching, and ongoing work is still
+developing theories for simple core
+calculi~\cite{tejiscak2015:dtp-draft,nuyts2018}.
+The state of practice in Coq is to distinguish between base universes, and use a
+mysterious static analysis at higher universes.
+
+To really address computational relevance, we need a core language with explicit
+relevance annotations and an elaboration from Coq to the core language.
+(A complete redesign of computational relevance in existing languages seems
+unlikely, but I'll keep hoping.)
+Once we have such a core language with explicit relevance annotations, then we
+should be able to redesign the type-preserving compilers presented so far (and
+developed in the future) to selectively compile only relevant expressions.
+We could also design optimization passes to optimize the irrelevant expressions
+for type checking.
+
+A selective translation could introduce problems in the interpretation of
+machine steps, however.
+For example, if we have two different kinds of functions, irrelevant and
+relevant, will we ever need to cast from one to another?
+This seems possible if we decide equivalence by normalization.
+If not, then it seems likely that we will duplicate code from one level into the
+other (as already happens in Coq with \sfonttext{Set} vs \sfonttext{Prop}),
+which will exacerbate the code size problem discussed next.
+However, in some ways, the interpretation of machine steps already casts one
+kind of computation into another.
+For example, in CPS, we cast a CPS'd computation into a function application
+that can be interpreted as an expression.
+So maybe interpreting irrelevant expressions will not be any more difficult.
+
+However, maybe we do want to compile even irrelevant computations.
+If we decide equivalence by normalization, we might be able to more efficiently
+normalize terms by jumping to the assembly code that computes their value,
+rather than by running an interpreter.
+This would result in efficient type checking by using normalization by
+evaluation in assembly.
+It is unclear whether this is possible, and I don't see how to integrate
+\(\eta\)-equivalence.
+
+\paragraph{Reducing Code Size}
+If we are planning to ship compiled code paired with its specification and
+proofs, code size may become an engineering constraint.
+My translations have completely ignored this problem, in favor of as many
+annotations as I need to prove type preservation and decidability.
+For example, the CPS translation increases annotations by ``a lot''.
+Each term becomes annotated with the type from its derivation, which is copied
+into at least two places: the continuation, and the machine step.
+This would be unacceptable in practice.
+So how do we keep specifications and proofs small?
+
+Past work has developed small proof witnesses for dependently typed languages,
+in particular, Twelf~\cite{sarkar2005}, and we will likely need to adapt this
+kind of work to the compiler ILs.
+It's unclear how this work scales to full-spectrum dependently typed languages
+such as Coq.
+
+One important consideration is whether decreasing the size of proofs will
+increase the trusted code base, for example by making the proof checker more
+complex, or increase the type checking time.
+In many high-assurance scenarios, we might want the proof checker itself to be
+small.
+On the other hand, maybe not: we might be able to prove the more complex proof
+checker correct using a smaller, more easily audited, proof checker.
+Past work has considered how to balance proof size against proof checker size in
+the context of PCC and LF~\cite{appel2003}.
+
+Another aspect to this problem is link time efficiency.
+Given that we want to run type checking at link time to rule out linking errors,
+we want proof checking to be fast so linking can be fast.
+Usually there is a space/time trade off, so I would expect that decreasing the
+size of proofs and specifications will increase the time to check proofs.
+This could increase link time, which might be undesirable.
+On the other hand, linking should happen rarely compared to running, so maybe it
+won't matter.
+
+\paragraph{Preserving Meaning of Specifications}
+One problem I alluded to in \fullref[]{chp:intro} is that we can only stop %
+\marginpar{This section dedicated to Greg.}
+trusting the compiler if we still trust the specification.
+This is no problem if we have a specification like
+\im{\sappe{\sfont{IsCorrect}}{{\sf}}}, but what about when the specification is
+\im{\tnfune{\tk}{\sfont{IsCorrect}~(\tnfune{\tx}{\sf^\div~(\tnfune{\ty}{\tappe{\ty}{\tx~\tk}})})}}?
+Compiling specifications, or at least compiling the computations in
+specifications, makes trusting those specifications much more difficult.
+One of the fundamental assumptions of type preservation is that \emph{we trust
+  the type translation}.
+However, when the type translation is also the compiler, because terms are
+types, doesn't that mean we must either trust the compiler or prove it correct?
+If so, type preservation alone isn't enough to rule out miscompilation errors,
+and we must at least prove compiler correctness as well.
+
+We need something somewhat more than type preservation to help preserve the
+meaning of, or at least our trust in, specifications.
+At first, I thought it was enough to prove logical consistency of the target.
+Surely if we were to badly mangle specifications in translation, and prove type
+preservation, we would inadvertently be inconsistent?
+I'm no longer sure of that.
+Greg Morrisett suggested to me that we want some kind of logical implication:
+reading the types as logical formulas, we want to say the translated type
+implies the original type.
+This seem intuitively right, but I'm unsure how to formalize that intuition.
+Either of these approaches, however, still requires trust in some proof about
+the compiler, which is unsatisfying to achieving fully \emph{certifying}
+compilation or proof-carrying code.
+
+A more satisfying approach would be to maintain readability of specifications,
+so the target specification still reads as \im{\tappe{\tfont{IsCorrect}}{{\sf^\div}}}.
+A solution to the computational relevance problem might help by letting us avoid
+translating irrelevant specifications.
+However, I'm not sure that this solves the problem in general.
+Even irrelevant specifications will refer to relevant computations, and it may
+be difficult to trust that \im{\sf^\div} is the same as the \im{\sf} we
+expected to be correct, unless we prove compiler correctness.
+Although I do prove compiler correctness in this dissertation, and
+it even falls out of the recipe from \fullref[]{chp:type-pres}, I would like to
+avoid it in favor of a fully certifying compiler using type preservation.
+
+\paragraph{Gradual Dependently Typed Assembly}
+In \fullref[]{chp:intro}, I described a mythical compiler able to rule out
+linking errors when linking with x86 assembly, but all formal definitions of
+linking in this dissertation rely on type checking, and x86 is not dependently
+typed.
+How will we ever interoperate with real assembly?
+It's not realistic to expect all code to be ported to a dependently typed
+language and compiled with our compiler, nor to expect all x86 code to be ported
+to a new dependently typed assembly language (even if it would rule out a lot of
+errors.
+Instead, we need some way allow existing code---either
+x86 assembly or code generated from non-dependently typed languages---to safely
+interoperate with the dependently typed assembly language generated from our
+type preserving compiler.
+
+The working conjecture on how to get safe interoperability between a typed and
+untyped assembly language is \emph{gradual typing}~\cite{ahmed2015:snapl}.
+The idea is that we will define a gradual type system between typed assembly and
+assembly.
+At the boundary between typed and untyped code, the types will become
+\emph{contracts}---dynamic checks---ensuring safe interoperability.
+Work on gradual typing suggests this will incur a performance
+penalty~\cite{takikawa2016}, but static contract verification looks promising
+and could reduce contract costs to near zero~\cite{tobin-hochstadt2012}.
+
+To apply gradual typing to a dependent-type preserving compiler, we would need
+to extend gradual typing to dependent types and to assembly language.
+There are several instances for gradual typing for forms of dependent types,
+such as gradual refinement types~\cite{lehmann2017}, and gradual liquid
+types~\cite{vazou2018}.
+These seem promising, but probably require nontrivial extensions to support a
+dependently typed language such as Coq.
+There is recent work on dynamically typed assembly that should prove a promising
+starting point for extension to gradual dependently typed assembly~\cite{hernandez2018}.
+There is also work on gradual call-by-push-value (CBPV)~\cite{new2019:gtt}, which could
+prove a useful starting point since CBPV has been shown to correspond to a
+low-level SSA IR~\cite{garbuzov2018:cbpv-ssa}.
+
+\section{Conclusion}
+In this dissertation, I developed a theory of dependent-type-preservation,
+showing that type-preservation is a viable way to elimination miscompilation and
+linking errors from dependently typed languages.
+I describe the core features of dependency, and essence of type preservation,
+and a recipe for proving type preservation for dependently typed language.
+I presented four translations: two I believe will scale to practice as they are,
+while two will need more work to scale to languages such as Coq.
+I summarized the lessons of these translations, explain how to apply those
+lessons to remaining translations required to finish a prototype
+dependent-type-preserving compiler, and described some practical issues
+that will need to be solved to develop the mythical full-spectrum
+type-preserving compiler from Coq to gradually dependently-typed assembly.

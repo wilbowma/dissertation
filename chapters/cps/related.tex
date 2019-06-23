@@ -1,0 +1,198 @@
+\section{Related and Future Work}
+\label{sec:cps:related}
+
+\paragraph{Dependent Conditionals}
+In addition to showing that the traditional double-negation CPS for \(\Sigma\)
+types is not type preserving, \citet{barthe2002} demonstrate an impossibility
+result for CPS and dependent conditionals.
+They prove that no type-correct CPS translation can exist for sums with
+dependent case.
+However, careful inspection of their proof reveals that this impossibility
+result only applies if the CPS translation allows unrestricted control effects.
+As my translation does not allow control effects, I conjecture it is possible to
+prove type preservation for dependent conditionals.
+
+The impossibility result by \citeauthor{barthe2002} relies on the ability to
+implement \texttt{call/cc} via the CPS translation.
+Assuming there is a type-preserving CPS translation, they construct a model of CoC extended with
+\texttt{call/cc} and sum types (CC\(\Delta+\)) in CoC with sum types (CoC+).
+Since CoC+ is consistent, this model proves that CoC\(\Delta+\) is consistent.
+However, it is known that CoC\(\Delta+\) is inconsistent~\cite{coquand1989}.
+Therefore, the type-preserving CPS translation of CoC\(\Delta\)+ cannot exist.
+
+Their proof is valid; however, it is well known that the polymorphic answer type
+CPS translation that I use cannot implement
+\texttt{call/cc}~\cite{ahmed2011}.
+Therefore, my translation does not give a model of CoC\(\Delta+\) in CoC+.
+
+I further conjecture that my CPS translation is type preserving for dependent
+conditionals.
+Since the original work by \citeauthor{barthe2002} uses sums with dependent
+case, I use these instead of the dependent if presented in
+\fullref[]{chp:source}, but the same core idea applies to either implementation
+of dependent conditionals.
+The typing rule for dependent case is the following.
+\begin{displaymath}
+  \inferrule
+  {\styjudg{\slenv,\sy:\ssumty{\sA}{\sB}}{\sApr}{\sstarty} \\
+   \styjudg{\slenv}{\se}{\ssumty{\sA}{\sB}} \\
+   \styjudg{\slenv,\sx:\sA}{\seone}{\subst{\sApr}{\ssume{1}{\sx}}{\sy}} \\
+   \styjudg{\slenv,\sx:\sB}{\setwo}{\subst{\sApr}{\ssume{2}{\sx}}{\sy}}
+ }
+  {\styjudg{\slenv}{\scasee{\se}{\sx}{\seone}{\sx}{\setwo}}{\subst{\sApr}{\se}{\sy}}}
+\end{displaymath}
+
+I would extend the \cbnname{} with the following rule.
+\begin{displaymath}
+  (\scasee{\se}{\sx}{\seone}{\sx}{\setwo})^\div =
+  \begin{stackTL}
+    \cpsfune{\cpsalpha}{\cpsstarty}{
+      \cpsfune{\cpsk}{\cpsfunty{\subst{\sA^{\sprime+}}{\se^\div}{\cpsy}}{\cpsalpha}}{
+        \\\quad
+        \cpscappe{\se^\div}{\cpsalpha}{(\cpsfune{\cpsy}{\cpssumty{\sA^+}{\sB^+}}{
+          \cpscasee{\cpsy}{\cpsx}{(\cpsappe{\seone^\div}{\cpsalpha~\cpsk})}{\cpsx}{(\cpsappe{\setwo^\div}{\cpsalpha~\cpsk})}})}}}
+  \end{stackTL}
+\end{displaymath}
+
+Focusing on the first branch of the \im{\tfont{case}} above, note that
+\im{\cpsappe{\seone^\div}{\cpsalpha} : 
+  \cpsfunty{(\cpsfunty{\subst{\sA^{\sprime+}}{(\ssume{1}{\sx})^\div}{\cpsy}}{\cpsalpha})}{\cpsalpha}},
+however \im{\cpsk : {\cpsfunty{\subst{\sA^{\sprime+}}{\se^\div}{\cpsy}}{\cpsalpha}}}.
+We need to show that \im{\se^\div \equiv (\ssume{1}{\sx})^\div}, similar to the problem with
+the second projection of dependent pairs.  This time, however, to show
+\im{\se^\div \equiv (\ssume{1}{\sx})^\div} we need to reason
+about the flow of the underlying value of $\se^\div$ into $\cpsy$
+and also about the relationship between $\cpsy$ and $\cpsx$.
+Specifically, we need to first use my new \rulename{T-Cont} rule, which
+allows us to assume \im{\cpsy =
+  \cpsappe{\se^\div}{\cpsalpha~\cpsidk}}.  Next, 
+we need to know that since the case analysis is on the value $\cpsy$,
+in the first branch \im{\cpsy \equiv \cpssume{1}{\cpsx}} (and similarly
+for the other branch), but the problem is that the existing typing
+rule for dependent case does not let us assume that.
+
+Nonetheless, I conjecture the same extension I propose in \fullref[]{chp:anf}
+works to allow type preservation for CPS.
+We simply change the typing rule for case to record the equality \im{\se \equiv
+  \ssume{1}{\sx}} while typing the first branch, and similarly for the second
+branch, like in the following rule.
+\begin{displaymath}
+  \inferrule
+  {\styjudg{\slenv,\sy:\ssumty{\sA}{\sB}}{\sApr}{\sstarty} \\
+   \styjudg{\slenv}{\se}{\ssumty{\sA}{\sB}} \\
+   \styjudg{\slenv,\sx:\sA,\sp:\se = \ssume{1}}{\seone}{\subst{\sApr}{\ssume{1}{\sx}}{\sy}} \\
+   \styjudg{\slenv,\sx:\sB,\sp:\se = \ssume{2}}{\setwo}{\subst{\sApr}{\ssume{2}{\sx}}{\sy}}
+ }
+  {\styjudg{\slenv}{\scasee{\se}{\sx}{\seone}{\sx}{\setwo}}{\subst{\sApr}{\se}{\sy}}}
+\end{displaymath}
+With this modification in the target language \cps{}, we can type check the
+above translation of dependent case.
+I have not yet shown the consistency of the target language \cps{} once it is
+extended with this modified typing rule for dependent case, primarily due to
+problems scaling the CPS translation to higher universes, which I discuss next,
+and further in \fullref[]{chp:conclusions}.
+
+\paragraph{Higher Universes}
+It is unclear how to scale this CPS translation to higher universes.
+In this work, I have a single impredicative universe \im{\cpsstarty}, and the
+locally polymorphic answer type \im{\cpsalpha} lives in that universe.
+With an infinite hierarchy, it is not clear what the universe of \im{\cpsalpha} should be.
+Furthermore, the translation relies on impredicativity in \im{\cpsstarty}.
+We can only use impredicativity at one universe level and the locally
+polymorphic answer-type translation does not seem possible in the context of
+predicative polymorphism, so it's unclear how to adapt our translation to the
+infinite predicative hierarchy.
+
+I initially conjectured that the right solution for handling universes was
+universe polymorphism~\cite{sozeau2014}.
+My thought was that since the type is provided by the calling context, it seems
+sensible that the calling context should also provide the universe.
+Then, we could modify the type translation to be
+\im{\cpspity{\tfont{\ell}}{\tfont{Level}}{\cpspity{\cpsalpha}{\cpstypety{\tfont{\ell}}}{\cpsfunty{(\cpsfunty{\sA^+}{\cpsalpha})}{\cpsalpha}}}}. 
+However, one of the authors of \citeauthor{sozeau2014} (Sozeau) suggested to me
+that this would not work.\footnote{Personal communication. Jan. 2018.}
+
+\paragraph{Control Operators and Dependent Types}
+This chapter explicitly avoids control effects and dependent types to focus on
+type preservation.
+However, in general, we may want to combine the two.
+\citet{herbelin2005} shows that unrestricted use of \texttt{call/cc} and
+\texttt{throw} in a language with \(\Sigma\) types and equality leads to an inconsistent system.
+The inconsistency is caused by type dependency on terms involving control effects.
+\citet{herbelin2012} solves the inconsistency by constraining types to depend only
+on \emph{negative-elimination-free (NEF)} terms, which are free of effects.
+This restriction makes dependent types compatible with classical reasoning
+enabled by the control operators.
+
+After the initial publication of the work in this
+chapter~\cite{bowman2018:cps-sigma}, \citet{cong2018:lam-pi-s-r} extended the
+CPS translation to control effects in the NEF fragment, and use this locally
+polymorphic translation to disallow control effects for terms that use unsafe dependencies.
+
+This is similar to recent work by \citet{miquey2017} uses the NEF restriction to
+soundly extend the \im{\bar{\lambda}\mu\tilde{\mu}}-calculus of
+\citet{curien2000}, a computational classic calculus, with
+dependent types.
+He then extends the language with delimited continuations, and defines a
+type-preserving CPS to a standard intuitionistic dependent type theory.
+By comparison, our source language \cpsslang is effect-free,
+therefore we do not need the NEF condition to restrict dependency.
+My use of the identity function serves a similar role to their delimited
+continuations---allowing local evaluation of a CPS'd computation.
+
+\paragraph{Effects and Dependent Types}
+\citet{pedrot2017:weaning} define the \emph{weaning translation}, a monadic translation for
+adding effects to dependent type theory.
+The weaning translation allows us to represent self-algebraic monads, \ie,
+monads whose algebras' universe itself forms an algebra, such as exception and
+non-determinism monads.
+However, it does not apply to the standard continuation monad, which is not self-algebraic.
+The paper extends the translation to inductive types, with a restricted form of
+dependent elimination.
+Full dependent elimination can be implemented only for terms whose type is
+first-order, and this comes at the cost of inconsistency, although one can
+recover consistency by requiring that every inductive term be parametric.
+My translation does not lead to inconsistency, and requires no restrictions on
+the type to be translated.
+However, my translation appears to impose the self-algebraic structure on the
+computation types, and my use of parametricity to cast computations to values is
+similar to their
+parametricity restriction.
+
+\paragraph{Internalizing Parametricity}
+My work internalizes a specific free theorem, but ongoing work focuses on how to internalize
+parametricity more generally in a dependent type theory.
+\citet{krishnaswami2013} develop a technique for adding new rules to the extensional CoC.
+They present a logical relation for terms that are not syntactically well typed, but are
+semantically well behaved and equivalent at a particular type.
+Using this logical relation, they prove the consistency of several extensions to extensional CoC,
+including sum types, dependent records, and natural numbers.
+\citet{bernardy2012,keller2012} give translations from one dependent type theory
+into another that yield a parametric model of the original theory.
+These essentially encode the logical relation in the target type theory, similar to the approach we
+took in \fullref{sec:cps:consistent}.
+Recent work by \citet{nuyts2017} develops a theory that internalizes parametricity, including the
+important concept of \emph{identity extension}, and gives a thorough comparison of the literature.
+By building a target language based on one of these systems, it's possible that
+we could eliminate the rule \rulename{\im{\equiv}-Cont} as an axiom and instead
+derive it internally.
+This could allow the translation to scale to theories that are orthogonal to
+parametricity.
+
+\paragraph{Pervasive Translation}
+In this chapter, I only CPS translate \emph{terms}, \ie, run-time expressions.
+However, other work~\cite{barthe2001} studies \emph{pervasive} translation of PTSs.
+A pervasive CPS translation internalizes evaluation order for all
+expressions: terms, types, and kinds. 
+This is necessary in general, since in a language such as Coq, we cannot easily
+distinguish between terms, types, and kinds.
+A pervasive translation may be necessary to scale type-preserving translation to
+higher universes and more type-level computation.
+The translations in \fullref[]{chp:anf} and \fullref[]{chp:abs-cc} both use
+pervasive translation for this reason.
+
+A pervasive CPS translation is also used in a partial solution to the
+Barendregt-Geuvers-Klop conjecture~\cite{geuvers1993} which essentially states
+that every weakly normalizing PTS is also strongly normalizing.
+The conjecture has been solved for non-dependent PTSs, but the solution for
+dependent PTSs remains open.

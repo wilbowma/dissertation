@@ -1,0 +1,31 @@
+\label{sec:param-cc:intro}
+In this chapter, I develop a \deftech{parametric closure conversion}
+translation, \ie, a \tech{closure conversion} translation that does not add
+primitive \tech{closures} to the target language but instead encodes them using
+\tech{existential types}.
+As discussed in \fullref[]{chp:abs-cc}, this translation is not suitable in all
+\tech{dependent type} theories, since it relies on \tech{parametricity} and
+\tech{impredicativity}.
+However, parametric \tech{closure conversion} has some advantages over \tech{abstract
+  closure conversion} which makes studying this translation worthwhile.
+In particular, known optimizations for recursive \tech{closures} that avoid
+rebuilding the \tech{closure} every time through the loop use \tech{parametric
+  closure conversion}~\cite{minamide1996,morrisett1998:reccc}.
+We can develop a \tech{parametric closure conversion} if we admit
+\tech{impredicativity} and \tech{parametricity}, and avoid \tech{higher
+  universes}.
+
+I begin with a review of the problems with \tech{parametric closure conversion}
+discussed in \fullref[]{chp:abs-cc}.
+To accommodate the restrictions, the \tech{parametric closure conversion}
+translation is defined on \pccslang, the same source language used
+in \fullref[]{chp:cps}, and a restriction of \slang presented
+in \fullref[]{chp:source}.
+I then design a target language, \pcctlang, before developing the full
+translation, and proofs of type preservation and compiler correctness.
+
+\begin{typographical}
+ In this chapter, I typeset the source language, \pccslang, in
+ a \emph{\sfonttext{blue, non-bold, sans-serif font}}, and the target
+ language, \pcctlang, in a \emph{\tfonttext{bold, red, serif font}}.
+\end{typographical}

@@ -1,0 +1,468 @@
+\renewcommand{\techprefix}{cpssrc}
+
+\newcommand{\FigCOCSyntax}[1][t]{
+  \begin{figure}[#1]
+    \begin{bnfgrammar}
+      \bnflabel{Universes} &
+      \sU & \bnfdef & \sstarty \bnfalt \sboxty
+      \bnfnewline
+
+      \bnflabel{Expressions} &
+      \st,\se,\sA,\sB & \bnfdef & \sx
+                                  \bnfalt \sstarty
+                                  \bnfalt \spity{\sx}{\sA}{\se}
+                                  \bnfalt \sfune{\sx}{\sA}{\se}
+                                  \bnfalt \sappe{\se}{\se}
+                                  \bnfalt \ssigmaty{\sx}{\sA}{\sB}
+                                  \\ && \bnfalt & \sdpaire{\seone}{\setwo}{\ssigmaty{\sx}{\sA}{\sB}}
+                                  \bnfalt \sfste{\se} \bnfalt \ssnde{\se}
+                                  \bnfalt \sboolty
+                                  \bnfalt \struee
+                                  \bnfalt \sfalsee
+                                  \\ && \bnfalt & \sife{\se}{\seone}{\setwo}
+                                  \bnfalt \salete{\sx}{\se}{\sA}{\se}
+
+      \bnfnewline
+
+      \bnflabel{Environments} &
+      \slenv & \bnfdef & \cdot \bnfalt \slenv,\sx:\sA \bnfalt \slenv,\sx = \se:\sA
+    \end{bnfgrammar}
+    \caption{\cpsslang Syntax}
+    \label{fig:cps:ecc:syntax}
+  \end{figure}
+}
+
+\newcommand{\COCRed}{
+  \judgshape{\sstepjudg[\step]{\slenv}{\se}{\sepr}}
+  \begin{reductionrules}
+    \slenv \vdash \sappe{(\sfune{\sx}{\sA}{\seone})}{\setwo} & \step_{\beta} & \subst{\seone}{\setwo}{\sx}
+    \stepnewline
+
+    \slenv \vdash \sfste{\spaire{\seone}{\setwo}} & \step_{\pi_1} & \seone
+    \stepnewline
+
+    \slenv \vdash \ssnde{\spaire{\seone}{\setwo}} & \step_{\pi_2} & \setwo
+    \stepnewline
+
+    \slenv \vdash \sife{\struee}{\seone}{\setwo} & \step_{\iota_{1}} & \seone
+    \stepnewline
+
+    \slenv \vdash \sife{\sfalsee}{\seone}{\setwo} & \step_{\iota_{1}} & \setwo
+    \stepnewline
+
+    \slenv \vdash \sx & \step_{\delta} & \se & \where{\sx = \se : \sA \in \slenv}
+    \stepnewline
+
+    \slenv \vdash \salete{\sx}{\setwo}{\sA}{\seone} & \step_{\zeta} & \subst{\seone}{\setwo}{\sx}
+    \stepnewline
+  \end{reductionrules}
+}
+
+\newcommand{\FigCOCRed}[1][t]{
+  \begin{figure}[#1]
+    \COCRed
+    \caption{\cpsslang Reduction}
+    \label{fig:cps:ecc:red}
+  \end{figure}
+}
+
+\newcommand{\FigCOCConv}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\sstepjudg[\stepstar]{\slenv}{\se}{\sepr}}
+    \begin{mathpar}
+      \inferrule*[right=\defrule{Red-Refl}]
+      {~}
+      {\sstepjudg[\stepstar]{\slenv}{\se}{\se}}
+
+      \inferrule*[right=\defrule{Red-Trans}]
+      {\sstepjudg{\slenv}{\se}{\seone} \\
+       \sstepjudg[\stepstar]{\slenv}{\seone}{\sepr}}
+      {\sstepjudg[\stepstar]{\slenv}{\se}{\sepr}}
+
+      \inferrule*[right=\defrule{Red-Cong-Lam}]
+      {\sstepjudg[\stepstar]{\slenv}{\sA}{\sApr} \\
+       \sstepjudg[\stepstar]{\slenv,\sx:\sApr}{\se}{\sepr}}
+      {\sstepjudg[\stepstar]{\slenv}{\sfune{\sx}{\sA}{\se}}{\sfune{\sx}{\sApr}{\sepr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Pi}]
+      {\sstepjudg[\stepstar]{\slenv}{\sA}{\sApr} \\
+       \sstepjudg[\stepstar]{\slenv,\sx:\sApr}{\se}{\sepr}}
+      {\sstepjudg[\stepstar]{\slenv}{\spity{\sx}{\sA}{\se}}{\spity{\sx}{\sApr}{\sepr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-App}]
+      {\sstepjudg[\stepstar]{\slenv}{\seone}{\seonepr} \\
+       \sstepjudg[\stepstar]{\slenv}{\setwo}{\setwopr}}
+      {\sstepjudg[\stepstar]{\slenv}{\sappe{\seone}{\setwo}}{\sappe{\seonepr}{\setwopr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Sig}]
+      {\sstepjudg[\stepstar]{\slenv}{\sA}{\sApr} \\
+       \sstepjudg[\stepstar]{\slenv,\sx:\sApr}{\se}{\sepr}}
+      {\sstepjudg[\stepstar]{\slenv}{\ssigmaty{\sx}{\sA}{\se}}{\ssigmaty{\sx}{\sApr}{\sepr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Pair}]
+      {\sstepjudg[\stepstar]{\slenv}{\seone}{\seonepr} \\
+       \sstepjudg[\stepstar]{\slenv}{\setwo}{\setwopr} \\
+       \sstepjudg[\stepstar]{\slenv}{\sA}{\sApr}}
+      {\sstepjudg[\stepstar]{\slenv}{\sdpaire{\seone}{\setwo}{\sA}}{\sdpaire{\seonepr}{\setwopr}{\sApr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Fst}]
+      {\sstepjudg[\stepstar]{\slenv}{\se}{\sepr}}
+      {\sstepjudg[\stepstar]{\slenv}{\sfste{\se}}{\sfste{\sepr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Snd}]
+      {\sstepjudg[\stepstar]{\slenv}{\se}{\sepr}}
+      {\sstepjudg[\stepstar]{\slenv}{\ssnde{\se}}{\ssnde{\sepr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-If}]
+      {\sstepjudg[\stepstar]{\slenv}{\se}{\sepr} \\
+       \sstepjudg[\stepstar]{\slenv}{\seone}{\seonepr} \\
+       \sstepjudg[\stepstar]{\slenv}{\setwo}{\setwopr}}
+      {\sstepjudg[\stepstar]{\slenv}{\sife{\se}{\seone}{\setwo}}{\sife{\sepr}{\seonepr}{\setwopr}}}
+
+      \inferrule*[right=\defrule{Red-Cong-Let}]
+      {\sstepjudg[\stepstar]{\slenv}{\seone}{\seonepr} \\
+       \sstepjudg[\stepstar]{\slenv}{\sA}{\sApr} \\
+       \sstepjudg[\stepstar]{\slenv,\sx = \sepr : \sApr}{\setwo}{\setwopr}}
+      {\sstepjudg[\stepstar]{\slenv}{\salete{\sx}{\seone}{\sA}{\setwo}}{\salete{\sx}{\seonepr}{\sApr}{\setwopr}}}
+    \end{mathpar}
+    \caption{\cpsslang Conversion}
+    \label{fig:cps:ecc:conv}
+  \end{figure}
+}
+
+\newcommand{\COCEqv}{
+  \judgshape{\sequivjudg{\slenv}{\se}{\sepr}}
+  \begin{mathpar}
+    \inferrule*[right=\defrule*{eqv}{\inlinemath{\equiv}}]
+      {\sstepjudg[\stepstar]{\slenv}{\se}{\seone} \\
+       \sstepjudg[\stepstar]{\slenv}{\sepr}{\seone}}
+      {\sequivjudg{\slenv}{\se}{\sepr}}
+
+    \inferrule*[right=\defrule*{eqv-eta1}{\inlinemath{\equiv}-\im{\eta_1}}]
+      {\sstepjudg[\stepstar]{\slenv}{\se}{\sfune{\sx}{\sA}{\seone}} \\
+       \sstepjudg[\stepstar]{\slenv}{\sepr}{\setwo} \\
+       \sequivjudg{\slenv,\sx:\sA}{\seone}{\sappe{\setwo}{\sx}}}
+      {\sequivjudg{\slenv}{\se}{\sepr}}
+
+    \inferrule*[right=\defrule*{eqv-eta2}{\inlinemath{\equiv}-\im{\eta_2}}]
+      {\sstepjudg[\stepstar]{\slenv}{\se}{\seone} \\
+       \sstepjudg[\stepstar]{\slenv}{\sepr}{\sfune{\sx}{\sA}{\setwo}} \\
+       \sequivjudg{\slenv,\sx:\sA}{\sappe{\seone}{\sx}}{\setwo}}
+      {\sequivjudg{\slenv}{\se}{\sepr}}
+  \end{mathpar}
+}
+
+\newcommand{\FigCOCEqv}[1][t]{
+  \begin{figure}[#1]
+    \COCEqv
+    \caption{\cpsslang Equivalence}
+    \label{fig:cps:ecc:eqv}
+  \end{figure}
+}
+
+\newcommand{\FigCOCWF}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\swf{\slenv}}
+    \begin{mathpar}
+      \inferrule*[right=\defrule{W-Empty}]
+      {~}
+      {\swf{\cdot}}
+
+      \inferrule*[right=\defrule{W-Assum}]
+      {\swf{\slenv} \\
+       \styjudg{\slenv}{\sA}{\sU}}
+      {\swf{\slenv,\sx:\sA}}
+
+      \inferrule*[right=\defrule{W-Def}]
+      {\swf{\slenv} \\
+       \styjudg{\slenv}{\se}{\sA} \\
+       \styjudg{\slenv}{\sA}{\sU}}
+      {\swf{\slenv,\sx = \se :\sA}}
+    \end{mathpar}
+    \caption{\cpsslang Well-Formed Environments}
+  \end{figure}
+}
+
+\newcommand{\FigCoCTyping}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\styjudg{\slenv}{\se}{\sA}}
+    \begin{mathpar}
+      \inferrule*[right=\defrule{Var}]
+      {(\sx : \sA \in \slenv \text{ or }
+       \sx = \se : \sA \in \slenv) \\
+      \swf{\slenv}}
+      {\styjudg{\slenv}{\sx}{\sA}}
+
+      \inferrule*[right=\defrule{*}]
+      {\swf{\slenv}}
+      {\styjudg{\slenv}{\sstarty}{\sboxty}}
+
+      \inferrule*[right=\defrule{Pi-*}]
+      {\styjudg{\slenv,\sx:\sA}{\sB}{\sstarty}}
+      {\styjudg{\slenv}{\spity{\sx}{\sA}{\sB}}{\sstarty}}
+
+      \inferrule*[right=\defrule*{Pi-Square}{Pi-\im{\square}}]
+      {\styjudg{\slenv,\sx:\sA}{\sB}{\sboxty}}
+      {\styjudg{\slenv}{\spity{\sx}{\sA}{\sB}}{\sboxty}}
+
+      \inferrule*[right=\defrule{Lam}]
+        {\styjudg{\slenv,\sx:\sA}{\se}{\sB} \\
+         \styjudg{\slenv}{\spity{\sx}{\sA}{\sB}}{\sU}}
+        {\styjudg{\slenv}{\sfune{\sx}{\sA}{\se}}{\spity{\sx}{\sA}{\sB}}}
+
+      \inferrule*[right=\defrule{App}]
+        {\styjudg{\slenv}{\se}{\spity{\sx}{\sApr}{\sB}} \\
+         \styjudg{\slenv}{\sepr}{\sApr}}
+        {\styjudg{\slenv}{\sappe{\se}{\sepr}}{\subst{\sB}{\sepr}{\sx}}}
+
+      \inferrule*[right=\defrule{Sig}]
+      {\styjudg{\slenv}{\sA}{\sstarty} \\
+       \styjudg{\slenv,\sx:\sA}{\sB}{\sstarty}}
+      {\styjudg{\slenv}{\ssigmaty{\sx}{\sA}{\sB}}{\sstarty}}
+
+      \inferrule*[right=\defrule{Pair}]
+        {\styjudg{\slenv}{\seone}{\sA} \\
+         \styjudg{\slenv}{\setwo}{\subst{\sB}{\seone}{\sx}}}
+        {\styjudg{\slenv}{\sdpaire{\seone}{\setwo}{\ssigmaty{\sx}{\sA}{\sB}}}{\ssigmaty{\sx}{\sA}{\sB}}}
+
+      \inferrule*[right=\defrule{Fst}]
+        {\styjudg{\slenv}{\se}{\ssigmaty{\sx}{\sA}{\sB}}}
+        {\styjudg{\slenv}{\sfste{\se}}{\sA}}
+
+      \inferrule*[right=\defrule{Snd}]
+        {\styjudg{\slenv}{\se}{\ssigmaty{\sx}{\sA}{\sB}}}
+        {\styjudg{\slenv}{\ssnde{\se}}{\subst{\sB}{\sfste{\se}}{\sx}}}
+
+      \inferrule*[right=\defrule{Bool}]
+      {\swf{\slenv}}
+      {\styjudg{\slenv}{\sboolty}{\sstarty}}
+
+      \inferrule*[right=\defrule{True}]
+      {\swf{\slenv}}
+      {\styjudg{\slenv}{\struee}{\sboolty}}
+
+      \inferrule*[right=\defrule{False}]
+      {\swf{\slenv}}
+      {\styjudg{\slenv}{\sfalsee}{\sboolty}}
+
+      \inferrule*[right=\defrule{If}]
+      {\styjudg{\slenv}{\se}{\sboolty} \\
+       \styjudg{\slenv}{\seone}{\sB} \\
+       \styjudg{\slenv}{\setwo}{\sB}}
+      {\styjudg{\slenv}{\sife{\se}{\seone}{\setwo}}{\sB}}
+
+      \inferrule*[right=\defrule{Let}]
+        {\styjudg{\slenv}{\sepr}{\sA} \\
+         \styjudg{\slenv,\sx=\sepr:\sA}{\se}{\sB}}
+        {\styjudg{\slenv}{\salete{\sx}{\sepr}{\sA}{\se}}{\subst{\sB}{\sepr}{\sx}}}
+
+      \inferrule*[right=\defrule{Conv}]
+        {\styjudg{\slenv}{\se}{\sA} \\
+         \styjudg{\slenv}{\sB}{\sU} \\
+         \sequivjudg{\slenv}{\sA}{\sB}}
+        {\styjudg{\slenv}{\se}{\sB}}
+    \end{mathpar}
+    \caption{\cpsslang Typing}
+    \label{fig:cps:ecc:type}
+  \end{figure}
+}
+
+\newcommand{\FigECCExplicitSyntax}[1][t]{
+  \begin{figure}[#1]
+    \begin{bnfgrammar}
+      \bnflabel{Kinds} &
+      \sK & \bnfdef & \sstarty \bnfalt \spity{\salpha}{\sK}{\sK} \bnfalt
+                        \spity{\sx}{\sA}{\sK}
+
+      \bnfnewline
+
+      \bnflabel{Types} &
+      \sA,\sB & \bnfdef & \salpha \bnfalt \spity{\sx}{\sA}{\sB}
+                              \bnfalt \spity{\salpha}{\sK}{\sB}
+                              \bnfalt \sfune{\sx}{\sA}{\sB}
+                              \bnfalt \sfune{\salpha}{\sK}{\sB}
+                              \bnfalt \sappe{\sA}{\se}
+                              \\ && \bnfalt & \sappe{\sA}{\sB} 
+                              \bnfalt \ssigmaty{\sx}{\sA}{\sB}
+                              \bnfalt \sboolty 
+                              \bnfalt \salete{\salpha}{\sA}{\sK}{\sB}
+                              \\ && \bnfalt & \salete{\sx}{\se}{\sA}{\sB}
+      \bnfnewline
+
+      \bnflabel{Terms} &
+      \se & \bnfdef & \sx 
+                      \bnfalt \sfune{\sx}{\sA}{\se}
+                      \bnfalt \sfune{\salpha}{\sK}{\se}
+                      \bnfalt \sappe{\se}{\se}
+                      \bnfalt \sappe{\se}{\sA}
+                      \bnfalt \sdpaire{\seone}{\setwo}{\ssigmaty{\sx}{\sA}{\sB}}
+                      \\ && \bnfalt & \sfste{\se}
+                      \bnfalt \ssnde{\se}
+                      \bnfalt \struee
+                      \bnfalt \sfalsee
+                      \bnfalt \sife{\se}{\seone}{\setwo}
+                      \\ && \bnfalt & \salete{\sx}{\se}{\sA}{\se}
+                      \bnfalt \salete{\salpha}{\sA}{\sK}{\se}
+      \bnfnewline
+
+      \bnflabel{Environments} &
+      \slenv & \bnfdef & \cdot \bnfalt \slenv,\sx:\sA \bnfalt \slenv,\sx = \se :
+                           \sA, \bnfalt \slenv,\salpha : \sK \bnfalt \slenv,\salpha = \sA : \sK
+    \end{bnfgrammar}
+    \caption{\cpsslang Explicit Syntax}
+    \label{fig:cps:ecc:explicit-syntax}
+  \end{figure}
+}
+
+\newcommand{\FigCOCLinking}[1][t]{
+  \begin{figure}[#1]
+    \begin{bnfgrammar}
+      \bnflabel{Closing Substitutions} &
+      \ssubst & \defeq & \cdot \bnfalt \ssubst[\sx \mapsto \se]
+    \end{bnfgrammar}
+    \judgshape{\wf{\slenv}{\ssubst}}
+    \begin{mathpar}
+      \inferrule
+      {~}
+      {\wf{\cdot}{\cdot}}
+
+      \inferrule
+      {\wf{\slenv}{\ssubst} \\
+       \styjudg{\cdot}{\se}{\sA}}
+      {\wf{\slenv,\sx:\sA}{\ssubst[\sx \mapsto \se]}}
+
+      \inferrule
+      {\wf{\slenv}{\ssubst} \\
+       \styjudg{\slenv}{\se}{\sA}}
+      {\wf{\slenv,\sx = \se : \sA}{\ssubst[\sx \mapsto \ssubst(\se)]}}
+    \end{mathpar}
+    \judgshape{\ssubst(\se) = \se}
+    \begin{mathpar}
+      \cdot(\se) = \se
+
+      \ssubst[\sx \mapsto \sepr](\se) = \ssubst(\subst{\se}{\sx}{\sepr})
+    \end{mathpar}
+    \caption{\cpsslang Closing Substitutions and Linking}
+  \end{figure}
+}
+
+\section{The Calculus of Constructions with Definitions}
+\label{sec:cps:ecc}
+\FigCOCSyntax
+
+The language \cpsslang is an extension of the Calculus of
+Constructions (\deftech{CoC}) with booleans, \tech{dependent pairs} and
+\tech{definitions}.
+This is a restriction of the earlier \slang, without \tech{dependent
+  conditionals}, \tech{higher universes}, and \tech{cumulativity}.
+Note that the booleans in \cpsslang do not allow dependent elimination; they
+only serve as a ground type for observations across languages.
+I return to dependent conditions in \fullref[]{sec:cps:related}.
+I adapt this presentation from the model of the Calculus of Inductive
+Constructions (\deftech{CIC}) given in the Coq reference manual~\cite[Chapter~4]{coq2017}.
+
+I present the syntax of \cpsslang in \fullref[]{fig:cps:ecc:syntax} in the style
+of a Pure Type System (\deftech{PTS}) with no syntactic distinction between
+\tech{terms} and \tech{types} and \deftech*{kind,kinds}{kinds}, which describe \tech{types}.
+This has been true of earlier chapters, but we will soon make an explicit
+distinction in order to selectively \tech{CPS} translate only \tech{terms}, as,
+unlike with \tech{ANF} and \tech{closure conversion}, it is unclear how to
+uniformly \tech{CPS} translate \tech{types} and \tech{kinds} in addition to
+\tech{terms}.
+As before, I use the phrase \tech{expression} to refer to a \tech{term},
+\tech{type}, or \tech{kind} in the \tech{PTS} syntax.
+I usually use the meta-variable \im{\se} to evoke a term expression and
+I use \im{\st} for an expression to be explicitly ambiguous about its nature
+as a \tech{term}, \tech{type}, or \tech{kind}.
+
+The language includes one \tech{impredicative} \tech{universe}, or
+\deftech{sort}, \im{\sstarty}, and its \tech{type}, \im{\sboxty}.
+Compared to \slang from \fullref[]{chp:source}, we can think of \im{\sstarty}
+as \im{\spropty} and \im{\sboxty} as \im{\stypety{1}}.
+The syntax of \tech{expressions} includes the \tech{universe} \im{\sstarty},
+variables \im{\sx} or \im{\salpha}, \tech{dependent function} types
+\im{\spity{\sx}{\sA}{\sB}}, \tech{dependent functions}
+\im{\sfune{\sx}{\sA}{\se}}, application
+\im{\sappe{\seone}{\setwo}}, dependent let
+\im{\salete{\sx}{\se}{\sA}{\sepr}}, \tech{dependent pair} types
+\im{\ssigmaty{\sx}{\sA}{\sB}}, \tech{dependent pairs}
+\im{\sdpaire{\seone}{\setwo}{\ssigmaty{\sx}{\sA}{\sB}}}, and first and second
+projections \im{\sfste{\se}} and \im{\ssnde{\se}}.
+Note that, unlike in \slang, we cannot write \im{\sboxty} in source
+programs---it is only used by the type system.
+The typing environment \im{\slenv} includes assumptions \im{\sx:\sA} and
+definitions \im{\sx = \se : \sA}.
+Note that definitions in this language include annotations, unlike in \slang.
+Unlike in the ANF translation in \fullref[]{chp:anf}, including annotations on
+definitions does not complicate the CPS translation because the \tech{CPS}
+translation is already inherently complicated by producing type annotations for
+continuations (which I discuss more later).
+
+As with \tech{dependent pairs}, I omit the type annotations on \im{\sfont{let}}
+expressions, \im{\slete{\sx}{\se}{\sepr}}, when they are clear from
+context.
+I use the notation \im{\sfunty{\sA}{\sB}} for a function type whose result
+\im{\sB} does not depend on the input.
+
+\FigCOCRed
+\FigCOCEqv
+The reduction relation, conversion relation, and equivalence relations for
+\cpsslang are essentially the same as for \slang.
+I partially duplicate them here anyway for convenience, and give full
+definitions in \fullref[]{sec:cps:appendix}.
+Notice, however, that there is no subtyping relation since \cpsslang excludes
+higher universes.
+In \fullref[]{fig:cps:ecc:red}, I present the reduction relation for \cpsslang,
+and in \fullref[]{fig:cps:ecc:eqv}, I present the equivalence relation.
+Note that \cpsslang does not fix an evaluation order, but this is not important since
+\cpsslang is effect-free.
+
+\FigCoCTyping
+The typing rules for \cpsslang, \fullref[]{fig:cps:ecc:type}, are also
+essentially the same, but missing removed features.
+The judgment \im{\swf{\slenv}} checks that the environment
+\im{\slenv} is well-formed; it is defined by mutual recursion with the
+typing judgment.
+Note that there is no typing rule analogous to \refrule[src]{Type}, so
+\im{\sboxty} is not a well-typed expression.
+This means \im{\sboxty} does not need a type, and means \cpsslang excludes
+\tech{higher universes}.
+Since I exclude \tech{higher universes}, I exclude \tech{cumulativity}, so the
+\refrule{Conv} is different.
+Notice that the \refrule{If} does not allow the result type to be dependent; I
+return to this in \fullref[]{sec:cps:related}.
+Instead of subtyping, \refrule{Conv} allows typing an expression
+\im{\se : \sA} as \im{\se : \sB} when \im{\sA \equiv \sB}.
+The remaining rules are essentially the same.
+\refrule{Pi-*} essentially corresponds to \refrule[srcapp]{Pi-Prop}, and
+implicitly allows \tech{impredicativity} in \im{\sstarty}, since the domain
+\im{\sA} could be in the \tech{higher universe} \im{\sboxty}.
+\refrule*{Pi-Square}{Pi-\(\square\)} is predicative, similar to
+\refrule[srcapp]{Pi-Type}.
+
+Note that for simplicity, I include only term-level pairs of type
+\im{\ssigmaty{\sx}{\sA}{\sB} : \sstarty}.
+Type-level pairs \im{\ssigmaty{\sx}{\sA}{\sB} : \sboxty} introduce
+numerous minor difficulties with \tech{CPS} translation.
+For instance, we can write pairs of terms and types \im{\spaire{\se}{\sA}} or
+\im{\spaire{\sA}{\se}}.
+It is unclear how these \tech{expression} should be \tech{CPS} translated;
+should they be considered terms or types?
+This is an instance of the more general problem of computational relevance.
+In general, dependent-type-preserving compilation is difficult when we try to
+compile only the computationally relevant terms, because we cannot easily decide
+relevance.
+I discuss this further in \fullref[]{chp:conclusions}.
+
+\FigECCExplicitSyntax
+To make the upcoming \tech{CPS} translation easier to follow, I present a second
+version of the syntax for \cpsslang in which we make the distinction between
+\tech{terms}, \tech{types}, and \tech{kinds} explicit (see
+\fullref[]{fig:cps:ecc:explicit-syntax}).
+The two presentations are equivalent~\cite{barthe1999}, at least as long as we
+do not include \tech{computationally relevant} \tech{higher universes}.
+Distinguishing \tech{terms} from \tech{types} and \tech{kinds} is useful since
+we only want to CPS translate \emph{terms}, because our goal is to internalize
+only \emph{run-time} evaluation contexts.
+I discuss \deftech{pervasive translation}, which also internalizes the
+\tech{type}-level evaluation context, in \fullref[]{sec:cps:related}.

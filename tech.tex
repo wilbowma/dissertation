@@ -1,0 +1,61 @@
+%% NB This ended up being a bad idea and so it doesn't actually do anything.
+
+
+% A package for defining hyper linked technical terms, and ensuring no use-before-define of technical tersm.
+% Comparable to acronym and glossaries, but those felt a bit heavy weight and only provided linking through an auxiliary appendix, instead of directly into the text.
+% https://www.sharelatex.com/learn/Glossaries
+
+% renew this at whatever granularity to get default prefixs.
+% use * versions of commands, like deftech* or refrule*, to circumvent
+\newcommand{\techprefix}{}
+
+\makeatletter
+
+% light-grey
+\definecolor{tech-color}{gray}{0.37}
+% NB: Coloring was too distracting
+\newcommand{\techcolor}[2]{#2}
+
+\newcommand{\@deftechStar}[3][]{%
+  \emph{#3}%
+  %\phantomsection{\emph{#3}}%
+  %\let\@meow\undefined%
+  %\foreach \@meow in {#2}{%
+  %  \expandafter\label{tech:#1:\@meow}%
+  %}%
+  %\let\@meow\undefined%
+}
+
+% by default, add a prefix.
+\newcommand{\@deftechNoStar}[2][]{\@deftechStar[#1]{#2,#2s}{#2}}
+
+\newcommand{\deftech}{\@ifstar\@deftechStar\@deftechNoStar}
+\newcommand{\deftechs}[1]{\@deftechStar{#1,#1s}{#1s}}
+% Can't use makefirstuc, or other iterative macros, in label generation it seems.
+\newcommand{\Deftech}[1]{\@deftechStar{#1,#1s}{\makefirstuc{#1}}}
+\newcommand{\Deftechs}[1]{\@deftechStar{#1,#1s}{\makefirstuc{#1}s}}
+
+\newcommand{\@techStar}[3][]{%
+  %{\hypersetup{hidelinks}\hyperref[tech:#1:#2]{\techcolor{tech-color}{#3}}}%
+  #3%
+}
+\newcommand{\@techNoStar}[2][]{\@techStar[#1]{#2}{#2}}
+
+\newcommand{\tech}{\@ifstar\@techStar\@techNoStar}
+\newcommand{\Tech}[1]{\@techStar{#1}{\makefirstuc{#1}}}
+\newcommand{\techs}[1]{\@techStar{#1}{#1s}}
+\newcommand{\Techs}[1]{\@techStar{#1}{\makefirstuc{#1}s}}
+
+\renewcommand{\rulename}[1]{{\scshape #1}}
+
+\LetLtxMacro{\rulelabel}{\label}
+% For rules in particular
+\newcommand{\@defruleStar}[3][\techprefix]{\phantomsection{\rulename{#3}}\expandafter\rulelabel{rule:#1:#2}}
+\newcommand{\@defruleNoStar}[2][\techprefix]{\@defruleStar[#1]{#2}{#2}}
+\newcommand{\defrule}{\@ifstar\@defruleStar\@defruleNoStar}
+
+\newcommand{\@refruleStar}[3][\techprefix]{\hyperref[rule:#1:#2]{Rule \rulename{#3}}}
+\newcommand{\@refruleNoStar}[2][\techprefix]{\@refruleStar[#1]{#2}{#2}}
+\newcommand{\refrule}{\@ifstar\@refruleStar\@refruleNoStar}
+
+\makeatother

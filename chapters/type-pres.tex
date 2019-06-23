@@ -1,0 +1,953 @@
+\renewcommand{\techprefix}{type-pres}
+
+\newcommand{\FigModelDigram}[1][t]{
+  \begin{figure}[#1]
+    \begin{center}
+    \begin{tikzcd}[ampersand replacement=\&]
+      \& \text{Source} \arrow[d] \& \\
+      \& \text{CPS IL} \arrow[d] \& \text{Front end} \\
+      \& \text{Closure Conversion IL} \arrow[d, "-----------------------" description] \& \\
+      \& \text{Hoisted IL} \arrow[d] \& \\
+      \text{Back end} \& \text{Allocation IL} \arrow[d] \& \\
+      \& \text{Assembly} \&
+    \end{tikzcd}
+    \end{center}
+    \caption{Model Type-Preserving Compiler}
+    \label{fig:type-pres:f-to-tal}
+  \end{figure}
+}
+
+\chapter{Type-Preserving Compilation}
+\label{chp:type-pres}
+In this chapter, I introduce \tech{type-preserving compilation} at a high level,
+the particular problems that arise in proving \tech{type preservation} for
+\tech{dependent types}, and the standard proof architecture I will use in the
+rest of this dissertation.
+
+\begin{typographical}
+  In this chapter I typeset a source language in a \emph{\sfonttext{blue,
+      non-bold, sans-serif font}}, and a target language in a
+  \emph{\tfonttext{bold, red, serif font}}.
+  Unless otherwise specified, these languages are arbitrary except for the
+  requirements presented in \fullref[]{chp:source}, since the proof architecture
+  and lessons apply generally to dependently typed source and target languages.
+\end{typographical}
+
+\section{A Brief History}
+I begin with a brief history of \tech{type preservation} leading up to this
+dissertation.
+For a more in-depth survey of the use this early history of \tech{types} in
+compilation, see \citet[Section 2 and 3]{leroy1998}.
+
+Early \tech{compilers} preserved \tech{types} into intermediate languages
+(\deftech*{IL,ILs}{ILs}) for optimization, not for ruling out errors.
+\citet[Chapter 10]{aho1986} describe simple optimizations that use \tech{types}
+to specialize arithmetic operations, such as generating different instructions
+for integer or floating-point numbers based on \tech{types}.
+\citet{leroy1992} uses \tech{types} in an intermediate language to remove memory
+indirection introduced to support polymorphic functions.
+\citet{tarditi1996} develop \deftech{TIL}, a \tech{compiler} for ML with
+type-directed optimizations as a central feature.
+The \tech{TIL} \tech{compiler} preserved \tech{types} down to a typed
+intermediate language (hence the name \tech{TIL}), in which \tech{types} are
+used to optimize polymorphic functions, loops, and garbage collection.
+The Glasgow Haskell Compiler (\deftech{GHC}) employs a typed intermediate
+language, \deftech{Core}, and performs some type-based optimizations in
+\tech{Core}~\cite{peyton-jones1996}.
+The \deftech{SML/NJ} \tech{compiler} was extended with a typed intermediate
+language, \deftech{FLINT}, to support type-based optimization and study how to
+reduce compilation overhead caused by preserving \tech{types}~\cite{shao1998}.
+The System F to Typed Assembly Languages (\deftech{F-to-TAL}) \tech{compiler}
+was preserved all typing structure down to a typed assembly language
+(\deftech{TAL}), and leverages types in the assembly language for low-level
+optimizations such as array bounds check elimination~\cite{morrisett1998:ftotal}.
+
+While initially used for optimization, early work on \tech{type-preserving}
+compilation of functional languages recognized the use of \tech{types} for
+ruling out some \tech{miscompilation errors}.
+For example, the \tech{TIL} compiler, while focusing on the use of \tech{types}
+for optimization, points out that the ability to type check the output of the
+\tech{compiler} helps to find and fix \tech{miscompilation
+  errors}~\cite{tarditi1996}.
+The \tech{GHC} team also recognized the potential for ruling out
+\tech{miscompilation errors} and developed a tool, Core Lint, for type checking
+the output of each \tech{compiler} pass.
+This use seemed to surpass other uses; as the author, Simon Peyton-Jones, says
+``One of the dumbest things we did was to delay writing Core
+Lint.''~\cite[section 8]{peyton-jones1996}.
+The \tech{F-to-TAL} \tech{compiler} uses \tech{types} in the target assembly
+language and proves \tech{type safety}, ruling out a class of
+\tech{miscompilation errors} from the entire \tech{compiler} in the process:
+type and memory safety errors are statically ruled out~\cite{morrisett1998:ftotal}.
+
+This work spawned an approach related to \tech{type preservation} for ruling out
+both \tech{linking errors} and \tech{miscompilation errors}, in particular,
+\emph{proof-carrying code}.
+The work on \tech{TIL} is credited~\cite{tarditi2004} with spawning the idea of
+proof-carrying code (\tech{PCC})~\cite{necula1997} and \tech{certifying
+  compilation}~\cite{necula1998}.
+The two ideas are essentially similar.
+In \tech{PCC}, the idea is to pair \tech{implementation} code (\tech{executable})
+with a correctness \tech{specification} and a \tech{proof} that the
+\tech{implementation} satisfies its \tech{specification}.
+This allows ruling out \tech{linking errors} by enforcing the
+\tech{specification} when linking, and removes the \tech{implementation} from
+the trusted code base.
+\tech{Certifying compilation} extends this idea to \tech{compilers} to remove
+the \tech{compiler} from the trusted code base and eliminate
+\tech{miscompilation errors}.
+In a \deftech*{certifying compilation,Certifying compilation,certifying
+  compiler}{certifying compiler}, rather than prove the \tech{compiler} correct,
+we design the \tech{compiler} to produce both proof-carrying code, \ie, to
+produce or preserve \deftech{certificates} (\tech{proofs}) that the compiled
+code meets its correctness \tech{specifications}.
+
+\tech{PCC} and \tech{certifying compilation} can be viewed as instances of
+\tech{type preservation} in which we interpret \tech{type} broadly as either
+intrinsic or extrinsic, \ie, as either Church style or Curry style.
+Work on \tech{PCC} and \tech{certifying compilation} proceeded two veins: (1)
+using \tech*{intrinsic}{intrinsically typed languages} and (2) using
+\tech*{extrinsic}{extrinsically typed languages}.
+
+In \deftech*{intrinsic}{intrinsically typed systems}, such as in \tech{TIL}
+and \tech{TAL}, where \tech{types} represent \tech{specifications}, well-typed
+\tech{implementations} represent \tech{proofs} and type checking is proof
+checking.
+The work on \tech{TIL} describes an untrusted \tech{compiler} that could produce
+fully optimized \tech{TIL} code and a client could automatically verify simple
+safety properties, such as memory safety, by type checking~\cite{tarditi1996}.
+This guarantees absence of memory safety errors introduced when linking two
+compiled components, \ie, it rules out \tech{linking errors} that violate memory
+safety.
+In \tech{TAL}, the idea is carried out to the assembly level.
+Any two \tech{TAL} programs are guaranteed to be free of memory safety errors
+when linked, if their \tech{types} are compatible.
+Later work introduced \deftech{DTAL}~\cite{xi2001}, a variant of \tech{TAL} with
+indexed types, which could statically rule out memory indexing errors.
+\citet{chen2010} develop a \tech{certifying compiler} from \deftech{Fine}, an
+ML-like language with refinement types, to \deftech{DCIL}, a variant of the .NET
+Common Intermediate Language with refinement types, capable of certifying
+functional correctness properties, such as access control and information-flow
+policies.
+
+In \deftech*{extrinsic,extrinsic systems,extrinsic type systems}{extrinsic type
+  systems}, such as the work of
+\citet{necula1997} and \citet{necula1998}, \tech{specifications} and
+\tech{proofs} are written in separate languages from the
+\tech{implementation}.
+\citet{necula1997} uses \tech{LF} to represent \tech{specifications} and
+\tech{proofs}, and axiomatizes the behavior of \tech{implementation} primitives
+in \tech{LF} \tech{specifications}.
+\citet{shao2005} take a similar approach, but use \tech{CIC} as an extrinsic
+type system over a high-level functional language.
+
+Compared to \tech*{extrinsic}{extrinsic systems}, \tech*{intrinsic}{intrinsic
+  systems} have smaller \tech{certificates} by reusing the
+\tech{implementation} to represent the \tech{proof}~\cite{xi2001}, and can
+avoid the problem of \tech{specification puns}.
+However, it is simpler to build \tech{certificates} in
+\tech*{extrinsic}{extrinsic systems}, since the \tech{specification} and
+\tech{proof} can be designed and manipulated separately from the
+\tech{implementation}.
+
+So far, work on \tech{certifying compilation} and \tech{PCC} has been limited to
+either \tech{extrinsic systems} or to restricted (\ie, non-\tech{full-spectrum})
+\tech{dependent types}.
+This is apparently due to the difficulty of automatically transforming
+\tech{proofs} during compilation.
+For example, \citet{shao2005} point to using an extrinsic system explicitly
+because of a known impossibility result regarding preserving \tech{dependent
+  types} through the standard \tech{CPS} translation~\cite{barthe2002}.
+
+\section{A Model Type-Preserving Compiler}
+%% Goal: I want to communicate the standard by which modern type-preservation results are judged.
+\tech{F-to-TAL} developed the standard model of a \tech{type-preserving}
+\tech{compiler} from a high-level functional to a low-level assembly language.
+This work uses System F as a stand-in for a functional source programming language.
+The target language, \tech{TAL}, is a low-level assembly-like language.
+\tech{F-to-TAL} is structured as five passes, depicted in
+\fullref[]{fig:type-pres:f-to-tal}.
+The first two are so-called ``front-end'' translations, which make high-level
+functional control-flow and data-flow explicit in order to facilitate low-level
+transformations.
+These are the continuation-passing style \deftech{(CPS)} translation, and the
+\tech{closure conversion} translation.
+I'll explain these two in detail shortly.
+The next three so-called ``back-end'' translations make machine-level details
+explicit.
+These are: hoisting, a simple administrative pass that lifts function
+definitions to the top-level; explicit allocation, which makes the heap and memory
+operations explicit; and code generation, which makes machine details like
+word size and registers explicit, and which implements high-level operations in
+terms of sets of machine instructions.
+\FigModelDigram
+
+In this dissertation, I focus on the two front-end translations as
+they introduce a particular challenge for \tech{type-preserving} compilation.
+They are standard translations for studying \tech{type
+  preservation}~\cite{minamide1996,barthe1999,shao2005,ahmed2008,chen2010,ahmed2011,new2016}.
+As I describe in the rest of this section, the translations fundamentally change
+the meaning of \tech{types}, particularly for higher-order \tech{expressions},
+by introducing explicit distinctions into the \tech{terms} described by
+\tech{types}.
+By creating new distinctions during compilation, a \tech{type-preserving}
+compiler needs to automatically adapt \tech{specifications} and \tech{proofs} to
+describe and proof the correctness of code with explicit distinctions.
+
+Often we explain \tech{CPS} in terms of making control flow and evaluation order
+explicit, but I think of it as changing each \tech{type} by imposing an
+explicit distinction between
+\deftech*{computation,Computation,computations,Computations}{computations},
+which evaluate at run time and may have effects, and
+\deftech*{value,Value,values,Values}{values}, which simply exist and do not
+evaluate at run-time until they are composed with a \tech{computation}.
+In most functional languages, prior to \tech{CPS} translation, all \tech{terms}
+are implicitly cast to \tech{values} through evaluation; this is helpful for
+equational reasoning.
+\tech{CPS} translation transforms every \tech{term} into a \tech{computation}
+that expects a continuation to which it passes the underlying \tech{value} when
+the \tech{computation} is complete.
+This facilitates low-level machine implementation since machines typically have
+such distinction, for example, with \tech{values} that exist in the heap and in
+registers and instructions (\tech{computations}) that manipulate those
+\tech{values}.
+
+To understand this, consider the following example.
+We might write the \tech{expression} \im{\seone =
+  \sappe{(\snfune{\sx}{\sx})}{\struee}} in \slang which we think of as being
+\tech{equivalent} to the \tech{value} \im{\setwo = \struee}.
+This is \emph{\tech{equivalent}} to \im{\struee}, but \im{\seone}
+\emph{computes} while \im{\setwo} does not, so we need to make that distinction
+explicit.
+Eventually, we need to implement \im{\seone} as something like the following
+pseudo-assembly, whereas we implement \im{\setwo} as \mintinline{c}{true}.
+\begin{minted}{c}
+// expects value in x and continuation in k
+f:
+  ret = x;
+  goto k;
+halt:
+  print(ret);
+main:
+  k = halt;
+  x = true;
+  goto f;
+\end{minted}
+When the program begins, it will initialize the \tech{continuation} to
+\mintinline{c}{halt}, which will end the program with the final observation.
+Then it will set a register or stack frame, \mintinline{c}{x}, to the value
+\mintinline{c}{true}, and jump to the function \mintinline{c}{f}.
+Notice that \im{\snfune{\sx}{\sx}} makes no explicit distinctions between
+\tech{value} and \tech{computation}, but to generate the pseudo-assembly we need
+to know that the body of the function \im{\sx} is not merely a \tech{value} but
+a \tech{computation} that will return somewhere, unlike \im{\struee} which is
+merely a \tech{value} to be passed around.
+
+There are alternatives to \tech{CPS} translation that make the same \tech{value}
+vs \tech{computation} distinction, and each offer advantages and disadvantages
+for \tech{type preservation} and compilation.
+For example, the A-normal form (\deftech{ANF}) and the monadic-normal form
+translations also impose this distinction.
+Unlike \tech{CPS}, \tech{ANF} and monadic form do not make explicit changes to
+\tech{types} but primarily modify syntactic structure.
+I discuss this further in \fullref[]{chp:anf}, but in short: by avoiding
+changing \tech{types} significantly we can simplify \tech{type preservation}.
+
+The \deftech*{Closure conversion,closure
+  conversion,closure-conversion}{closure-conversion} translation is typically
+explained as about making
+first-class functions easy to heap allocate, but, as in \tech{CPS}, I prefer to
+view it as introducing an explicit distinction---this time, a distinction
+between a \emph{use} of \tech{computation} and a \emph{definition} of a
+\tech{computation}.
+This is usually seen in functions because functions are the only source-level
+abstraction for defining \tech{computations} in many languages.
+Prior to \tech{closure conversion}, every first-class function can simultaneously
+define a new \tech{computation} and can be used immediately.
+
+For example, in \im{\seone = \sappe{(\snfune{\sx}{\sx})}{\struee}} from before, the
+function \im{\snfune{\sx}{\sx}} is simultaneously \emph{defined} (\ie, it comes into
+existence), and \emph{used} (\ie, it is immediately applied).
+After \tech{closure conversion}, all \tech{computation} is represented by closed
+\emph{code}, which defines the \tech{computation} generally and separately from
+its use.
+In the pseudocode example above, we need to somehow separate the definition of
+\im{(\snfune{\sx}{\sx})} as a labeled block of code \mintinline{c}{f:}, and its
+use, \ie, the \mintinline{c}{goto f;}.
+
+The primary difficultly in \tech{closure conversion} is that defining a
+\tech{computation} (\eg, a function) \emph{implicitly} captures the local
+\tech{environment}, and using the \tech{computation} \emph{implicitly} gives
+access to that local \tech{environment}, regardless of where the
+\tech{computation} is used.
+To make the definition and use explicitly distinct, we must make this
+\emph{implicit} \tech{environment} \emph{explicit}.
+We do this by introducing an \emph{explicit}
+\deftech*{closure,Closure,closures,Closures}{closure} object, \ie,
+closed \tech{code} paired with the local \tech{environment} the
+\tech{computation} expects.
+The \tech{code} part can be lifted to the top-level while each use explicitly
+passes in the \tech{environment}.
+
+The main alternative to \tech{closure conversion} is defunctionalization.
+While \tech{closure conversion} represents the implicit \tech{environment} as an
+explicit object that is passed to closed \tech{code}, defunctionalization
+transforms every application into a case-split, and every closure into a
+constructor for a sum.
+The constructor holds the local environment and the case-split is responsible
+for setting up the local environment in the scope of the code.
+This ensures that the local environment cannot be passed to untrusted code,
+which would leak hidden local variables.
+Unfortunately, it requires a whole-program transformation, so it cannot be used
+with separate compilation.
+
+The goal of this dissertation is to build a model of the front-end translations
+of a \tech{compiler}.
+This solves the main challenges of transforming higher-order \tech{dependently
+  typed} \tech{expressions}, and informs the design of dependent-type-preserving
+translations in general.
+After these two translations, we end up in a language analogous to a pure subset
+of C with all higher-order \tech{expressions} essentially encoded in first-order
+data.
+Then the challenges become about representing \tech{dependently typed} machine
+concepts, such as the heap and word sized registers.
+
+\section{The Difficulty of Preserving Dependency}
+Generally speaking, \tech{type preservation} is difficult because when introducing
+new distinctions we must automatically adapt \tech{specifications} and
+\tech{proofs}.
+After \tech{closure conversion}, \tech{specifications} and \tech{proofs} about a
+function with certain lexical variables must be adapted to be valid in the
+global scope.
+After \tech{CPS}, a \tech{value} of \tech{type} \im{A} has a fundamentally
+different interface from \tech{computations} of \tech{type} \im{A}.
+Any \tech{specification} that relied on \tech{expressions} being implicitly cast
+to \tech{values} will need some explicit way to transform a \tech{computation}
+into a \tech{value}.
+
+The problem is worse for \tech{intrinsic} \tech{dependent types} because the
+\tech{compiler} transformations disrupt the \emph{syntactic} reasoning used by
+the type system to decide type checking.
+To allow arbitrary low-level run-time \tech{terms} to still appear in
+\tech{types}, the type system must be able to check \tech{proofs} encoded in
+low-level abstractions.
+For example, in \slang, the type system decides equivalence by evaluating
+run-time \tech{terms} during type checking.
+This works well in high-level, functional languages such as the core language of
+Coq, but evaluating low-level machine languages requires threading all the
+machine-state (\eg, the heap or register file) through evaluation, so we must
+design a type system that captures all of that necessary state.
+We would need to adapt all the typing judgments---\tech{reduction},
+\tech{conversion}, \tech{equivalence}, \tech{subtyping}, typing, and
+well-formedness---to track this state and capture new invariants that are
+expressed explicitly at the low-level.
+
+Each of the features of \tech{dependency} introduced in \fullref[]{chp:source}
+rely on this kind of syntactic reasoning, which is disrupted by translation.
+For example, \citet{barthe2002} show that the standard call-by-name
+(\deftech{CBN}) double-negation \tech{CPS} translation is not \tech{type
+  preserving} in the presence of \tech{dependent pairs}.
+The problem is that the typing rule \refrule[srcapp]{Snd} for second projection of a
+\tech{dependent pair}, \im{\ssnde{\se} : \subst{\sB}{\sfste{\se}}{\sx}}, copies
+the syntax \im{\sfste{\se}} into the \tech{type} \im{\sB}.
+This represents evaluating \im{\se} to a \tech{value} and taking the first
+projection.
+After \tech{CPS} translation, such a \tech{term} is invalid as there is a
+\tech{computation} vs \tech{value} distinction, so target language version of
+the typing rule \refrule[srcapp]{Snd} can no longer express \tech{dependency} on
+a \tech{computation}
+\emph{syntactically}, the way it was expressed in the source language.
+We end up needing some syntactic way to express \im{\ssnde{\se} :
+  \subst{\sB}{\textrm{as-a-value}({\sfste{\se}})}{\sx}}, that is, to cast an
+arbitrary \tech{computation} to a \tech{value} but in a way that is compatible
+with the low-level machine semantics we want the output to use.
+(I discuss this example in greater detail in \fullref[]{chp:cps}.)
+
+There is an additional difficulty in \emph{proving} \tech{type preservation} in
+the presence of dependent types---the proof architecture.
+I discuss this difficulty in detail next.
+
+\section{Proving Type Preservation for Dependent Types}
+\label{sec:source:proof-arch}
+In this section, I introduce the proof architecture I use in the rest of this
+paper, discuss some difficulties that arise when attempting to prove \tech{type
+  preservation} for \tech{dependent types}, and how this particular architecture
+and the design of \slang avoids them.
+
+\begin{typographical}
+  Recall that the source language in a \emph{\sfonttext{blue,
+      non-bold, sans-serif font}}, and target language in a
+  \emph{\tfonttext{bold, red, serif font}}, represent arbitrary source and
+  target languages.
+\end{typographical}
+
+Ultimately, our goal is to prove \tech{type preservation} of some translation
+\im{\sembrace{\se}}.
+Semi-formally (since so far this translation is undefined), this is stated in
+\fullref[]{thm:type-pres:type-pres}.
+\begin{theorem}[Type Preservation]
+  \label{thm:type-pres:type-pres}
+  If \im{\styjudg{\slenv}{\se}{\sA}} then \im{\styjudg{\sembrace{\slenv}}{\sembrace{\se}}{\sembrace{\sA}}}.
+\end{theorem}
+\noindent \deftech*{type preservation,type-preservation,type-preserving
+  compilation,type preserving}{Type preservation} states
+that if, in the source type system, the source term
+\im{\se} is well-typed with type \im{\sA} under the local environment
+\im{\slenv}, then, in the target type system, the translation
+\im{\sembrace{\se}} of \im{\se} is well-typed at the translated type
+\im{\sembrace{\sA}} under the translated local environment
+\im{\sembrace{\slenv}}.
+
+The proof of \tech{type preservation} is typically by induction on the same
+\emph{structure} over which the \tech{compiler} is defined.
+What this structure is depends on what information the \tech{compiler} requires
+to perform a transformation.
+
+In an untyped setting, that \emph{structure} is the structure (or size) of
+syntax.
+For example, the untyped call-by-value \tech{CPS} translation of
+\citet{plotkin1975} on the untyped \(\lambda\)-calculus is given below.
+\begin{displaymath}
+  \begin{array}{rcl}
+    \sembrace{\gx} & \defeq & \gnfune{\gk}{\gappe{\gk}{\gx}} \\
+    \sembrace{\gnfune{\gx}{\ge}} & \defeq & \gnfune{\gk}{\gappe{\gk}{(\gnfune{\gx}{\sembrace{\ge}})}} \\
+    \sembrace{\gappe{\geone}{\getwo}} & \defeq & \gnfune{\gk}{\gappe{\sembrace{\geone}}{(\gnfune{\gxone}{\gappe{\sembrace{\getwo}}{(\gnfune{\gxtwo}{\gappe{\gxone}{\gxtwo~\gk}})}})}} \\
+  \end{array}
+\end{displaymath}
+Note that the translation is easily defined by induction on the syntactic
+structure of terms.
+
+In a typed setting or in a \tech{type-preserving} setting, the \tech{compiler}
+must often be defined over the typing derivation or the height of typing
+derivations.
+This is because, in general, the \tech{compiler} may need to make decisions
+based on types, or produce type annotation in the target language.
+For example, if we try to adapt the above call-by-value \tech{CPS}
+translation to simply-typed \(\lambda\)-calculus functions, we wind up with the
+following incomplete translation.
+\begin{displaymath}
+  \begin{array}{rcl}
+    \sembrace{\gfune{\gx}{\gA}{\ge}} & \overset{\text{not-really-def}}{=} & \gfune{\gk}{\gBpr}{\gappe{\gk}{(\gfune{\gx}{\sembrace{\gA}}{\sembrace{\ge}})}} \\
+  \end{array}
+\end{displaymath}
+The target language, being typed, requires a type annotation \im{\gBpr} for the
+continuation \im{\gk}.
+To produce this annotation, the \tech{compiler} requires the type
+\im{\gfunty{\gA}{\gB}} of the function \im{\gfune{\gx}{\gA}{\ge}}.
+Instead, the translation should be defined over typing derivations, as follows.
+\begin{mathpar}
+  \inferrule
+  {\gjudg{\glenv,\gx:\gA}{\ge}{\gB \leadsto \ge^+}}
+  {\gjudg{\glenv}{\gfune{\gx}{\gA}{\ge}}{{\gfunty{\gA}{\gB} \leadsto
+      \gfune{\gk}{(\gfunty{\sembrace{\gfunty{\gA}{\gB}}}{\gFalse})}{\gappe{\gk}{(\gfune{\gx}{\sembrace{\gA}}{\ge^+})}}}}}
+\end{mathpar}
+This way, the translation has access to all typing information in order to
+produce type annotations or use type information to inform the translation.
+
+In a simply-typed setting, defining compilation over typing derivations poses no
+problems.
+We can define the translation \im{\sembrace{\se}} of terms as short-hand,
+defined as follows.
+\begin{displaymath}
+  \begin{array}{rcl}
+    \sembrace{\se} & \defeq & \te~\where{\styjudg{\slenv}{\se}{\sA \leadsto \te}}
+    \end{array}
+\end{displaymath}
+The translation over syntax \im{\sembrace{\se}} is simply notation for the
+translation over typing derivations, and we make the typing derivation
+\im{\styjudg{\slenv}{\se}{\sA}} an implicit parameter.
+Then we prove \fullref[]{thm:type-pres:type-pres} by induction over the typing
+derivation.
+
+With \tech{dependent types}, this simple recipe does not work because we must
+show many mutually defined judgments are preserved, not just one typing
+judgment.
+The problem is due to ``the infernal way that everything depends on everything
+else''\footnote{From \citet{mcbride2010}.}.
+The judgmental structure of the type system is much more complex---recall that
+we defined six judgments just to define the \slang type system---and the
+judgments can be mutually defined.
+To prove \tech{type preservation}, we must prove that each additional judgment
+is preserved.
+Because those judgments are mutually defined, we cannot, in general, cleanly
+break up the judgmental structure into separate lemmas---we may have to show
+that all judgments are preserved in one large simultaneous induction.
+I'll introduce each of the lemmas required by the judgmental structure of
+\slang, before going into detail about the problems of proving each judgment is
+preserved.
+
+\subsection{The Key Lemmas for Type Preservation}
+As the judgmental structure of typing gets more complex, we need additional
+lemmas before we can prove \fullref[]{thm:type-pres:type-pres}.
+
+For example if the type system allows substitution into types, we need a
+\deftech*{compositionality,Compositionality}{compositionality} lemma, which
+states that translating first and then
+substituting is equivalent to substituting first and then translating.
+\begin{lemma}[Compositionality]
+  \label{lem:type-pres:compositionality}
+  \im{\sembrace{\subst{\sA}{\sApr}{\sx}} \equiv \subst{\sembrace{\sA}}{\sembrace{\sApr}}{\tx}}
+\end{lemma}
+\noindent This requires some definition of type equivalence, \im{\equiv}, which
+could be as simple as syntactic identity.
+For \tech{dependent types}, it must usually be \tech{definitional equivalence}.
+Intuitively, this is because a dependent-type-preserving translation must
+introduce new equivalence rules for whatever feature is made explicit by the
+translation.
+(I discuss this further in \fullref[]{chp:conclusions}.)
+
+In \slang, we require \tech{compositionality}, due to \refrule[srcapp]{App},
+\refrule[srcapp]{Snd}, and \refrule[srcapp]{Let}.
+For example, consider \refrule{App}.
+\begin{mathpar}
+\inferrule*[right=\defrule{App}]
+{\styjudg{\slenv}{\se}{\spity{\sx}{\sApr}{\sB}} \\
+ \styjudg{\slenv}{\sepr}{\sApr}}
+{\styjudg{\slenv}{\sappe{\se}{\sepr}}{\subst{\sB}{\sepr}{\sx}}}
+\end{mathpar}
+We know that
+\im{\styjudg{\slenv}{\sappe{\seone}{\setwo}}{\subst{\sB}{\setwo}{\sx}}}, and must
+show that
+\im{\ttyjudg{\sembrace{\slenv}}{\sembrace{\sappe{\seone}{\setwo}}}{\sembrace{\subst{\sB}{\setwo}{\sx}}}}.
+Even in the case that the translation is simply homomorphic on application, thus
+leaves application alone, the target variant of \refrule{App} will only tell us
+\im{\ttyjudg{\sembrace{\slenv}}{\tappe{\sembrace{\seone}}{\sembrace{\setwo}}}{\subst{\sembrace{\sB}}{\sembrace{\setwo}}{\tx}}}.
+Thus, we either need to know \im{\sembrace{\subst{\sB}{\setwo}{\sx}}} and
+\im{\subst{\sembrace{\sB}}{\sembrace{\setwo}}{\tx}} are syntactically identical
+or, by \refrule{Conv}, \tech{equivalent}.
+In general, they will not be syntactically identical.
+For example, consider \tech{closure conversion}, which is sensitive to the free
+variables.
+If translating the function \im{\se = \snfune{\sy}{\sx}}, we end up with the following
+two translations depending on whether we translate before or after substitution.
+\begin{mathpar}
+  \subst{\sembrace{\se}}{\sembrace{\seone}}{\sx} = \subst{(\spaire{\snfune{\sy,\sn}{\sfste{\sn}}}{\snpaire{\sx}})}{\sembrace{\seone}}{\sx} =  (\spaire{\snfune{\sy,\sn}{\sfste{\sn}}}{\snpaire{\sembrace{\seone}}})
+
+  \sembrace{\subst{{\se}}{{\seone}}{\sx}} = \spaire{\snfune{\sy,\sn}{\sembrace{\seone}}}{\snpaire{}}
+\end{mathpar}
+Translating before substitution will yield a \tech{closure}
+\tech{environment} in which the \tech{expression} \im{\sembrace{\seone}} is
+substituted in for \im{\sx}, while translating after substitution will yield an
+\tech{environment} with all free variables.
+(I discuss this example further in \fullref[]{chp:abs-cc}.)
+
+If the type system has a type equivalence judgment then we must first prove that
+\deftech{equivalence preservation}, \ie, that type equivalence is preserved, and
+then prove \tech{type preservation},
+\begin{lemma}[Preservation of Equivalence]
+  \label{lem:type-pres:equiv-pres}
+  If \im{\sequivjudg{\slenv}{\sA}{\sB}} then \im{\tequivjudg{\slenv}{\sembrace{\sA}}{\sembrace{\sB}}}
+\end{lemma}
+\noindent This states that if \im{\sA} and \im{\sB} are equivalent in the source, then
+\im{\sembrace{\sA}} and \im{\sembrace{\sB}} are equivalent in the target.
+
+In the Calculus of Constructions (\deftech{CoC}), similar to \slang but without
+subtyping, we require equivalence preservation due to
+\refrule{Conv}.
+\begin{mathpar}
+\inferrule*[right=\defrule{Conv}]
+{\styjudg{\slenv}{\se}{\sA} \\
+ \styjudg{\slenv}{\sB}{\sU} \\
+ \sequivjudg{\slenv}{\sA}{\sB}}
+{\styjudg{\slenv}{\se}{\sB}}
+\end{mathpar}
+When proving \tech{type preservation} by induction on the typing derivation, we
+must consider the case of \refrule{Conv}: intuitively, for some
+translation, we will know by the induction hypothesis that \im{\sembrace{\se}}
+has type \im{\sembrace{\sA}}, and must show that \im{\sembrace{\se}} has type
+\im{\sembrace{\sB}}.
+This follows easily by \refrule{Conv} in the target language if
+\im{\sembrace{\sB} \equiv \sembrace{\sA}}, which we know if we have equivalence
+preservation.
+
+Depending on how \tech{equivalence} is defined, we may need further supporting lemmas.
+For example, in \slang, we implement \tech{equivalence} as \tech{conversion} up
+to \(\eta\)-equivalence.
+Therefore, to show \tech{equivalence} is preserved, we need to show \tech{reduction} and
+\tech{conversion} are preserved (up to \tech{equivalence}, since in general we
+don't care that \tech{expressions} \tech{reduce} or \tech{convert} to
+\emph{syntactically} the same, only that they \tech{reduce} to some
+\tech{equivalent} \tech{expression}).
+\begin{lemma}[Preservation of Reduction]
+  \label{lem:type-pres:pres-red}
+  If \im{\sstepjudg[\step]{\slenv}{\se}{\sepr}} then \im{\sstepjudg[\stepstar]{\sembrace{\slenv}}{\sembrace{\se}}{\tepr}} and \im{\tequivjudg{\sembrace{\slenv}}{\tepr}{\sembrace{\sepr}}}
+\end{lemma}
+\noindent This lemma is similar to \tech{compiler} correctness theorems in that we don't
+want to require the translated term \im{\sembrace{\se}} to simulate the
+reductions of \im{\se} in lock-step. Instead, we specify this as a
+weak-simulation: it is sufficient for
+\im{\sembrace{\se}} to be \tech{convertible} to some \im{\tepr} that is
+\tech{equivalent} to \im{\sembrace{\sepr}}.
+
+\begin{lemma}[Preservation of Conversion]
+  \label{lem:type-pres:pres-conv}
+  If \im{\sstepjudg[\stepstar]{\slenv}{\se}{\sepr}} then \im{\sstepjudg[\stepstar]{\sembrace{\slenv}}{\sembrace{\se}}{\tepr}} and \im{\tequivjudg{\sembrace{\slenv}}{\tepr}{\sembrace{\sepr}}}
+\end{lemma}
+\noindent In a simply typed language, we could prove this lemma by induction on
+the length of reduction sequences.
+However, the judgmental structure of \tech{conversion} is not always so simple.
+Recall that in \slang, the congruence rule for \sfonttext{let}
+\tech{expressions}, \refrule[src]{Red-Cong-Let}, introduces a \tech{definition}
+during \tech{conversion}, \ie, we have the following rule.
+\begin{mathpar}
+  \inferrule*[right=\rulename{Red-Cong-Let}]
+  {\sstepjudg[\stepstar]{\slenv}{\seone}{\seonepr} \\
+   \sstepjudg[\stepstar]{\slenv,\sx = \sepr}{\setwo}{\setwopr}}
+  {\sstepjudg[\stepstar]{\slenv}{\slete{\sx}{\seone}{\setwo}}{\slete{\sx}{\seonepr}{\setwopr}}}
+\end{mathpar}
+This means that proving \tech{conversion} is preserved must be by induction on
+the \tech{conversion} derivation, so we correctly capture the \tech{definition}.
+
+By specifying \tech{equivalence} via \tech{reduction}, we get an extra benefit:
+the three previous lemmas, required for \tech{type preservation}, also easily
+imply \tech{compiler correctness}, as I discuss shortly in
+\fullref[]{sec:type-pres:correct}.
+
+If the type system has a subtyping judgment, then we must also prove that
+subtyping is preserved.
+\begin{lemma}[Preservation of Subtyping]
+  \label{lem:type-pres:pres-subtype}
+  If \im{\ssubtyjudg{\slenv}{\sA}{\sB}} then \im{\ssubtyjudg{\slenv}{\sembrace{\sA}}{\sembrace{\sB}}}
+\end{lemma}
+\noindent This states that if \im{\sA} is a subtype of \im{\sB} in the source,
+then \im{\sembrace{\sA}} is still a subtype of \im{\sembrace{\sB}} in the
+target.
+
+In \slang, we extend conversion to subtyping to support \tech{cumulativity}.
+We have the following \refrule{Conv}.
+\begin{mathpar}
+\inferrule*[right=\rulename{Conv}]
+{\styjudg{\slenv}{\se}{\sA} \\
+ \styjudg{\slenv}{\sB}{\sU} \\
+ \ssubtyjudg{\slenv}{\sA}{\sB}}
+{\styjudg{\slenv}{\se}{\sB}}
+\end{mathpar}
+Similar to the discussion for \fullref[]{lem:type-pres:equiv-pres}, the proof of
+\tech{type preservation} will require showing that \im{\sembrace{\se}} has type
+\im{\sembrace{\sB}}, given that \im{\sembrace{\se}} has type \im{\sembrace{\sA}}
+and \im{\sA \subtypesym \sB}.
+By the target language \refrule{Conv} and preservation of \tech{subtyping}, the
+proof is simple.
+However, for certain translations, proving that \tech{subtyping} is preserved
+can be challenging.
+For example, the standard \tech{locally polymorphic answer type} \tech{CPS}
+translation relies on impredicativity, so it translates any
+\tech{computationally relevant} type \im{\sA : \stypety{i}} into the type
+\im{\tpity{\talpha}{\tpropty}{\tfunty{(\tfunty{\sA^+}{\talpha})}{\talpha}} : \tpropty}.
+I discuss this translation further in \fullref[]{chp:cps}, but the important
+thing to observe now is that \im{\sA} exists in a \tech{higher universe}, while
+\im{\sembrace{\sA}} \emph{must} exist in the base universe \im{\tpropty}.
+This does not preserve \tech{subtyping}.
+
+With all of these lemmas, we will finally be able to prove that the typing and
+well-formedness relations are preserved.
+The theorem we ultimately want is \fullref[]{thm:type-pres:type-pres}, we must
+prove it via something like the following lemma.
+\begin{lemma}[Type and Well-formedness Preservation]
+  \label{lem:type-pres:type-pres}
+  ~
+  \begin{enumerate}
+  \item If \im{\swf{\slenv}} then \im{\twf{\sembrace{\slenv}}}
+  \item If \im{\styjudg{\slenv}{\se}{\sA}} then \im{\ttyjudg{\sembrace{\slenv}}{\sembrace{\se}}{\sembrace{\sA}}}
+  \end{enumerate}
+\end{lemma}
+\noindent Since well-formedness of environments and typing are mutually defined,
+we have to prove these two by simultaneous induction on the mutually defined
+judgments.
+
+\subsection{The Problem with Typed Equivalence}
+The proof architecture presented in the previous section does not work if
+\tech{equivalence} is mutually defined with typing.
+This can happen with some formulations of \tech{dependent types} with strong
+\(\eta\)-principles.
+For example, we might want the following \(\eta\)-equivalence for the unit type.
+\begin{mathpar}
+  \inferrule
+  {~}
+  {\styjudg{\slenv}{\se \equiv \sunite}{\sunitty}}
+\end{mathpar}
+That is, every expression \im{\se} should be \tech{equivalent} to the unit value
+\im{\sunite} at the unit type \im{\sunitty}.
+This requires that \tech{equivalence} be defined over well-typed \tech{expressions}.
+
+Unfortunately, defining \tech{equivalence} over well-typed \tech{expressions}
+introduces a circularity into the proof architecture for \tech{type preservation}.
+If \tech{equivalence} is typed, then we \emph{must} show \tech{type
+  preservation} \emph{before} we can establish any \tech{equivalence} about translated
+\tech{expressions}.
+But establishing \tech{type preservation} requires showing \tech{equivalence} is
+preserved.
+
+For example, as discussed earlier, we require
+\fullref{lem:type-pres:compositionality} to prove \fullref{thm:type-pres:type-pres}.
+But, \tech{compositionality} must, in general, be proven in terms of
+\tech{equivalence}.
+If \tech{equivalence} is typed, then we must show \emph{\tech{type preservation}
+before \tech{compositionality}}.
+But, since some type rules are defined by substitution, we must show
+\emph{\tech{compositionality} before \tech{type preservation}}.
+That is, we must:
+\begin{itemize}
+  \item prove \tech{type preservation} before \tech{compositionality}, and
+  \item prove \tech{compositionality} before \tech{type preservation}.
+\end{itemize}
+Similarly, as discussed before, we require \fullref{lem:type-pres:equiv-pres} in
+order to show \tech{type preservation}.
+But if \tech{equivalence} is typed, we cannot show preservation of equivalence
+until we show \tech{type preservation}.
+So we must:
+\begin{itemize}
+  \item prove \tech{type preservation} before \tech{equivalence preservation}, and
+  \item prove \tech{equivalence preservation} before \tech{type preservation}.
+\end{itemize}
+And if \tech{equivalence} is defined using substitution, we cannot show
+preservation of \tech{equivalence} until we show \tech{compositionality}. But
+\tech{compositionality} requires establishing \tech{equivalence}, which requires
+\tech{type preservation}.
+We must:
+\begin{itemize}
+  \item prove \tech{compositionality} before \tech{equivalence preservation}, and
+  \item prove \tech{equivalence preservation} before \tech{type preservation}, and
+  \item prove \tech{type preservation} before \tech{compositionality}.
+\end{itemize}
+
+To see the problem concretely, consider the \tech{CPS} translation by
+\tech{double negation} in the presence of type \tech{equivalence} rule
+\refrule{Conv}, but with a typed definition of \tech{equivalence}.
+Because \tech{CPS} translation adds \tech{type} annotations for
+\tech{continuations}, we can end up with the following translation.
+\begin{mathpar}
+  \inferrule
+  {\styjudg{\slenv}{\sB}{\sU \leadsto \tB} \\
+   \styjudg{\slenv}{\se}{\sB \leadsto \tein{B}} \\
+   \styjudg{\slenv}{\sA}{\sU \leadsto \tA}}
+  {\styjudg{\slenv}{\se}{\sA \leadsto \tfune{\tk}{(\tfunty{\tA}{\tFalse})}{\tappe{\tein{B}}{(\tfune{\tx}{\tB}{\tappe{\tk}{\tx}})}}}}
+\end{mathpar}
+That is, when translating \refrule{Conv}, we produce a
+\tech{computation} which takes a \tech{continuation} \im{\tk} that expects some
+\tech{value} of \tech{type} \im{\tA}, but then we call \im{\tk} with a
+\tech{value} of type \im{\tB}.
+Unless \im{\tA} and \im{\tB} are \tech{equivalent}, the domain annotations on
+this term make little sense---why can we apply \im{\tk}, which expects a
+\im{\tA}, to \im{\tx} of type \im{\tB}?
+So we must first show \tech{equivalence} is preserved.
+To prove \tech{equivalence} is preserved, we would need to show \im{\tein{B}}
+is \tech{equivalent} to
+\im{\te^+ \tfune{\tk}{(\tfunty{\tA}{\tFalse})}{\tappe{\tein{B}}{(\tfune{\tx}{\tB})}{\tappe{\tk}{\tx}}}}.
+If \tech{equivalence} is typed, then we need to show that \im{\te^+} and
+\im{\tein{B}} are well-typed first.
+
+\citet{barthe1999} observe this problem in an early attempt at
+\tech{type-preserving} \tech{CPS} translation of \tech{dependent types}.
+Their solution is to give up domain annotations, thus yielding undecidable type
+checking.
+This is unsatisfying if we want to rely on type checking for ruling out
+\tech*{miscompilation errors}{miscompilation} and \tech{linking errors}.
+
+Instead, in this work, I require an untyped \tech{equivalence} for the source
+and target languages.
+This is a strong requirement on the type theory, but not unrealistic; Coq relies
+on an untyped \tech{equivalence}, for example.
+By using an untyped \tech{equivalence}, we can prove equivalence between terms
+without regard to their domain annotations, and the above translation of
+\refrule{Conv} can be easily shown equivalent to \im{\tein{B}} (by
+\(\eta\)-equivalence).
+This breaks the circularity, and allows us to stage all the lemmas from the
+previous section.
+\begin{enumerate}
+  \item \fullref{lem:type-pres:compositionality}
+  \item \fullref{lem:type-pres:pres-red}
+  \item \fullref{lem:type-pres:pres-conv}
+  \item \fullref{lem:type-pres:equiv-pres}
+  \item \fullref{lem:type-pres:pres-subtype}
+  \item \fullref{lem:type-pres:type-pres}
+  \item \fullref{thm:type-pres:type-pres}
+\end{enumerate}
+
+A possible alternative is to prove all the lemmas simultaneously by one large
+mutual induction, as stated below.
+I have not investigated this approach, as the sheer number of cases and
+induction hypotheses to keep straight in one theorem seems daunting.
+\footnote{To investigate this approach, I suggest attempting this proof
+  technique, with the help of a proof assistant, for the abstract closure
+  conversion in \fullref[]{chp:abs-cc}.}
+\begin{conjecture}[Type Preservation (with Typed Equivalence)]
+  ~
+  \begin{enumerate}
+    \item \im{\tequivjudg{\sembrace{\slenv}}{\sembrace{\subst{\se}{\sepr}{\sx}}}{\subst{\sembrace{\se}}{\sembrace{\sepr}}{\tx}}}
+    \item If \im{\sequivjudg{\slenv}{\se}{\sepr}} then \im{\tequivjudg{\sembrace{\slenv}}{\sembrace{\se}}{\sembrace{\sepr}}}
+    \item If \im{\swf{\slenv}} then \im{\twf{\sembrace{\slenv}}}
+    \item If \im{\styjudg{\slenv}{\se}{\sA}} then \im{\ttyjudg{\sembrace{\slenv}}{\sembrace{\se}}{\sembrace{\sA}}}
+  \end{enumerate}
+\end{conjecture}
+
+\subsection{Type Preservation and Compiler Correctness}
+\label{sec:type-pres:correct}
+On its own, \tech{type preservation} is a weak theorem, but the proof
+architecture just presented and the structure of the \tech{dependent types}
+essentially force us to prove a standard \tech{compiler correctness} theorem:
+correctness of separate compilation.
+The statement of \fullref{thm:type-pres:type-pres} only tells us that if the
+source term was well-typed, then so is the target term.
+A \tech{compiler} \emph{could} trivially satisfy this property by compiling
+every \tech{term} to the unit value and every \tech{type} to the unit type.
+It is unlikely to satisfy all the lemmas in
+\fullref[]{sec:source:proof-arch}, but it would still satisfy
+\fullref{thm:type-pres:type-pres}.
+To trust \fullref[]{thm:type-pres:type-pres}, we must \emph{at least} add the
+translation of types to the trusted code base, \ie, we must at least understand
+how types are translated.
+By reading the translation of types, we can have confidence that the translation
+is non-trivial.
+Even then, \tech{type preservation} does not give many guarantees about how
+programs execute unless the \tech{types} are complete, full-functional
+\tech{specifications}.
+Thankfully, the judgmental structure of \tech{dependent types}, and by defining
+\tech{equivalence} in terms of \tech{conversion} of open terms, \tech{type
+  preservation} forces us to prove a stronger compiler correctness theorem: that
+\emph{linking} and \emph{then evaluating} in the \emph{source} is equivalent to
+translating and \emph{linking} and \emph{then evaluating} in the \emph{target}.
+
+To specify compiler correctness, we need an independent specification that tells
+us how \tech{observations} are related to target \tech{observations}, hence the
+definition of \tech{observations} in \slang.
+For instance, when compiling to C we might specify that the number
+\im{5} is related to the bits \im{0x101}.
+Without a specification, independent of the \tech{compiler}, there is no definition
+that the \tech{compiler} can be correct with respect to.
+The best we could prove is that the \emph{translation} of the value \im{\sv}
+produced in the source is \emph{definitionally equivalent} to the value we get
+by running the translated term, \ie, we would get \im{\anfh{\sv} \equiv
+  \teval{\anfh{\se}}}.
+This fails to tell us how \im{\sembrace{\sv}} is related to \im{\sv}, unless we
+inspect the \tech{compiler}.
+Thankfully, it is simple to define related observations for \tech{dependently
+  typed} languages, since these languages are usually error-, divergence-, and
+effect-free.
+
+We must also formalize linking for each language, as we did in
+\fullref[]{chp:source} for \slang.
+We define well-typed closing substitution \im{\ssubst} as in \slang, and extend
+the translation to closing substitutions point-wise.
+
+\deftech*{correctness of separate compilation}{Correctness of separate
+  compilation}, formally stated below, tells us that if
+\im{\se} is a well-typed source \tech{component}, and \im{\ssubst} is a
+well-typed closing substitution, and linking \im{\ssubst} with \im{\se}
+(written \im{\ssubst(\se)}) then evaluating in the source produces an
+\tech{observation} \im{\sv} that is related to the observation produced by
+separately compiling \im{\ssubst} and \im{\se}, linking, and then evaluating in
+the target.
+\begin{theorem}[Separate Compilation Correctness]
+  If \im{\wf{\slenv}{\se}}, \im{\wf{\slenv}{\ssubst}}, then
+  \im{\seval{\ssubst(\se)} \approx \teval{\sembrace{\ssubst}(\sembrace{\se})}}.
+\end{theorem}
+\noindent The proof of this theorem will always follow essentially the same
+structure, and is expressed as the following commuting diagram.
+
+\begin{tikzcd}
+  \seval{\ssubst(\se)} \arrow[r, "\equiv"] \arrow[d, "\equiv"] & {\sembrace{\ssubst(\se)}} \arrow[d, "\equiv"] \\
+  \teval{\sembrace{\ssubst(\sembrace{\se})}} \arrow[r, "\equiv"] & \sembrace{\ssubst(\sembrace{\se})}
+\end{tikzcd}
+
+\noindent This diagram in terms of \tech{equivalence} suffices since \im{\equiv}
+corresponds to \im{\approx} on \tech{observations}, \eg, \im{\struee \equiv \struee}
+iff \im{\struee \approx \sembrace{\struee}} iff \im{\struee \approx \ttruee}.
+The diagram commutes since \im{\seval{\ssubst(\se)} \equiv \ssubst(\se)}, since
+\tech{evaluation} and \tech{equivalence} are both defined in terms of \tech{conversion},
+\im{\ssubst(\se) \equiv \sembrace{\ssubst(\se)}} by \fullref{lem:type-pres:equiv-pres},
+\im{\sembrace{\ssubst}(\sembrace{\se}) \equiv \sembrace{\ssubst(\se)}}, by
+\fullref{lem:type-pres:compositionality}, and
+\im{\teval{\sembrace{\ssubst}(\sembrace{\se})} \equiv
+  {\sembrace{\ssubst}(\sembrace{\se})}}, again because \tech{evaluation} and
+\tech{equivalence} are defined in terms of \tech{conversion}.
+
+This recipe will not be \emph{exactly} the same in all languages.
+For example, in \fullref[]{chp:anf} I define a machine evaluation semantics
+separate from \tech{conversion} in the target language.
+To derive \tech{compiler correctness} from preservation \tech{conversion} we
+must show the machine semantics coincide to or refine \tech{conversion}.
+
+This separate-compilation correctness theorem is similar to the guarantees
+provided by SepCompCert~\cite{kang2016} in that it supports linking with only
+the output of the same compiler.
+We could support more flexible notions of linking---such as linking with code
+produced by different compilers, from different source languages, or code
+written directly in the target language---by defining an independent
+specification for when closing substitutions are related across languages (\eg,
+\cite{neis2015:pilsner,ahmed2011,new2016,perconti2014}).
+This is orthogonal to my thesis and I do not consider it further.
+
+Of course, this correctness of \tech{separate compilation} implies the usual
+``whole-program correctness'' theorem, typically called just \deftech{compiler
+  correctness}, stated below.
+\begin{corollary}[Whole-Program Correctness]
+  If \im{\wf{}{\se}}, then
+  \im{\seval{\se} \approx \sembrace{\teval{\se}}}.
+\end{corollary}
+\noindent This simply states that any \tech{program} evaluates to related
+\tech{observations} before and after compilation.
+
+\section{Type Preservation as Syntactic Modeling}
+When designing new \tech{dependently typed} (target) languages, we also need to
+prove \tech{type safety} and \tech{consistency} of the type system to
+have confidence that the \tech{proofs} we have preserved are meaningful.
+There are many ways to do this: we can give a denotational or a
+categorical semantics, or prove \tech{progress}, \tech{preservation} and
+\tech{normalization} of the operational semantics.
+
+My preferred method is to reduce \tech{type safety} and \tech{consistency} to
+that of an existing type theory via a \tech{type-preserving} translation, \ie,
+by providing a \deftech*{model,model language,modeling}{syntactic model} of the target theory in another theory.
+This use of \tech{type preservation} is common in the literature.
+\citet{bernardy2012} give a syntactic model of parametric Pure Type Systems
+(\deftech{PTS}) by translation into an existing \tech{PTS}, and show how to
+develop a parametric model of \tech{CoC} and use it to prove free theorems.
+\citet{pedrot2017:weaning} give a syntactic model of \tech{CIC} with effects by
+translation into a \tech{CIC}.
+\citet{boulier2017} discuss this technique in detail and give several example
+syntactic models.
+
+The ultimate theorems we wish to prove, \tech{type safety}\footnote{I use
+  \tech{type safety} as opposed to \emph{type soundness}. \emph{Soundness}
+  has too many meaning in this context---\eg, \tech*{logical
+    consistency}{logical soundness}---and \emph{safety} helps us focus on the
+  interpretation of this theorem as ensuring safe execution of programs.} and
+\tech{consistency}, are stated below.
+Typically, we think of \tech{type safety} when interpreting \tech{expressions}
+as programs, and \tech{consistency} when interpreting \tech{expressions} as \tech{proofs}.
+\begin{theorem}[Type Safety]
+  If \im{\twf{\te}} then \im{\teval{\te}} is well-defined.
+\end{theorem}
+\deftech*{type safe,type safety,Type safe,Type safety}{Type safety} states that any
+well-typed \tech{program} ``evaluates correctly''.
+Recall from \fullref[]{chp:source} that in this context, this means that
+evaluation produces a \tech{value}.
+\begin{theorem}[Logical Consistency]
+  There does not exist a \im{\te} such that \im{\ttyjudg{\cdot}{\te}{\tFalse}}.
+\end{theorem}
+\deftech*{consistent,Consistency,logical consistency,Logical
+  consistency}{Logical consistency} tells us that there is no closed well-typed
+proof of \im{\tFalse}, the false theorem or uninhabited type.
+
+To prove these two theorems, it suffices to give a \tech{type-preserving}
+translation \im{\model{\te}} from target terms to the \tech{model} language, and
+prove that falseness is preserved.
+To prove \tech{type preservation}, we follow the same \tech{type-preservation}
+recipe described earlier in \fullref[]{sec:source:proof-arch}.
+The statement of preservation of falseness is given below.
+\begin{lemma}[Preservation of Falseness]
+  \im{\model{\tFalse} \equiv \sFalse}
+\end{lemma}
+\noindent This states that the definition of the false in the target is modeled
+as false in the \tech{model language}.
+
+The proof of each of the above theorems follows by a simple proof by
+contradiction.
+For example, \tech{consistency} follows because, if the target were not
+\tech{consistent} then we have a proof of \im{\tFalse}, and by \tech{type
+  preservation} and preservation of falseness, we could translate that proof
+into a proof of \im{\sFalse} in the \tech{model}, violating the
+\tech{consistency} of the \tech{model}.
+Since the \tech{model} is \tech{consistent}, the target language must be as
+well.

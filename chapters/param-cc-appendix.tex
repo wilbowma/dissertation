@@ -1,0 +1,113 @@
+\renewcommand{\techprefix}{refpcc}
+\renewcommand{\tlang}{\pcctlang}
+\renewcommand{\slang}{\pccslang}
+
+\chapter{Reference for \pcctlang}
+\label{sec:param-cc:appendix}
+This appendix contains the complete definitions for \pcctlang.
+All \pcctlang figures from \fullref[]{chp:param-cc} are reproduced and completed
+with elided parts here, and elided figures are presented here.
+These figures contained extensions with definitions required to fully formalize
+the compiler correctness results, including booleans with non-dependent
+elimination.
+
+\begin{typographical}
+  In this appendix, I typeset \pcctlang in a \emph{\tfonttext{bold, red, serif
+      font}}.
+\end{typographical}
+
+\FigCoCCCSyntaxFull[ht]
+\FigCoCCCSugar[ht]
+\FigCoCCCRedFull[ht]
+\FigCoCCCConv[ht]
+\FigCoCCCEquivFull[ht]
+\FigCoCCCTypingOne[ht]
+\FigCoCCCTypingTwo[ht]
+
+\begingroup
+\let\label\discard
+\renewcommand{\cpstlang}{\pcctlang}
+\renewcommand{\slang}{\pcctlang}
+\renewcommand{\sfont}{\pccfont}
+\renewcommand{\sfontsym}{\pccfontsym}
+\renewcommand{\scolor}{\pcccolor}
+
+\FigCPSWf[ht]
+\FigECCObs[ht]
+\FigECCProg[ht]
+\FigECCEval[ht]
+
+\endgroup
+
+\begingroup
+\let\label\discard
+\renewcommand{\cpsslang}{\pcctlang}
+\renewcommand{\sfont}{\pccfont}
+\renewcommand{\sfontsym}{\pccfontsym}
+\renewcommand{\scolor}{\pcccolor}
+
+\FigCOCLinking
+\endgroup
+
+\FloatBarrier
+
+\begin{listing}[h]
+\begin{minted}{coq}
+Definition translucent {A} e B := forall (x : A), (x = e) -> B.
+
+Notation "e ⇒ B" := (translucent e B) (at level 42).
+
+Definition translucent_intro {A B} {e' : A}
+  (e : forall (x : A), B x) : e' ⇒ B e'
+:= fun x w => match w with eq_refl => e x end.
+
+Notation "e :T: A" := (translucent_intro e : A) (at level 99).
+
+Definition translucent_elim {A B} {e' : A} (e : e' ⇒ B) : B
+:= e e' eq_refl.
+
+Notation "e @ m" := (@translucent_elim _ _ m e) (at level 99).
+
+Inductive sigS {A:Type} (P:A -> Type) : Prop :=
+  existS : forall x:A, P x -> sigS P.
+
+Notation "'∃' x : A , P" := (sigS (A:=A) (fun x => P))
+  (at level 0, x at level 99) : type_scope.
+
+Definition Closure A B : Prop :=
+  ∃ α : Type , ∃ env : α , (env ⇒ (A -> B)).
+\end{minted}
+\caption{Model of \pcctlang in Coq}
+\end{listing}
+
+\cleardoublepage
+\chapter{Reference for Parametric Closure Conversion}
+\label{sec:param-cc:cc:appendix}
+This appendix contains the complete definitions for the parametric closure
+conversion from \cpsslang to \pcctlang.
+All translation figures from \fullref[]{chp:param-cc} are reproduced and completed
+with elided parts here, and elided figures are presented here.
+
+\begin{typographical}
+  In this appendix, I typeset the source language, \pccslang, in a
+  \emph{\sfonttext{blue, non-bold, sans-serif font}}, and the target language,
+  \pcctlang, in a \emph{\tfonttext{bold, red, serif font}}.
+\end{typographical}
+
+\begingroup
+\let\label\discard
+\renewcommand{\cpstlang}{\pcctlang}
+
+\FigCPSObsRel[ht]
+
+\endgroup
+
+\begingroup
+\let\label\discard
+
+\FigDFVs[ht]
+
+\endgroup
+
+\FigCCTermOne[ht]
+\FigCCTermTwo[ht]

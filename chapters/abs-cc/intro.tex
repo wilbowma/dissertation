@@ -1,0 +1,37 @@
+In this chapter, I develop the second of the two front-end
+\tech{type-preserving} translations, a so-called \tech{abstract closure
+conversion} translation.
+\deftech*{abstract closure conversion,Abstract closure conversion}{Abstract closure conversion}
+produces \tech{closure converted} \tech{code} in which \tech{closures} are
+primitives, rather than encoded using a well-known datatype~\cite{minamide1996}.
+The goal of \deftech*{closure conversion,closure converted,closure
+converting,closure-converted}{closure conversion} is to close
+all \tech{computation}
+abstractions with respect to free variables so the definition of
+a \tech{computation} can be separate from its use.
+In \slang, the only \tech{computation} abstraction is \(\lambda\), so we will be
+translating all \(\lambda\) expressions into an explicit closure object.
+Intuitively, the abstract closure object essentially represents closed code
+partially applied to the local environment in which the code was defined.
+This is abstract compared to representations of closures as a pair of the code
+and environment, since a pair supports more operations (projection) than a
+closure.
+The abstract closure conversion ensures the only operation defined on closures
+is application.
+
+I begin by describing the key problems with type preserving closure
+conversion---particularly why the standard \tech{parametric closure conversion}
+fails---and the solutions, then develop the \tech{closure conversion} \tech{IL},
+and finally prove \tech{type preservation} and \tech{compiler correctness}.
+As this pass is meant to follow \tech{ANF}, I also prove that \tech{ANF} is
+preserved.
+
+\begin{typographical}
+ In this chapter, I typeset the source language, \slang, in
+ a \emph{\sfonttext{blue, non-bold, sans-serif font}}, and the target
+ language, \tlang, in a \emph{\tfonttext{bold, red, serif font}}.
+\end{typographical}
+
+\begin{digression}
+  A variant of the translation presented in this chapter was independently discovered by \citet{kovacs2018:cconv}. That translation differs primarily in its use of universes ala Tarski. The author also spends some time discussing type-passing polymorphism, which I do not discuss.
+\end{digression}

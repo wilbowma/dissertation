@@ -1,0 +1,1428 @@
+\newcommand{\FigCBNUnv}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\cbnU{\slenv}{\sU}{\cpsU}}
+    \begin{mathpar}
+      \inferrule*[right=\defcbnUrule{Star}]
+      {~}
+      {\cbnU{\slenv}{\sstarty}{\cpsstarty}}
+
+      \inferrule*[right=\defcbnUrule{Box}]
+      {~}
+      {\cbnU{\slenv}{\sboxty}{\cpsboxty}}
+    \end{mathpar}
+    \caption{\cbnname{} of Universes}
+    \label{fig:cps:cbn:unv}
+  \end{figure}
+}
+
+\newcommand{\FigCBNKind}[1][t]{
+  \begin{figure}[#1]
+    \judgshape[\text{\fullref[]{lem:cps:cbn:type-pres} will show \im{\cpstyjudg{\slenv^+}{\sK^+}{\sU^+}}}]
+    {\cbnK{\slenv}{\sK}{\sU}{\cpsK}}
+    \begin{mathpar}
+      \inferrule*[right=\defcbnKrule{Ax}]
+      {~}
+      {\cbnK{\slenv}{\sstarty}{\sboxty}{\cpsstarty}}
+
+      \inferrule*[right=\defcbnKrule{PiK}]
+      {\cbnK{\slenv}{\sK}{\sU}{\cpsK} \\
+       \cbnK{\slenv,\salpha:\sK}{\sKpr}{\sUpr}{\cpsKpr}}
+      {\cbnK{\slenv}{\spity{\salpha}{\sK}{\sKpr}}{\sUpr}{\cpspity{\cpsalpha}{\cpsK}{\cpsKpr}}}
+
+      \inferrule*[right=\defcbnKrule{PiA}]
+      {\cbnAdiv{\slenv}{\sA}{\sKpr}{\cpsA} \\
+       \cbnK{\slenv,\sx:\sA}{\sK}{\sU}{\cpsK}}
+      {\cbnK{\slenv}{\spity{\sx}{\sA}{\sK}}{\sU}{\cpspity{\cpsx}{\cpsA}{\cpsK}}}
+    \end{mathpar}
+    \caption{\cbnname{} of Kinds}
+    \label{fig:cps:cbn:kind}
+  \end{figure}
+}
+
+\newcommand{\FigCBNTypesFullOne}[1][t]{
+  \begin{figure}[#1]
+    % Types
+    \judgshape[\text{\fullref[]{lem:cps:cbn:type-pres} will show \im{\cpstyjudg{\slenv^+}{\sA^+}{\sK^+}}}]
+    {\cbnA{\slenv}{\sA}{\sK}{\cpsA}}
+    \begin{mathpar}
+      \inferrule*[right=\defcbnArule{Var}]
+      {~}
+      {\cbnA{\slenv}{\salpha}{\sK}{\cpsalpha}}
+
+      \inferrule*[right=\defcbnArule{Pi}]
+      {\cbnAdiv{\slenv}{\sA}{\sK}{\cpsA} \\
+       \cbnAdiv{\slenv,\sx:\sA}{\sB}{\sKpr}{\cpsB}}
+      {\cbnA{\slenv}{\spity{\sx}{\sA}{\sB}}{\sKpr}{\cpspity{\cpsx}{\cpsA}{\cpsB}}}
+
+      \inferrule*[right=\defcbnArule{PiK}]
+      {\cbnK{\slenv}{\sK}{\sU}{\cpsK} \\
+       \cbnAdiv{\slenv,\sx:\sA}{\sB}{\sKpr}{\cpsB}}
+      {\cbnA{\slenv}{\spity{\salpha}{\sK}{\sB}}{\sKpr}{\cpspity{\cpsalpha}{\cpsK}{\cpsB}}}
+
+      \inferrule*[right=\defcbnArule{Constr}]
+      {\cbnAdiv{\slenv}{\sA}{\sKpr}{\cpsA} \\
+       \cbnA{\slenv,\sx:\sA}{\sB}{\sK}{\cpsB}}
+      {\cbnA{\slenv}{\sfune{\sx}{\sA}{\sB}}{\spity{\sx}{\sA}{\sK}}{\cpsfune{\cpsx}{\cpsA}{\cpsB}}}
+
+      \inferrule*[right=\defcbnArule{Abs}]
+      {\cbnK{\slenv}{\sK}{\sU}{\cpsK} \\
+       \cbnA{\slenv,\salpha:\sK}{\sB}{\sKpr}{\cpsB}}
+      {\cbnA{\slenv}{\sfune{\salpha}{\sK}{\sB}}{\spity{\salpha}{\sK}{\sKpr}}{\cpsfune{\cpsalpha}{\cpsK}{\cpsB}}}
+
+      \inferrule*[right=\defcbnArule{AppConstr}]
+      {\cbnA{\slenv}{\sA}{\spity{\sx}{\sB}{\sK}}{\cpsA} \\
+       \cbne{\slenv}{\se}{\sB}{\cpse}}
+      {\cbnA{\slenv}{\sappe{\sA}{\se}}{\subst{\sK}{\se}{\sx}}{\cpsappe{\cpsA}{\cpse}}}
+
+      \inferrule*[right=\defcbnArule{Inst}]
+      {\cbnA{\slenv}{\sA}{\spity{\salpha}{\sKpr}{\sK}}{\cpsA} \\
+       \cbnA{\slenv}{\sB}{\sKpr}{\cpsB}}
+      {\cbnA{\slenv}{\sappe{\sA}{\sB}}{\subst{\sK}{\sB}{\salpha}}{\cpsappe{\cpsA}{\cpsB}}}
+
+      \inferrule*[right=\defcbnArule{Sig}]
+      {\cbnAdiv{\slenv}{\sA}{\sstarty}{\cpsA} \\
+       \cbnAdiv{\slenv,\sx:\sA}{\sB}{\sstarty}{\cpsB}}
+      {\cbnA{\slenv}{\ssigmaty{\sx}{\sA}{\sB}}{\sstarty}{\cpssigmaty{\cpsx}{\cpsA}{\cpsB}}}
+
+      \inferrule*[right=\defcbnArule{Bool}]
+      {~}
+      {\cbnA{\slenv}{\sboolty}{\sstarty}{\cpsboolty}}
+
+      \inferrule*[right=\defcbnArule{Let}]
+      {\cbne{\slenv}{\se}{\sA}{\cpse} \\
+       \cbnAdiv{\slenv}{\sA}{\sK}{\cpsA} \\
+       \cbnA{\slenv,\sx=\se:\sA}{\sB}{\sKpr}{\cpsB}}
+      {\cbnA{\slenv}{\salete{\sx}{\se}{\sA}{\sB}}{\sKpr}{\cpsalete{\cpsx}{\cpse}{\cpsA}{\cpsB}}}
+
+      \cdots
+    \end{mathpar}
+    \caption{\cbnname{} of Types (1/2)}
+    \label{fig:cps:cbn:types-full1}
+  \end{figure}
+}
+
+\newcommand{\FigCBNTypesFullTwo}[1][t]{
+  \begin{figure}[#1]
+    % Types
+    \judgshape[\text{\fullref[]{lem:cps:cbn:type-pres} will show \im{\cpstyjudg{\slenv^+}{\sA^+}{\sK^+}}}]
+    {\cbnA{\slenv}{\sA}{\sK}{\cpsA}}
+    \begin{mathpar}
+      \cdots
+
+      \inferrule*[right=\defcbnArule{LetK}]
+      {\cbnA{\slenv}{\sA}{\sK}{\cpsA} \\
+       \cbnlenv{\slenv}{\cpslenv} \\
+       \cbnK{\slenv}{\sA}{\sK}{\cpsK} \\
+       \cbnA{\slenv,\salpha=\sA:\sK}{\sB}{\_}{\cpsB}}
+      {\cbnA{\slenv}{\salete{\salpha}{\sA}{\sK}{\sB}}{\_}{\cpsalete{\cpsalpha}{\cpsA}{\cpsK}{\cpsB}}}
+
+      \inferrule*[right=\defcbnArule{Conv}]
+      {\styjudg{\slenv}{\sA}{\sKpr} \\
+       \sequivjudg{\slenv}{\sK}{\sKpr} \\
+       \cbnA{\slenv}{\sA}{\sKpr}{\cpsA}}
+      {\cbnA{\slenv}{\sA}{\sK}{\cpsA}}
+    \end{mathpar}
+    \judgshape[\text{\fullref[]{lem:cps:cbn:type-pres} will show \im{\cpstyjudg{\slenv^+}{\sA^\div}{\sstarty^+}}}]
+    {\cbnAdiv{\slenv}{\sA}{\sstarty}{\cpsA}}
+    \begin{mathpar}
+      \inferrule*[right=\defcbnAdivrule{Comp}]
+      {\cbnA{\slenv}{\sA}{\sstarty}{\cpsA}}
+      {\cbnAdiv{\slenv}{\sA}{\sstarty}{\cpspity{\cpsalpha}{\cpsstarty}{\cpsfunty{(\cpsfunty{\cpsA}{\cpsalpha})}{\cpsalpha}}}}
+    \end{mathpar}
+    \caption{\cbnname{} of Types (1/2)}
+    \label{fig:cps:cbn:types-full}
+  \end{figure}
+}
+
+\newcommand{\FigCBNTypesShort}[1][t]{
+  \begin{figure}[#1]
+    % Types
+  \judgshape[\text{\fullref[]{lem:cps:cbn:type-pres} will show \im{\cpstyjudg{\slenv^+}{\sA^+}{\sK^+}}}]
+    {\cbnA{\slenv}{\sA}{\sK}{\cpsA}}
+    \begin{mathpar}
+      \inferrule*[right=\defcbnArule{Var}]
+      {~}
+      {\cbnA{\slenv}{\salpha}{\sK}{\cpsalpha}}
+
+      \inferrule*[right=\defcbnArule{Pi}]
+      {\cbnAdiv{\slenv}{\sA}{\sK}{\cpsA} \\
+       \cbnAdiv{\slenv,\sx:\sA}{\sB}{\sKpr}{\cpsB}}
+      {\cbnA{\slenv}{\spity{\sx}{\sA}{\sB}}{\sKpr}{\cpspity{\cpsx}{\cpsA}{\cpsB}}}
+
+      \inferrule*[right=\defcbnArule{PiK}]
+      {\cbnK{\slenv}{\sK}{\sU}{\cpsK} \\
+       \cbnAdiv{\slenv,\sx:\sA}{\sB}{\sKpr}{\cpsB}}
+      {\cbnA{\slenv}{\spity{\salpha}{\sK}{\sB}}{\sKpr}{\cpspity{\cpsalpha}{\cpsK}{\cpsB}}}
+
+      \inferrule*[right=\defcbnArule{Constr}]
+      {\cbnAdiv{\slenv}{\sA}{\sKpr}{\cpsA} \\
+       \cbnA{\slenv,\sx:\sA}{\sB}{\sK}{\cpsB}}
+      {\cbnA{\slenv}{\sfune{\sx}{\sA}{\sB}}{\spity{\sx}{\sA}{\sK}}{\cpsfune{\cpsx}{\cpsA}{\cpsB}}}
+
+      \inferrule*[right=\defcbnArule{AppConstr}]
+      {\cbnA{\slenv}{\sA}{\spity{\sx}{\sB}{\sK}}{\cpsA} \\
+       \cbne{\slenv}{\se}{\sB}{\cpse}}
+      {\cbnA{\slenv}{\sappe{\sA}{\se}}{\subst{\sK}{\se}{\sx}}{\cpsappe{\cpsA}{\cpse}}}
+
+      \inferrule*[right=\defcbnArule{Sig}]
+      {\cbnAdiv{\slenv}{\sA}{\sstarty}{\cpsA} \\
+       \cbnAdiv{\slenv,\sx:\sA}{\sB}{\sstarty}{\cpsB}}
+      {\cbnA{\slenv}{\ssigmaty{\sx}{\sA}{\sB}}{\sstarty}{\cpssigmaty{\cpsx}{\cpsA}{\cpsB}}}
+
+      \inferrule*[right=\defcbnArule{Let}]
+      {\cbne{\slenv}{\se}{\sA}{\cpse} \\
+       \cbnAdiv{\slenv}{\sA}{\sK}{\cpsA} \\
+       \cbnA{\slenv,\sx=\se:\sA}{\sB}{\sKpr}{\cpsB}}
+      {\cbnA{\slenv}{\salete{\sx}{\se}{\sA}{\sB}}{\sKpr}{\cpsalete{\cpsx}{\cpse}{\cpsA}{\cpsB}}}
+
+      \inferrule*[right=\defcbnArule{Conv}]
+      {\styjudg{\slenv}{\sA}{\sKpr} \\
+       \sequivjudg{\slenv}{\sK}{\sKpr} \\
+       \cbnA{\slenv}{\sA}{\sKpr}{\cpsA}}
+      {\cbnA{\slenv}{\sA}{\sK}{\cpsA}}
+
+      \cdots
+    \end{mathpar}
+    \judgshape[\text{\fullref[]{lem:cps:cbn:type-pres} will show \im{\cpstyjudg{\slenv^+}{\sA^\div}{\sstarty^+}}}]
+    {\cbnAdiv{\slenv}{\sA}{\sstarty}{\cpsA}}
+    \begin{mathpar}
+      \inferrule*[right=\defcbnAdivrule{Comp}]
+      {\cbnA{\slenv}{\sA}{\sstarty}{\cpsA}}
+      {\cbnAdiv{\slenv}{\sA}{\sstarty}{\cpspity{\cpsalpha}{\cpsstarty}{\cpsfunty{(\cpsfunty{\cpsA}{\cpsalpha})}{\cpsalpha}}}}
+    \end{mathpar}
+    \caption{\cbnname{} of Types (excerpts)}
+    \label{fig:cps:cbn:types-short}
+  \end{figure}
+}
+
+\newcommand{\PairRules}{
+  \inferrule*[right=\defcbnerule{Pair}]
+  {\cbne{\slenv}{\seone}{\sA}{\cpseone} \\
+    \cbne{\slenv}{\setwo}{\subst{\sB}{\seone}{\sx}}{\cpsetwo} \\
+    \cbnAdiv{\slenv}{\sA}{\sstarty}{\cpsA} \\
+    \cbnAdiv{\slenv,\sx:\sA}{\sB}{\sstarty}{\cpsB}}
+  {\cbne{\slenv}{\spaire{\seone}{\setwo}}{\ssigmaty{\sx}{\sA}{\sB}}{
+      \begin{stackTL}\cpsfune{\cpsalpha}{\cpsstarty}{
+        \cpsfune{\cpsk}{\cpsfunty{\cpssigmaty{\cpsx}{\cpsA}{\cpsB}}{\cpsalpha}}{
+          \\\quad\cpsappe{\cpsk}{\cpsdpaire{\cpseone}{\cpsetwo}{\cpssigmaty{\cpsx}{\cpsA}{\cpsB}}}}}}
+  \end{stackTL}}
+
+  \inferrule*[right=\defcbnerule{Fst}]
+  {\cbnAdiv{\slenv}{\sA}{\sstarty}{\cpsAto{\div}} \\
+    \cbnAdiv{\slenv,\sx:\sA}{\sB}{\sstarty}{\cpsBto{\div}} \\
+    \cbnA{\slenv}{\sA}{\sstarty}{\cpsAto{+}} \\
+    \cbne{\slenv}{\se}{\ssigmaty{\sx}{\sA}{\sB}}{\cpse}}
+  {\cbne{\slenv}{\sfste{\se}}{\sA}{
+      \begin{stackTL}
+        \cpsfune{\cpsalpha}{\cpsstarty}{
+          \cpsfune{\cpsk}{\cpsfunty{\cpsAto{+}}{\cpsalpha}}{\\
+            \quad\begin{stackTL}
+              \cpscappe{\cpse}{\cpsalpha}{(\cpsfune{\cpsy}{\cpssigmaty{\cpsx}{\cpsAto{\div}}{\cpsBto{\div}}}{
+                    \cpslete{\cpsz}{\cpsfste{\cpsy}}{\cpsappe{\cpsz}{\cpsalpha~\cpsk}}}
+               )}}}
+        \end{stackTL}
+      \end{stackTL}
+    }}
+
+  \inferrule*[right=\defcbnerule{Snd}]
+  {\cbnAdiv{\slenv}{\sA}{\sstarty}{\cpsAto{\div}} \\
+    \cbnAdiv{\slenv,\sx:\sA}{\sB}{\sstarty}{\cpsBto{\div}} \\
+    \cbnA{\slenv,\sx:\sA}{\sB}{\sstarty}{\cpsBto{+}} \\
+    \cbne{\slenv}{(\sfste{\se})}{\sA}{(\sfste{\se})^{\div}} \\
+    \cbne{\slenv}{\se}{\ssigmaty{\sx}{\sA}{\sB}}{\cpse}}
+  {\cbne{\slenv}{\ssnde{\se}}{\subst{\sB}{(\sfste{\se})}{\sx}}{
+      \begin{stackTL}
+        \cpsfune{\cpsalpha}{\cpsstarty}{
+          \cpsfune{\cpsk}{\cpsfunty{\subst{\cpsBto{+}}{(\sfste{\se})^{\div}}{\cpsx}}{\cpsalpha}}{\\
+            \quad\begin{stackTL}
+              \cpscappe{\cpse}{\cpsalpha}{\begin{stackTL}(\cpsfune{\cpsy}{\cpssigmaty{\cpsx}{\cpsAto{\div}}{\cpsBto{\div}}}{
+                    \\\quad\cpslete{\cpsz}{\cpssnde{\cpsy}}{\cpsncappe{\cpsz}{\cpsalpha}{\cpsk}}}
+                )\end{stackTL}}}}
+        \end{stackTL}
+      \end{stackTL}
+    }}
+}
+
+\newcommand{\CBNEnvRules} {
+   \judgshape[\text{\fullref[]{lem:cps:cbn:type-pres} will show \im{\cpswf{\slenv^+}}}]
+    {\cbnlenv{\slenv}{\cpslenv}}
+    \begin{mathpar}
+      \inferrule*[right=\defcbnlenvrule{Empty}]
+      {~}
+      {\cbnlenv{\cdot}{\cdot}}
+
+      \inferrule*[right=\defcbnlenvrule{AssumT}]
+      {\cbnlenv{\slenv}{\cpslenv} \\
+       \cbnAdiv{\slenv}{\sA}{\sK}{\cpsA}}
+      {\cbnlenv{\slenv,\sx:\sA}{\cpslenv,\cpsx:\cpsA}}
+
+      \inferrule*[right=\defcbnlenvrule{AssumK}]
+      {\cbnlenv{\slenv}{\cpslenv} \\
+       \cbnK{\slenv}{\sK}{\sU}{\cpsK}}
+      {\cbnlenv{\slenv,\salpha:\sK}{\cpslenv,\cpsalpha:\cpsK}}{}
+
+      \inferrule*[right=\defcbnlenvrule{Def}]
+      {\cbnlenv{\slenv}{\cpslenv} \\
+       \cbnAdiv{\slenv}{\sA}{\sK}{\cpsA} \\
+       \cbne{\slenv}{\se}{\sA}{\cpse}}
+      {\cbnlenv{\slenv,\sx = \se:\sA}{\cpslenv,\cpsx = \cpse:\cpsA}}
+
+      \inferrule*[right=\defcbnlenvrule{DefT}]
+      {\cbnlenv{\slenv}{\cpslenv} \\
+       \cbnA{\slenv}{\sA}{\sK}{\cpsA} \\
+       \cbnK{\slenv}{\sK}{\sU}{\cpsK}}
+      {\cbnlenv{\slenv,\salpha = \sA:\sK}{\cpslenv,\cpsalpha = \cpsA:\cpsK}}
+    \end{mathpar}
+}
+
+\newcommand{\FigCBNTermsFull}[1][t]{
+  \begin{figure}[#1]
+  \judgshape[\text{\fullref[]{lem:cps:cbn:type-pres} will show \im{\cpstyjudg{\slenv^+}{\se^\div}{\sA^\div}}}]
+    {\cbne{\slenv}{\se}{\sA}{\cpsA}}
+    \begin{mathpar}
+      \inferrule*[right=\defcbnerule{Var}]
+      {\cbnA{\slenv}{\sA}{\sK}{\cpsA}}
+      {\cbne{\slenv}{\sx}{\sA}{\cpsfune{\cpsalpha}{\cpsstarty}{
+            \cpsfune{\cpsk}{\cpsfunty{\cpsA}{\cpsalpha}}{
+              \cpsncappe{\cpsx}{\cpsalpha}{\cpsk}}}}}
+
+      \inferrule*[right=\defcbnerule{Fun}]
+      {\cbnAdiv{\slenv}{\sA}{\sK}{\cpsA} \\
+       \cbnAdiv{\slenv,\sx:\sA}{\sB}{\sKpr}{\cpsB} \\
+       \cbne{\slenv,\sx:\sA}{\se}{\sB}{\cpse}}
+      {\cbne{\slenv}{\sfune{\sx}{\sA}{\se}}{\spity{\sx}{\sA}{\sB}}
+        {\cpsfune{\cpsalpha}{\cpsstarty}{
+            \cpsfune{\cpsk}{\cpsfunty{(\cpspity{\cpsx}{\cpsA}{\cpsB})}{\cpsalpha}}{
+                \cpsappe{\cpsk}{(\cpsfune{\cpsx}{\cpsA}{\cpse})}}}}}
+
+      \inferrule*[right=\defcbnerule{Abs}]
+      {\cbnK{\slenv}{\sK}{\_}{\cpsK} \\
+        \cbnAdiv{\slenv,\salpha:\sK}{\sB}{\_}{\cpsB} \\
+        \cbne{\slenv,\salpha:\sK}{\se}{\sB}{\cpse}}
+      {\cbne{\slenv}{\sfune{\salpha}{\sK}{\se}}{\spity{\salpha}{\sK}{\sB}}{
+          \begin{stackTL}\cpsfune{\cpsalphain{ans}}{\cpsstarty}{
+            \cpsfune{\cpsk}{\cpsfunty{(\cpspity{\cpsalpha}{\cpsK}{\cpsB})}{\cpsalphain{ans}}}{
+              \\\quad\cpsappe{\cpsk}{(\cpsfune{\cpsalpha}{\cpsK}{\cpse})}}}}
+      \end{stackTL}}
+
+      \inferrule*[right=\defcbnerule{App}]
+      {\cbne{\slenv}{\se}{\spity{\sx}{\sA}{\sB}}{\cpse} \\
+       \cbnAdiv{\slenv}{\sA}{\sK}{\cpsAto{\div}} \\
+       \cbnAdiv{\slenv,\sx:\sA}{\sB}{\sKpr}{\cpsBto{\div}} \\
+       \cbnA{\slenv,\sx:\sA}{\sB}{\sKpr}{\cpsBto{+}} \\
+       \cbne{\slenv}{\sepr}{\sA}{\cpsepr}}
+      {\cbne{\slenv}{\sappe{\se}{\sepr}}{\subst{\sB}{\sepr}{\sx}}
+        {\begin{stackTL}\cpsfune{\cpsalpha}{\cpsstarty}{
+            \cpsfune{\cpsk}{\cpsfunty{(\subst{\cpsBto{+}}{\cpsepr}{\cpsx})}{\cpsalpha}}{\\\quad
+              \cpsncappe{\cpse}{\cpsalpha}{(\cpsfune{\cpsf}{\cpspity{\cpsx}{\cpsAto{\div}}{\cpsBto{\div}}}{
+                  \cpsncappe{(\cpsappe{\cpsf}{\cpsepr})}{\cpsalpha}{\cpsk})}}}
+            \end{stackTL}
+          }}}
+
+      \inferrule*[right=\defcbnerule{Inst}]
+      {\cbne{\slenv}{\se}{\spity{\salpha}{\sK}{\sB}}{\cpse} \\
+        \cbnAdiv{\slenv,\salpha:\sK}{\sB}{\_}{\cpsBto{\div}} \\
+        \cbnA{\slenv,\salpha:\sK}{\sB}{\_}{\cpsBto{+}} \\
+        \cbnA{\slenv}{\sA}{\sK}{\cpsA}}
+      {\cbne{\slenv}{\sappe{\se}{\sA}}{\subst{\sB}{\sA}{\salpha}}
+        {\cpsfune{\cpsalphain{ans}}{\cpsstarty}{
+            \begin{stackTL}
+              \cpsfune{\cpsk}{\cpsfunty{(\subst{\cpsBto{+}}{\cpsA}{\cpsalpha})}{\cpsalphain{ans}}}{\\\quad
+                \cpsncappe{\cpse}{\cpsalpha}{(\cpsfune{\cpsf}{\cpspity{\cpsalpha}{\cpsK}{\cpsBto{\div}}}{
+                      \cpsncappe{(\cpsappe{\cpsf}{\cpsA})}{\cpsalphain{ans}}{\cpsk})}}}
+            \end{stackTL}
+          }}}
+
+      \inferrule*[right=\defcbnerule{True}]
+      {~}
+      {\cbne{\slenv}{\struee}{\sboolty}{\cpsfune{\cpsalpha}{\cpsstarty}{
+            \cpsfune{\cpsk}{\cpsfunty{\cpsboolty}{\cpsalpha}}{
+              \cpsappe{\cpsk}{\cpstruee}}}}}
+
+      \inferrule*[right=\defcbnerule{False}]
+      {~}
+      {\cbne{\slenv}{\sfalsee}{\sboolty}{\cpsfune{\cpsalpha}{\cpsstarty}{
+            \cpsfune{\cpsk}{\cpsfunty{\cpsboolty}{\cpsalpha}}{
+              \cpsappe{\cpsk}{\cpsfalsee}}}}}
+
+      \inferrule*[right=\defcbnerule{If}]
+      {\cbne{\slenv}{\se}{\sboolty}{\cpse}\\
+       \cbnA{\slenv}{\sB}{\sstarty}{\cpsB}\\
+       \cbne{\slenv}{\seone}{\sB}{\cpseone}\\
+       \cbne{\slenv}{\setwo}{\sB}{\cpsetwo}}
+      {\cbne{\slenv}{\sife{\se}{\seone}{\setwo}}{\sB}{\begin{stackTL}\cpsfune{\cpsalpha}{\cpsstarty}{
+            \cpsfune{\cpsk}{\cpsfunty{\cpsB}{\cpsalpha}}{
+              \\\quad\cpscappe{\cpse}{\talpha}{(\begin{stackTL}\cpsfune{\cpsx}{\cpsboolty}{
+                    \begin{stackTL}
+                    \cpsife{\cpsx}{(\cpscappe{\cpseone}{\talpha}{\cpsk})\\\quad\,\,\,\,}{(\cpscappe{\cpsetwo}{\talpha}{\cpsk}))}
+                    \end{stackTL}}}}}}
+                  \end{stackTL}
+                  \end{stackTL}}
+
+      \inferrule*[right=\defcbnerule{Let}]
+      {\cbne{\slenv}{\se}{\sA}{\cpse} \\
+       \cbnAdiv{\slenv}{\sA}{\sK}{\cpsA} \\
+       \cbnA{\slenv,\sx=\se:\sA}{\sB}{\sKpr}{\cpsB} \\
+       \cbne{\slenv,\sx=\se:\sA}{\sepr}{\sB}{\cpsepr}}
+      {\cbne{\slenv}{\salete{\sx}{\se}{\sA}{\sepr}}{\subst{\sB}{\se}{\sx}}{
+          \begin{stackTL}\cpsfune{\cpsalpha}{\cpsstarty}{
+            \cpsfune{\cpsk}{\cpsfunty{\subst{\cpsB}{\cpse}{\cpsx}}{\cpsalpha}}{
+              \\\quad\cpsalete{\cpsx}{\cpse}{\cpsA}{\cpsncappe{\cpsepr}{\cpsalpha}{\cpsk}}}}}
+      \end{stackTL}}
+
+    \end{mathpar}
+    \caption{\cbnname{} of Terms (1/2)}
+    \label{fig:cps:cbn:terms-full}
+  \end{figure}
+}
+
+\newcommand{\FigCBNTermsShort}[1][t]{
+  \begin{figure}[#1]
+  \judgshape[\text{\fullref[]{lem:cps:cbn:type-pres} will show \im{\cpstyjudg{\slenv^+}{\se^\div}{\sA^\div}}}]
+    {\cbne{\slenv}{\se}{\sA}{\cpsA}}
+    \begin{mathpar}
+      \inferrule*[right=\defcbnerule{Var}]
+      {\cbnA{\slenv}{\sA}{\sK}{\cpsA}}
+      {\cbne{\slenv}{\sx}{\sA}{\cpsfune{\cpsalpha}{\cpsstarty}{
+            \cpsfune{\cpsk}{\cpsfunty{\cpsA}{\cpsalpha}}{
+              \cpsncappe{\cpsx}{\cpsalpha}{\cpsk}}}}}
+
+      \inferrule*[right=\defcbnerule{Fun}]
+      {\cbnAdiv{\slenv}{\sA}{\sK}{\cpsA} \\
+       \cbnAdiv{\slenv,\sx:\sA}{\sB}{\sKpr}{\cpsB} \\
+       \cbne{\slenv,\sx:\sA}{\se}{\sB}{\cpse}}
+      {\cbne{\slenv}{\sfune{\sx}{\sA}{\se}}{\spity{\sx}{\sA}{\sB}}
+        {\cpsfune{\cpsalpha}{\cpsstarty}{
+            \cpsfune{\cpsk}{\cpsfunty{(\cpspity{\cpsx}{\cpsA}{\cpsB})}{\cpsalpha}}{
+                \cpsappe{\cpsk}{(\cpsfune{\cpsx}{\cpsA}{\cpse})}}}}}
+
+      \inferrule*[right=\defcbnerule{App}]
+      {\cbne{\slenv}{\se}{\spity{\sx}{\sA}{\sB}}{\cpse} \\
+       \cbnAdiv{\slenv}{\sA}{\sK}{\cpsAto{\div}} \\
+       \cbnAdiv{\slenv,\sx:\sA}{\sB}{\sKpr}{\cpsBto{\div}} \\
+       \cbnA{\slenv,\sx:\sA}{\sB}{\sKpr}{\cpsBto{+}} \\
+       \cbne{\slenv}{\sepr}{\sA}{\cpsepr}}
+      {\cbne{\slenv}{\sappe{\se}{\sepr}}{\subst{\sB}{\sepr}{\sx}}
+        {\begin{stackTL}
+          \cpsfune{\cpsalpha}{\cpsstarty}{
+            \cpsfune{\cpsk}{\cpsfunty{(\subst{\cpsBto{+}}{\cpsepr}{\cpsx})}{\cpsalpha}}{\\\quad
+              \cpsncappe{\cpse}{\cpsalpha}{(\cpsfune{\cpsf}{\cpspity{\cpsx}{\cpsAto{\div}}{\cpsBto{\div}}}{
+                  \cpsncappe{(\cpsappe{\cpsf}{\cpsepr})}{\cpsalpha}{\cpsk})}}}
+            \end{stackTL}
+          }}}
+
+      \PairRules
+
+      \inferrule*[right=\defcbnerule{Let}]
+      {\cbne{\slenv}{\se}{\sA}{\cpse} \\
+       \cbnAdiv{\slenv}{\sA}{\sK}{\cpsA} \\
+       \cbnA{\slenv,\sx=\se:\sA}{\sB}{\sKpr}{\cpsB} \\
+       \cbne{\slenv,\sx=\se:\sA}{\sepr}{\sB}{\cpsepr}}
+      {\cbne{\slenv}{\salete{\sx}{\se}{\sA}{\sepr}}{\subst{\sB}{\se}{\sx}}{
+          \begin{stackTL}\cpsfune{\cpsalpha}{\cpsstarty}{
+            \cpsfune{\cpsk}{\cpsfunty{\subst{\cpsB}{\cpse}{\cpsx}}{\cpsalpha}}{
+              \\\quad\cpsalete{\cpsx}{\cpse}{\cpsA}{\cpsncappe{\cpsepr}{\cpsalpha}{\cpsk}}}}}
+      \end{stackTL}}
+
+      \inferrule*[right=\defcbnerule{Conv}]
+      {\cbne{\slenv}{\se}{\sB}{\cpse}}
+      {\cbne{\slenv}{\se}{\sA}{\cpse}}
+
+      \cdots
+    \end{mathpar}
+    \caption{\cbnname{} of Terms (excerpts)}
+    \label{fig:cps:cbn:terms-short}
+  \end{figure}
+}
+
+\newcommand{\FigCBNTermsPairs}[1][t]{
+  \begin{figure}[#1]
+    \begin{mathpar}
+      \inferrule*[right=\defcbnerule{LetK}]
+      {\cbnA{\slenv}{\sA}{\sK}{\cpsA} \\
+        \cbnK{\slenv}{\sK}{\sU}{\cpsK} \\
+        \cbnA{\slenv,\salpha=\sA:\sK}{\sB}{\sKpr}{\cpsB} \\
+        \cbne{\slenv,\salpha=\sA:\sK}{\se}{\sB}{\cpse}}
+      {\cbne{\slenv}{\salete{\salpha}{\sA}{\sK}{\se}}{\subst{\sB}{\sA}{\salpha}}{
+          \begin{stackTL}\cpsfune{\cpsalphain{ans}}{\cpsstarty}{
+            \cpsfune{\cpsk}{\cpsfunty{\subst{\cpsB}{\cpsA}{\cpsx}}{\cpsalphain{ans}}}{
+              \\\quad\cpsalete{\cpsalpha}{\cpsA}{\cpsK}{\cpsncappe{\cpse}{\cpsalphain{ans}}{\cpsk}}}}}
+      \end{stackTL}}
+
+      \inferrule*[right=\defcbnerule{Conv}]
+      {\cbne{\slenv}{\se}{\sB}{\cpse}}
+      {\cbne{\slenv}{\se}{\sA}{\cpse}}
+
+      \PairRules
+    \end{mathpar}
+    \caption{\cbnname{} of Terms (2/2)}
+    \label{fig:cps:cbn:terms-pairs}
+  \end{figure}
+}
+
+\newcommand{\FigCBNEnv}[1][t]{
+  \begin{figure}[#1]
+    \CBNEnvRules
+  \caption{\cbnname{} of Environments}
+  \label{fig:cps:cbn:env}
+  \end{figure}
+}
+
+\section{Call-by-Name {{CPS}} Translation}
+\label{sec:cps:cbn}
+I now present the call-by-name \tech{CPS} translation (\cbnname) of \cpsslang.
+There are two main differences compared to the \tech{CBN} \tech{CPS} translation
+of \citet{barthe1999}: (1) I use a \tech{locally polymorphic answer type} instead
+of the \tech{double-negation translation}, which enables proving
+\tech{type-preservation} with \tech{dependent pairs}, and (2) I use a domain-full
+target language, which is a necessary step to get decidable type-checking for
+\tech{dependently typed} languages.
+
+For CPS, it is helpful to present the translation as a relation over typing
+derivations instead of as a function over syntax.
+The \tech{CPS} translation requires the type of each \tech{expression} in order
+to produce type annotation on continuations.
+Furthermore, the translation is not uniformly defined on \tech{expressions}:
+\tech{terms} are translated differently than \tech{types}, \tech{types} are
+translated either using the \tech{computation translation} or the \tech{value
+  translation} depending on the derivation, and \tech{kinds} and
+\tech{universes} have separate translations.
+The presentation as a relation on typing derivation is verbose, but makes all of
+these details explicit and thus easier to follow and understand why the
+translation is \tech{type preserving}.
+However, as in \fullref[]{sec:cps:ideas}, it is also useful to abbreviate these
+as translations over \tech{expressions} for the purposes of examples and proofs.
+I continue to use \im{\st^\div} for the \tech{computation translation} and
+\im{\st^+} for the \tech{value translation}.
+Below I give the abbreviations for all of the translation judgments.
+Note that anywhere I use this notation, I require the typing derivation as an
+implicit parameter, since formally the translation is defined over typing
+derivations.
+\begin{mathpar}
+  \begin{array}[t]{rcl}
+    \sA^{\div} & \defeq & \cpsA~\where{\cbnAdiv{\slenv}{\sA}{\sstarty}{\cpsA}} \\
+    \se^{\div} & \defeq & \cpse~\where{\cbne{\slenv}{\se}{\sA}{\cpse}}
+  \end{array}
+
+  \begin{array}[t]{rcl}
+    \sU^{+} & \defeq & \cpsU~\where{\cbnU{\slenv}{\sU}{\cpsU}} \\
+    \sK^{+} & \defeq & \cpsK~\where{\cbnK{\slenv}{\sK}{\sU}{\cpsK}} \\
+    \sA^{+} & \defeq & \cpsA~\where{\cbnA{\slenv}{\sA}{\sK}{\cpsA}} \\
+  \end{array}
+\end{mathpar}
+
+\FigCBNUnv
+\FigCBNKind
+I start with the simple translations.
+The translation on \tech{universes} and \tech{kinds} are essentially homomorphic
+on the structure of the typing derivation.
+I define the translation for \tech{universes} \cbnUname{} in
+\fullref[]{fig:cps:cbn:unv} and \tech{kinds} \cbnKname{} in
+\fullref[]{fig:cps:cbn:kind}, both of which I abbreviate with \im{^+}.
+There is no separate \tech{computation translation} for \tech{kinds} or
+\tech{universes}, which cannot appear as \tech{computations} in \cpsslang.
+
+\FigCBNTypesShort[h!]
+I give the key \cbnname{} translations of \tech{types} in
+\fullref[]{fig:cps:cbn:types-short}; the full definition is in
+\fullref[]{sec:cps:cbn:appendix} \fullref[]{fig:cps:cbn:types-full}.
+For \tech{types}, I define a \tech{value translation} \cbnAname{} and a
+\tech{computation translation} \cbnAdivname{}.
+We need separate \tech*{computation translation}{computation} and \tech{value
+  translations} for \tech{types} since we internalize the concept of evaluation
+at the \tech{term}-level, and \tech{types} describe \tech{term}-level
+\tech{computations} and \tech{term}-level \tech{values}.
+Recall that this is the call-by-name translation, so function arguments, even
+\tech{type}-level functions, are \tech{computations}.
+Note, therefore, that the rule \cbnKrule{PiA} uses the \tech{computation
+  translation} on the domain annotation \im{\sA} of
+\im{\spity{\sx}{\sA}{\sK}}---\ie, the \tech{kind} describing a \tech{type}-level
+function that abstracts over a \tech{term} of \tech{type} \im{\sA}.
+Most rules are straightforward.
+We translate \tech{type}-level variables \im{\salpha} in-place in \cbnArule{Var}.
+Again, since this is the \tech{CBN} translation, we use the \tech{computation
+  translation} on domain annotations.
+\cbnArule{Constr} for the \tech{value translation} of \tech{type}-level
+functions that abstract over a \tech{term}, \im{\sfune{\sx}{\sA}{\sB}},
+translates the domain annotation \im{\sA} using the \tech{computation
+  translation}.
+The rule for the \tech{value translation} of a \tech{dependent function} type,
+\cbnArule{Pi}, translates the domain annotation \im{\sA} using the
+\tech{computation translation}.
+This means that a function is a \tech{value} when it accepts a
+\tech{computation} as an argument.
+\cbnArule{Sig} produces the \tech{value translation} of a \tech{dependent pair}
+type by translating both components of a pair using the \tech{computation
+  translation}.
+This means we consider a pair a \tech{value} when it contains
+\tech{computations} as components.
+Note that since the translation is defined on typing derivations, we have an
+explicit translation of the conversion rule \cbnArule{Conv}.
+
+There is only one rule for the \tech{computation translation} of a \tech{type},
+\cbnAdivrule{Comp}, which is the \tech{polymorphic answer type translation}
+described in \fullref[]{sec:cps:ideas}.
+Notice that \cbnAdivrule{Comp} is defined only for \tech{types} of \tech{kind}
+\im{\sstarty}, since only \tech{types} of kind \im{\sstarty} have inhabitants in
+\cpsslang.
+For example, we cannot apply \cbnAdivrule{Comp} to \tech{type}-level function since no
+\tech{term} inhabits a \tech{type}-level function.
+
+\FigCBNTermsShort[h!]
+The main \cbnname{} translation rules for \tech{terms} are given in
+\fullref[]{fig:cps:cbn:terms-short}; the full definition is in
+\fullref[]{sec:cps:cbn:appendix} \fullref[]{fig:cps:cbn:terms-full} and
+\fullref[]{fig:cps:cbn:terms-pairs}.
+Intuitively, we translate each \tech{term} \im{\se} of type \im{\sA} to a term
+\im{\cpse} of type
+\im{\cpspity{\cpsalpha}{\cpsstarty}{\cpsfunty{(\cpsfunty{\cpsA}{\cpsalpha})}{\cpsalpha}}},
+where \im{\cpsA} is the \tech{value translation} of \im{\sA}.
+This \tech{type} represents a \tech{computation} that, when given a
+\tech{continuation} \im{\cpsk} that expects a \tech{value} of type \im{\cpsA},
+promises to call \im{\cpsk} with a \tech{value} of type \im{\cpsA}.
+Since we have only two \tech{value} forms in the call-by-name translation, we do
+not explicitly define a separate \tech{value translation} for \tech{terms}, but
+inline that translation.
+Note that the \tech{value} cases, \cbnerule{Fun} and \cbnerule{Pair}, feature the same
+pattern---\ie, produce a \tech{computation}
+\im{\cpsnfune{\cpsalpha}{\cpsnfune{\cpsk}{\cpsappe{\cpsk}{\cpsv}}}} that expects
+a \tech{continuation} and then immediately calls that \tech{continuation} on the
+\tech{value} \im{\cpsv}.
+In the case of \cbnerule{Fun}, the \tech{value} \im{\cpsv} is the function
+\im{\cpsfune{\cpsx}{\cpsA}{\cpse}} produced by translating the source function
+\im{\sfune{\sx}{\sA}{\se}} using the \tech{computation} \tech{type} translation from
+\im{\sA \cbnsymAdiv \cpsA} and the \tech{computation} \tech{term} translation
+\im{\se \cbnsyme \cpse}.
+In the case of \cbnerule{Pair}, the \tech{value} we produce
+\im{\cpspaire{\cpseone}{\cpsetwo}} contains \tech{computations}, not
+\tech{values}.
+
+The rest of the \tech{term} translation rules are for \tech{computations}.
+Notice that while all \tech{terms} produced by the \tech{term} translation have
+a \tech{computation} type, all \tech{continuations} take a \tech{value} type.
+Since this is a \tech{CBN} translation, we consider variables as
+\tech{computations} in \cbnerule{Var}.
+We translate \tech{term} variables as an \(\eta\)-expansion of a \tech{CPS'd}
+\tech{computation}.
+We must \(\eta\)-expand the variable case to guarantee \tech{CBN} evaluation
+order, as I discuss shortly.
+In \cbnerule{App}, we encode the \tech{CBN} evaluation order for function
+application \im{\sappe{\se}{\sepr}} in the usual way.
+We translate the \tech{computations} \im{\se \cbnsyme \cpse} and \im{\sepr
+  \cbnsyme \cpsepr}.
+First, we evaluate \im{\cpse} to a \tech{value} \im{\cpsf}, then apply
+\im{\cpsf} to the \emph{\tech{computation}} \im{\cpsepr}.
+The application \im{\cpsappe{\cpsf}{\cpsepr}} is itself a \tech{computation},
+which we call with the \tech{continuation} \im{\cpsk}.
+
+Notice that only the translation rules \cbnerule{Fst} and \cbnerule{Snd} use the
+new \im{\tfontsym{@}} form.
+As discussed in, \fullref[]{sec:cps:ideas}, to type check the translation of
+\im{\ssnde{\se}} produced by \cbnerule{Snd}, we require the rule
+\refrule{T-Cont} when type checking the \tech{continuation} that performs the
+second projection.
+While type checking the \tech{continuation,} we know that the \tech{value} \im{\cpsy}
+that the \tech{continuation} receives is equivalent to
+\im{\cpsncappe{\se^\div}{\cpsalpha}{\cpsidk}}.
+The reason we must use the \im{\tfontsym{@}} syntax in the in the translation
+\cbnerule{Fst}, whose type is not dependent, is so that we can apply the
+\refrule*{eqv-cont}{\im{\equiv}-Cont} rule to resolve the \tech{equivalence} of
+the two \emph{first projections} in the type of the second projection.
+That is, as we saw in \fullref[]{sec:cps:ideas}, \tech{type preservation} fails because
+we must show \tech{equivalence} between \im{(\sfste{\se})^\div} and
+\im{\cpsfste{\cpsy}}.
+Since these are the only two cases that require our new rules, these are the
+only cases where we need to use the \im{\tfontsym{@}} form in the translation;
+all other translation rules use standard application.
+In \fullref[]{sec:cps:cbv}, I show that that the \tech{CBV} translation must use
+the \im{\tfontsym{@}} form much more frequently since, intuitively, the new
+\tech{equivalence} rule recovers a notion of ``\tech{value}'' in the
+\tech{CPS'd} language, and in call-by-\emph{value} types can only depend on
+\tech{values}.
+
+The \tech{CPS} translation encodes the \tech{CBN} evaluation order explicitly so
+that the evaluation order of compiled \tech{terms} is independent of the target
+language's evaluation order.
+This property is not immediately obvious since \cbnerule{Let} binds a
+variable \im{\cpsx} to an expression \im{\cpse}, making it seem like there are
+two possible evaluation orders: either evaluate \im{\cpse} first, or substitute
+\im{\cpse} for \im{\cpsx} first.
+Note, however, that the \tech{CBN} translation always produces a
+\im{\tfontsym{\lambda}} \tech{term}---even in the variable case since
+\cbnerule{Var} employs \(\eta\)-expansion as noted above.
+Therefore, in \cbnerule{Let}, \im{\cpse} will always be a \tech{value}, which
+means it doesn't evaluate in either \tech{CBN} or \tech{CBV}.
+Therefore, there is no ambiguity in how to evaluate the translation of
+\im{\sfont{let}}.
+
+The translation rule \cbnerule{Conv} is deceptively simple.
+We could equivalently write this translation as follows, which makes its
+subtlety apparent.
+\begin{displaymath}
+\inferrule*[right=\rulename{\cbnename-Conv}]
+{\styjudg{\slenv}{\se}{\sB} \\
+ \sequivjudg{\slenv}{\sA}{\sB} \\
+ \cbne{\slenv}{\se}{\sB}{\cpse} \\
+ \cbnA{\slenv}{\sA}{\sK}{\cpsA} \\
+ \cbnA{\slenv}{\sB}{\sK}{\cpsB}}
+{\cbne{\slenv}{\se}{\sA}{\cpsfune{\cpsalpha}{\cpsstarty}{
+      \cpsfune{\cpsk}{\cpsfunty{\cpsA}{\cpsalpha}}{
+        \cpsncappe{\cpse}{\cpsalpha}{(\cpsfune{\cpsx}{\cpsB}{\cpsappe{\cpsk}{\cpsx}})}}}}}
+\end{displaymath}
+Notice now that while the \tech{continuation} \im{\cpsk} expects a \tech{term}
+of type \im{\cpsA}, we call \im{\cpsk} with a \tech{term} of type \im{\cpsB}.
+Intuitively, \im{\cpsappe{\cpsk}{\cpsx}} should be well-typed since \im{\cpsA}
+and \im{\cpsB} should be equivalent.
+However, recall from \fullref[]{chp:type-pres} that we cannot prove that
+\im{\cpsA} and \im{\cpsB} are equivalence until we prove compositionality, which
+requires that we appeal to this translation rule.
+As a result, we require equivalence to be non-type-directed.
+
+\FigCBNEnv
+I lift the translations to typing environments in the usual way in
+\fullref[]{fig:cps:cbn:env}.
+Since this is the \tech{CBN} translation, we recur over the environment applying
+the \tech{computation translation}.
+
+\subsection{Type Preservation}
+\label{sec:cps:cbn:proof}
+{
+\allowdisplaybreaks
+The proof of \tech{type preservation} follows the standard architecture from
+\fullref[]{chp:type-pres}.
+
+First I show \fullref{lem:cps:cbn:subst}, which states that the \cbnname{}
+translation commutes with substitution.
+The formal statement of the lemma is somewhat complicated since we have the
+cross product of four syntactic categories and two translations.
+However, the intuition is simple: first substituting and then translating is
+equivalent to translating and then substituting.
+
+\begin{lemma}[\cbnname{} Compositionality]
+  \label{lem:cps:cbn:subst}
+  ~
+  \begin{multicols}{2}
+  \begin{enumerate}
+    \item \im{(\subst{\sK}{\sA}{\salpha})^{+} \equiv \subst{\sK^{+}}{\sA^{+}}{\cpsalpha}}
+    \item \im{(\subst{\sK}{\se}{\sx})^{+} \equiv \subst{\sK^{+}}{\se^{\div}}{\cpsx}}
+    \item \im{(\subst{\sA}{\sB}{\salpha})^{+} \equiv \subst{\sA^{+}}{\sB^{+}}{\cpsalpha}}
+    \item \im{(\subst{\sA}{\se}{\sx})^{+} \equiv \subst{\sA^{+}}{\se^{\div}}{\cpsx}}
+    \item \im{(\subst{\sA}{\sB}{\salpha})^{\div} \equiv \subst{\sA^{\div}}{\sB^{+}}{\cpsalpha}}
+    \item \im{(\subst{\sA}{\se}{\sx})^{\div} \equiv \subst{\sA^{\div}}{\se^{\div}}{\cpsx}}
+    \item \im{(\subst{\se}{\sA}{\salpha})^{\div} \equiv \subst{\se^{\div}}{\sA^{+}}{\cpsalpha}}
+    \item \im{(\subst{\se}{\sepr}{\sx})^{\div} \equiv \subst{\se^{\div}}{\se^{\sprime\div}}{\cpsx}}
+  \end{enumerate}
+  \end{multicols}
+\end{lemma}
+\begin{proof}
+  In the PTS syntax, we represent source expressions as \im{\subst{\st}{\stpr}{\sx}}.
+  The proof is by induction on the typing derivations for \im{\st}.
+  Note that our \im{^\div} and \im{^+} notation implicitly require the typing derivations as
+  premises.
+  The proof is completely straightforward.
+    Part 6 follows immediately by part 3.
+    Part 7 follows immediately by part 4.
+    I give representative cases for the other parts.
+    \begin{proofcases}
+    \item \refrule[cpssrc]{*}, parts 1 and 2. Trivial, since no free variables appear in \im{\sstarty}.
+    \item \refrule[cpssrc]{Pi-*} and \refrule*[cpssrc]{Pi-Square}{Pi-\im{\square}}: \im{\st = \spity{\sx}{\sB}{\sKpr}}
+    \item[{\bfseries Sub-case:}] Part 1. We must show that
+      \im{(\subst{(\spity{\sx}{\sB}{\sKpr})}{\sA}{\salpha})^+ =
+        \subst{(\spity{\sx}{\sB}{\sKpr})^+}{\sA^+}{\cpsalpha}}.
+      \begin{align}
+        & (\subst{(\spity{\sx}{\sB}{\sKpr})}{\sA}{\salpha})^+ \nonumber \\
+        =~&(\spity{\sx}{\subst{\sB}{\sA}{\salpha}}{\subst{\sKpr}{\sA}{\salpha}})^+ \\
+        & \text{by definition of substitution} \nonumber \\
+        =~&\cpspity{\cpsxpr}{(\subst{\sB}{\sA}{\salpha})^\div}{(\subst{\sKpr}{\sA}{\salpha})^+} \\
+        & \text{by definition of the translation} \nonumber \\
+        =~&\cpspity{\cpsxpr}{\subst{\sB^\div}{\sA^+}{\salpha}}{\subst{\sK^{\sprime+}}{\sA^+}{\salpha}}\\
+        & \text{by parts 1 and 5 of the induction hypothesis} \nonumber \\
+        =~& \subst{(\cpspity{\cpsxpr}{\sB^\div}{\sK^{\sprime+}})}{\sA^+}{\cpsalpha} \\
+        & \text{by definition of substitution} \nonumber \\
+        =~&\subst{(\spity{\sxpr}{\sB}{\sKpr})^+}{\sA^+}{\cpsalpha} \\
+        & \text{by definition of the translation} \nonumber
+      \end{align}
+    \item[{\bfseries Sub-case:}] Part 2. Similar to the previous sub-case.
+
+    \item \refrule[cpssrc]{Var}
+      \item[{\bfseries Sub-case:}] Part 3 \im{\st = \salphapr}. Part 4 is trivial since \im{\sx} is not free in
+        \im{\salpha}.
+
+        We must show that \im{(\subst{\salphapr}{\sA}{\salpha})^+ = \subst{\cpsalphapr}{\sA^+}{\cpsalpha}}.
+
+      \item[{\bfseries Sub-sub-case:}] \im{\salpha = \salphapr}. It suffices to show that \im{\sA^+ = \sA^+}, which is trivial.
+      \item[{\bfseries Sub-sub-case:}] \im{\salpha \neq \salphapr}. \im{\salpha^+ = \cpsalpha} by definition.
+
+      \item[{\bfseries Sub-case:}] \im{\sx}, parts 7 and 8. Similar to previous case.
+
+      \item \refrule[cpssrc]{App}
+
+      \item[{\bfseries Sub-case:}] \im{\st = \sappe{\seone}{\setwo}}, Part 7
+
+      We must show \im{(\subst{(\sappe{\seone}{\setwo})}{\sApr}{\salphapr})^\div =
+        \subst{(\sappe{\seone}{\setwo})^\div}{\sA^{\sprime+}}{\cpsalphapr}}.
+      \begin{align}
+        & (\subst{(\sappe{\seone}{\setwo})}{\sApr}{\salphapr})^\div \nonumber \\
+        =~& (\sappe{\subst{\seone}{\sA}{\salphapr}}{\subst{\setwo}{\sApr}{\salphapr}})^\div \\
+        & \text {by definition of substitution} \nonumber \\
+        =~& {\begin{stackTL}
+            \cpsfune{\cpsalpha}{\cpsstarty}{
+              \cpsfune{\cpsk}{\cpsfunty{(\subst{(\subst{\sB}{\sApr}{\salphapr})^+}{(\subst{\setwo}{\sApr}{\salphapr})^\div}{\cpsx})}{\cpsalpha}}{
+                \\\quad\cpsncappe{(\subst{\seone}{\sApr}{\salphapr})^\div}{\cpsalpha}{(\begin{stackTL}
+                    \cpsfune{\cpsf}{\cpspity{\cpsx}{(\subst{\sA}{\sApr}{\salphapr})^{\div}}{
+                       (\subst{\sB}{\sApr}{\salphapr})^{\div}}}{
+                     \\\quad\cpsncappe{(\cpsappe{\cpsf}{(\subst{\setwo}{\sApr}{\salphapr})^{\div}})}{\cpsalpha}{\cpsk}})
+                 \end{stackTL}}
+             }}
+         \end{stackTL}} \\
+        & \text{by def. of translation} \nonumber \\
+        =~& {\begin{stackTL}
+            \cpsfune{\cpsalpha}{\cpsstarty}{
+              \cpsfune{\cpsk}{\cpsfunty{(\subst{\subst{\sB^+}{\sA^{\sprime+}}{\cpsalphapr}}{\subst{\setwo^\div}{\sA^{\sprime+}}{\cpsalphapr}}{\cpsx})}{\cpsalpha}}{
+                \\\quad\cpsncappe{\subst{\seone^{\div}}{\sA^{\sprime+}}{\cpsalphapr}}{\cpsalpha}{(\begin{stackTL}
+                    \cpsfune{\cpsf}{\cpspity{\cpsx}{\subst{\sA^\div}{\sA^{\sprime+}}{\cpsalphapr}}{
+                        \subst{\sB^{\div}}{\sA^{\sprime+}}{\cpsalphapr}}}{
+                      \\\quad\cpsncappe{(\cpsappe{\cpsf}{\subst{\setwo^{\div}}{\sA^{\sprime+}}{\cpsalphapr}})}{\cpsalpha}{\cpsk}})}}}
+            \end{stackTL}\end{stackTL}} \\
+        & \text{by part 3, 5, and 7 of IH} \nonumber \\
+        =~& {(\begin{stackTL}
+            \cpsfune{\cpsalpha}{\cpsstarty}{
+                \cpsfune{\cpsk}{\cpsfunty{(\subst{\sB^+}{\setwo^\div}{\cpsx})}{\cpsalpha}}{
+                \\\quad\cpsncappe{\seone^{\div}}{\cpsalpha}{(\begin{stackTL}
+                    \cpsfune{\cpsf}{\cpspity{\cpsx}{\sA^\div}{\sB^{\div}}}{
+                      \\\quad\cpsncappe{(\cpsappe{\cpsf}{\setwo^{\div}})}{\cpsalpha}{\cpsk}})}}})
+              [{\sA^{\sprime+}}/{\cpsalphapr}]
+            \end{stackTL}
+          \end{stackTL}
+        } \\
+        & \text{by definition of substitution} \nonumber \\
+        =~& \subst{(\sappe{\seone}{\setwo})^{\div}}{\sA^{\sprime+}}{\cpsalphapr} \\
+            & \text{by definition of translation} \nonumber
+      \end{align}
+
+      \item[{\bfseries Sub-case:}] Part 8
+
+      We must show \im{(\subst{(\sappe{\seone}{\setwo})}{\se}{\sx})^\div =
+        \subst{(\sappe{\seone}{\setwo})^\div}{\se^\div}{\cpsx}}.
+
+      Similar to previous case.
+
+    \item \refrule[cpssrc]{Conv}. The proof is trivial, now that we have staged the proof appropriately. I
+give part 8 as an example.
+
+    \im{\inferrule
+      {\styjudg{\slenv}{\se}{\sB} \\
+        \styjudg{\slenv}{\sA}{\sU} \\
+       \sequivjudg{\slenv}{\sA}{\sB}}
+      {\styjudg{\slenv}{\se}{\sA}}}
+
+    We must show that \im{(\subst{\se}{\sepr}{\sx})^\div \equiv
+      \subst{\se^\div}{\se^{\sprime\div}}{\cpsx}} (at type \im{\sA}).
+    Note that by part 8 of the induction hypothesis, we know that
+    \im{(\subst{\se}{\sepr}{\sx})^\div \equiv
+      \subst{\se^\div}{\se^{\sprime\div}}{\cpsx}} (at the smaller derivation for type \im{\sB}).
+    But recall that equivalence is not type directed, so the proof is complete. \qedhere
+    \end{proofcases}
+\end{proof}
+
+I next prove that the translation preserves \tech{reduction} and
+\tech{conversion}, \fullref[]{lem:cps:cbn:pres-red} and
+\fullref[]{lem:cps:cbn:pres-red*}.
+Note that \tech{kinds} cannot take steps in the \tech{reduction} relation, but
+can in the \tech{conversion} relation since it reduces under all contexts.
+Note that we can only preserve \tech{reduction} and \tech{conversion} up to
+\tech{equivalence}, in particular \(\eta\)-equivalence.
+The intuition for this is simple.
+The \tech{computation translation} of a term \im{\se^{\sprime\div}} always
+produce a \(\lambda\)-expression
+\im{\cpsnfune{\cpsalpha}{\cpsnfune{\cpsk}{\cpsepr[2]}}}.
+However, when \im{\se^\div \stepstar \cpsepr}, we do not know that the term
+\im{\cpsepr} is equal to a \(\lambda\)-expression, although it is
+\(\eta\)-equivalent to one.
+\begin{lemma}[\cbnname{} Preservation of Reduction]
+  \label{lem:cps:cbn:pres-red}
+  ~
+  \begin{itemize}
+    \item If \im{\styjudg{\slenv}{\se}{\sA}} and \im{\se \step \sepr} then
+      \im{\se^{\div} \stepstar \cpsepr} and \im{\cpsepr \equiv \se^{\sprime\div}}
+    \item If \im{\styjudg{\slenv}{\sA}{\sK}} and \im{\sA \step \sApr} then
+      \im{\sA^{+} \stepstar \cpsApr} and \im{\cpsApr \equiv \sA^{\sprime+}}
+    \item If \im{\styjudg{\slenv}{\sA}{\sstarty}} and \im{\sA \step \sApr} then
+      \im{\sA^{\div} \stepstar \cpsApr} and \im{\cpsApr \equiv \sA^{\sprime\div}}
+  \end{itemize}
+\end{lemma}
+\begin{proof}
+  The proof is straightforward by cases on the \tech{reduction} relation.
+  I give some representative cases.
+  \begin{proofcases}
+    \item \im{\sx \step_{\delta} \sepr~\where{\sx = \sepr : \sApr \in \slenv}}
+
+    It suffices to show that \im{\sx^\div \step_{\delta} \se^{\sprime\div}~\where{\sx^\div =
+        \se^{\sprime\div} : \sA^{\sprime\div} \in \slenv^+}}, which follows by \cbnlenvrule[refcpsN]{Def}.
+
+    \item \im{\sappe{(\sfune{\sx}{\_}{\seone})}{\setwo} \step_{\beta} \subst{\seone}{\setwo}{\sx}}
+
+    We must show that \im{(\sappe{(\sfune{\sx}{\_}{\seone})}{\setwo})^{\div}
+      \stepstar \cpsepr} and \im{\cpsepr \equiv (\subst{\seone}{\setwo}{\sx})^\div}.
+    \begin{align}
+      & (\sappe{(\sfune{\sx}{\_}{\seone})}{\setwo}) \nonumber \\
+      =~& \begin{stackTL}\cpsfune{\cpsalpha}{\cpsstarty}{
+          \cpsfune{\cpsk}{\_}{
+            \\\quad\cpsncappe{(\cpsfune{\cpsalpha}{\cpsstarty}{
+              \cpsfune{\cpsk}{\_}{
+                \cpsappe{\cpsk}{(\cpsfune{\cpsx}{\_}{\seone^{\div}})}}})}
+          {\cpsalpha}{({\cpsfune{\cpsf}{\_}{\cpsncappe{(\cpsappe{\cpsf}{\setwo^{\div}})}{\cpsalpha}{\cpsk}}})}}}
+        \end{stackTL} \\
+        & \text{by definition of translation} \nonumber \\
+      \stepstar~& \cpsfune{\cpsalpha}{\cpsstarty}{
+                  \cpsfune{\cpsk}{\_}{
+                  (\cpsncappe{(\cpsappe{(\cpsfune{\cpsx}{\_}{\seone^{\div}})}{\setwo^{\div}})}{\cpsalpha}{\cpsk})}}
+                  \\
+        & \text{by \im{\step_\beta}} \nonumber \\
+      \stepstar ~& \cpsfune{\cpsalpha}{\cpsstarty}{
+                   \cpsfune{\cpsk}{\_}{
+                   \cpsncappe{(\subst{\seone^{\div}}{\setwo^\div}{\cpsx})}{\cpsalpha}{\cpsk}}} \\
+      \equiv ~& \subst{\seone^{\div}}{\setwo^\div}{\cpsx} \\
+                & \text{by \refrule*[refcps]{eqv-eta1}{\im{\equiv}-\im{\eta}}} \nonumber \\
+      = ~& (\subst{\seone}{\setwo}{\sx})^{\div} \\
+           & \text{by \fullref[]{lem:cps:cbn:subst}} \nonumber
+    \end{align}
+    \item \im{\ssnde{\spaire{\seone}{\setwo}} \step_{\pi_2} \setwo}
+
+    We must show that \im{(\ssnde{\spaire{\seone}{\setwo}})^{\div}
+      \stepstar \cpsepr} and \im{\cpsepr \equiv \setwo^\div}.
+    \begin{align}
+      & (\ssnde{\spaire{\seone}{\setwo}})^\div \nonumber \\
+      =~& \begin{stackTL} \cpsfune{\cpsalpha}{\cpsstarty}{
+            \cpsfune{\cpsk}{\_}{
+              \\\quad\cpscappe{(\cpsfune{\cpsalpha}{\cpsstarty}{\cpsfune{\cpsk}{\_}{
+                \cpsappe{\cpsk}{\cpspaire{\seone^\div}{\setwo^\div}}}})}
+          {\cpsalpha}{(\cpsfune{\cpsy}{\_}{\cpslete{\cpsz}{\cpssnde{\cpsy}}{\cpsncappe{\cpsz}{\cpsalpha}{\cpsk}}})}}}
+      \end{stackTL}
+      \\
+      \stepstar~& \cpsfune{\cpsalpha}{\cpsstarty}{
+                    \cpsfune{\cpsk}{\_}{
+                  {\cpslete{\cpsz}{\cpssnde{{\cpspaire{\seone^\div}{\setwo^\div}}}}{\cpsncappe{\cpsz}{\cpsalpha}{\cpsk}}}}}
+      \\
+      \stepstar~& \cpsfune{\cpsalpha}{\cpsstarty}{
+                    \cpsfune{\cpsk}{\_}{
+                  {\cpsncappe{\setwo^\div}{\cpsalpha}{\cpsk}}}} \\
+      \equiv~& \setwo^\div \quad \text{by \refrule*[refcps]{eqv-eta1}{\im{\equiv}-\im{\eta}}}
+    \end{align}
+  \end{proofcases}
+\end{proof}
+
+\begin{lemma}[\cbnname{} Preservation of Conversion]
+  \label{lem:cps:cbn:pres-red*}
+  ~
+  \begin{itemize}
+    \item If \im{\styjudg{\slenv}{\se}{\sA}} and \im{\se \stepstar \sepr} then
+      \im{\se^{\div} \stepstar \cpsepr} and \im{\cpsepr \equiv \se^{\sprime\div}}
+    \item If \im{\styjudg{\slenv}{\sA}{\sK}} and \im{\sA \stepstar \sApr} then
+      \im{\sA^{+} \stepstar \cpsApr} and \im{\cpsApr \equiv \sA^{\sprime+}}
+    \item If \im{\styjudg{\slenv}{\sA}{\sstarty}} and \im{\sA \stepstar \sApr} then
+      \im{\sA^{\div} \stepstar \cpsApr} and \im{\cpsApr \equiv \sA^{\sprime\div}}
+    \item If \im{\styjudg{\slenv}{\sK}{\sU}} and \im{\sK \stepstar \sKpr} then
+      \im{\sK^{+} \stepstar \cpsKpr} and \im{\cpsKpr \equiv \sK^{\sprime+}}
+  \end{itemize}
+\end{lemma}
+\begin{proof}
+  The proof is straightforward by induction on the \tech{conversion} derivation,
+  \ie, on \im{\sstepjudg[\stepstar]{\slenv}{\st}{\stpr}}.\footnote{In the
+    previous version of this work~\cite{bowman2018:cps-sigma}, this proof was
+    incorrectly stated as by induction on the length of reduction sequences.}
+\end{proof}
+
+\begin{lemma}[\cbnname{} Preservation of Equivalence]
+  \label{lem:cps:cbn:pres-equiv}
+  ~
+  \begin{multicols}{2}
+  \begin{itemize}
+    \item If \im{\se \equiv \sepr} then \im{\se^{\div} \equiv \se^{\sprime\div}}
+    \item If \im{\sA \equiv \sApr} then \im{\sA^{+} \equiv \sA^{\sprime+}}
+    \item If \im{\sA \equiv \sApr} then \im{\sA^{\div} \equiv \sA^{\sprime\div}}
+    \item If \im{\sK \equiv \sKpr} then \im{\sK^{+} \equiv \sK^{\sprime+}}
+  \end{itemize}
+  \end{multicols}
+\end{lemma}
+\begin{proof}
+  The proof is by induction on the derivation of \im{\se \equiv \sepr}.
+  The base case follows by \fullref[]{lem:cps:cbn:pres-red*}, and the cases of \(\eta\)-equivalence follow
+  from \fullref[]{lem:cps:cbn:pres-red*}, the induction hypothesis, and the fact that we have the same
+  \(\eta\)-equivalence rules in the \cps{}.
+\end{proof}
+
+I first prove type and well-formedness preservation,
+\fullref[]{lem:cps:cbn:type-pres}, using the explicit syntax on which I defined
+\cbnname{}.
+In this lemma, proving that the translation of \im{\ssnde{\se}} preserves typing
+requires both the new typing rule \refrule{T-Cont} and the equivalence rule
+\refrule*{eqv-cont}{\im{\equiv}-Cont}.
+The rest of the proof is straightforward.
+\begin{lemma}[\cbnname{} Type and Well-formedness Preservation]
+  \label{lem:cps:cbn:type-pres}
+  ~
+  \begin{multicols}{2}
+  \begin{enumerate}
+  \item If \im{\swf{\slenv}} then \im{\cpswf{\slenv^{+}}}
+  \item If \im{\styjudg{\slenv}{\se}{\sA}} then
+    \im{\styjudg{\slenv^{+}}{\se^{\div}}{\sA^{\div}}}
+  \item If \im{\styjudg{\slenv}{\sA}{\sK}} then
+    \im{\cpstyjudg{\slenv^{+}}{\sA^{+}}{\sK^+}}
+  \item If \im{\styjudg{\slenv}{\sA}{\sstarty}} then
+    \im{\styjudg{\slenv^{+}}{\sA^{\div}}{\sstarty^+}}
+  \item If \im{\styjudg{\slenv}{\sK}{\sU}} then
+    \im{\cpstyjudg{\slenv^{+}}{\sK^{+}}{\sU^+}}
+  \end{enumerate}
+  \end{multicols}
+\end{lemma}
+\begin{proof}
+  All cases are proven simultaneously by simultaneous induction on the type derivation and well-formedness
+  derivation.
+  Part 4 follows easily by part 3 in every case, so I elide its proof.
+  Most cases follow easily from the induction hypotheses.
+  \begin{proofcases}
+  \item Part 5, \refrule[cpssrc]{*}: \im{\styjudg{\slenv}{\sstarty}{\sboxty}}
+
+    We must show that
+    \im{\cpstyjudg{\slenv^+}{\sstarty^+}{\sboxty^+}}, which follows by part 1 of the
+    induction hypothesis and by definition of the translation, since \im{\sstarty^+ = \cpsstarty}
+    and \im{\sboxty^+ = \cpsboxty}.
+
+  \item \refrule[cpssrc]{Pi-*}: \im{\styjudg{\slenv}{\spity{\sx}{\seone}{\setwo}}{\sK}}
+
+      There are two sub-cases: either \im{\setwo} is a \tech{type}, or a \tech{kind}.
+    \item[{\bfseries Sub-case:}] Part 3, \im{\setwo = \sB}, \ie, is a \tech{type}.
+
+      There are two sub-cases: either \im{\seone} is a \tech{type} or a
+      \tech{kind}.
+    \item[{\bfseries Sub-sub-case:}] \im{\seone = \sA}, \ie, is a \tech{type}.
+
+    We have \im{\styjudg{\slenv}{\spity{\sx}{\sA}{\sB}}{\sstarty}}.
+
+    We must show that \im{\cpstyjudg{\slenv^+}{(\spity{\sx}{\sA}{\sB})^+}{\sstarty^+}}
+
+    By definition, must show
+    \im{\cpstyjudg{\slenv^+}{\cpspity{\cpsx}{\sA^\div}{\sB^\div}}{\cpsstarty}}, which follows by the
+    part 4 of the induction hypothesis applied to \im{\sA} and \im{\sB}.
+
+    \item[{\bfseries Sub-sub-case:}] \im{\seone = \sK}, \ie, is a \tech{kind}.
+
+    We have \im{\styjudg{\slenv}{\spity{\salpha}{\sK}{\sB}}{\sstarty}}.
+
+    We must show that \im{\cpstyjudg{\slenv^+}{(\spity{\salpha}{\sK}{\sB})^+}{\sstarty^+}}
+
+    By definition, must show
+    \im{\cpstyjudg{\slenv^+}{\cpspity{\cpsalpha}{\sK^+}{\sB^\div}}{\cpsstarty}}, which follows by the
+    part 4 of the induction hypothesis applied to \im{\sB}, and part 5 of the induction hypothesis
+    applied to \im{\sK}.
+
+    \item[{\bfseries Sub-case:}] Part 5,  \im{\setwo = \sKpr}, \ie, is a \tech{kind}.
+
+    There are two sub-cases: either \im{\seone} is a \tech{type} or a \tech{kind}.
+    \item[{\bfseries Sub-sub-case:}] \im{\seone = \sA}, \ie, is a \tech{type}.
+
+    We have \im{\styjudg{\slenv}{\spity{\sx}{\sA}{\sKpr}}{\sU}}.
+
+    We must show that \im{\cpstyjudg{\slenv^+}{(\spity{\sx}{\sA}{\sKpr})^+}{\sstarty^+}}
+
+    By definition, must show
+    \im{\cpstyjudg{\slenv^+}{\cpspity{\cpsx}{\sA^\div}{\sK^{\sprime+}}}{\cpsstarty}}, which follows
+    by the part 4 of the induction hypothesis applied to \im{\sA} and part 5 of the induction
+    hypothesis applied to \im{\sK}.
+
+    \item[{\bfseries Sub-sub-case:}] \im{\seone = \sK}, \ie, is a \tech{kind}.
+
+    We have \im{\styjudg{\slenv}{\spity{\salpha}{\sK}{\sKpr}}{\sstarty}}.
+
+    We must show that \im{\cpstyjudg{\slenv^+}{(\spity{\salpha}{\sK}{\sKpr})^+}{\sstarty^+}}
+
+    By definition, must show
+    \im{\cpstyjudg{\slenv^+}{\cpspity{\cpsalpha}{\sK^+}{\sK^{\sprime+}}}{\cpsstarty}}, which
+    follows by the
+    part 5 of the induction hypothesis applied to \im{\sK} and \im{\sK^{\sprime+}}.
+
+    \item \refrule*[cpssrc]{Pi-Square}{Pi-\im{\square}} Similar to the previous
+      case, except with \im{\sstarty} replaced by \im{\sboxty}; there are two
+      fewer cases since this must be a \tech{kind}.
+
+    \item \refrule[cpssrc]{Sig} \im{\styjudg{\slenv}{\ssigmaty{\sx}{\sA}{\sB}}{\sstarty}}
+
+    We must show that
+    \im{\cpstyjudg{\slenv^+}{\cpssigmaty{\cpsx}{\sA^\div}{\sB^\div}}{\cpsstarty}}, which
+    follows easily by the part 4 of the induction hypothesis applied to \im{\sA} and \im{\sB}.
+
+    \item \refrule[cpssrc]{Pair} \im{\styjudg{\slenv}{\spaire{\seone}{\setwo}}{\ssigmaty{\sx}{\sA}{\sB}}}
+
+    By definition of the translation, we must show that
+
+    \im{
+      \cpstyjudg{\slenv^+}{\begin{stackTL}\cpsfune{\cpsalpha}{\cpsstarty}{
+            \cpsfune{\cpsk}{(\cpsfunty{\cpssigmaty{\cpsx}{\sA^\div}{\sB^\div}}{\cpsalpha})}{
+              \\\quad\cpsappe{\cpsk}{\cpsdpaire{\seone^\div}{\setwo^\div}{\cpssigmaty{\cpsx}{\sA^\div}{\sB^\div}}}}}}
+        {
+          {\cpspity{\cpsalpha}{\cpsstarty}{\cpsfunty{(\cpsfunty{\cpssigmaty{\cpsx}{\sA^\div}{\sB^\div}}{\cpsalpha})}{\cpsalpha}}}
+        }
+      \end{stackTL}}
+
+    It suffices to show that
+    \im{\styjudg{\slenv^+}{\cpsdpaire{\seone^\div}{\setwo^\div}{\cpssigmaty{\cpsx}{\sA^\div}{\sB^\div}}}{\cpssigmaty{\cpsx}{\sA^\div}{\sB^\div}}},
+    which follows easily by part 2 of the induction hypothesis applied to \im{\styjudg{\slenv}{\seone}{\sA}} and
+    \im{\styjudg{\slenv}{\setwo}{\subst{\sB}{\seone}{\sx}}}.
+
+  \item \refrule[cpssrc]{Snd} \im{\styjudg{\slenv}{\ssnde{\se}}{\subst{\sB}{\sfste{\se}}{\sx}}}
+
+    We must show that
+    \begin{displaymath}
+      \begin{stackTL}
+          \cpsfune{\cpsalpha}{\cpsstarty}{
+            \cpsfune{\cpsk}{\cpsfunty{\subst{\sB^+}{(\sfste{\se})^{\div}}{\cpsx}}{\cpsalpha}}{\\
+              \quad\begin{stackTL}
+              \cpscappe{\se^\div}{\cpsalpha}{(\cpsfune{\cpsy}{\cpssigmaty{\cpsx}{\sA^\div}{\sB^\div}}{
+              \cpslete{\cpsz}{\cpssnde{\cpsy}}{\cpsncappe{\cpsz}{\cpsalpha}{\cpsk}}})}}}
+          \end{stackTL}
+          \end{stackTL}
+    \end{displaymath}
+    has type \im{(\subst{\sB}{\sfste{\se}}{\sx})^\div}.
+
+      By part 6 of \fullref[]{lem:cps:cbn:subst}, and definition of the
+      translation, this type is equivalent to
+      \begin{displaymath}
+        {\cpspity{\cpsalpha}{\cpsstarty}{\cpsfunty{(\cpsfunty{\subst{\sB^+}{(\sfste{\se})^{\div}}{\cpsx}}{\cpsalpha})}{\cpsalpha}}}
+      \end{displaymath}
+
+      By \refrule[refcps]{Lam}, it suffices to show that
+      \begin{displaymath}
+      \cpstyjudg{\slenv^+,\cpsalpha:\cpsstarty,\cpsk:\cpsfunty{\subst{\sB^+}{(\sfste{\se})^\div}{\sx}}{\cpsalpha}}
+        {\cpscappe{\se^\div}{\cpsalpha}{\begin{stackTL}(\cpsfune{\cpsy}{\cpssigmaty{\cpsx}{\sA^\div}{\sB^\div}}{
+                \\\quad\,\cpslete{\cpsz}{\cpssnde{\cpsy}}{\cpsncappe{\cpsz}{\cpsalpha}{\cpsk}}})}
+          }{\cpsalpha}
+        \end{stackTL}
+      \end{displaymath}
+    This is the key difficulty in the proof.
+    Recall from \fullref[]{sec:cps:ideas} that the term
+    \im{\cpsappe{\cpsz}{\cpsalpha}} has type
+    \im{\cpsfunty{(\cpsfunty{\subst{\sB^+}{\cpsfste{\cpsy}}{\cpsx}}{\cpsalpha})}{\cpsalpha}}
+    while the term \im{\cpsk} has type
+    \im{\cpsfunty{\subst{\sB^+}{(\sfste{\se})^\div}{\cpsx}}{\cpsalpha}}.
+    To show that \im{\cpsncappe{\cpsz}{\cpsalpha}{\cpsk}} is well-typed, we
+    must show that \im{(\sfste{\se})^\div \equiv \cpsfste{\cpsy}}.
+    I proceed by the new typing rule \refrule{T-Cont}, which will help us prove this.
+
+    First, note that \im{\cpsncappe{\se^\div}{(\cpssigmaty{\cpsx}{\sA^\div}{\sB^\div})}{\cpsidk}}
+    is well-typed.
+    By part 4 of the induction hypothesis we know that
+    \im{\cpstyjudg{\slenv^+}{\sA^\div}{\cpsstarty}} and
+    \im{\cpstyjudg{\slenv^+,\cpsx:\sA^\div}{\sB^\div}{\cpsstarty}}.
+    By part 2 of the induction hypothesis applied to
+    \im{\styjudg{\slenv}{\se}{\ssigmaty{\sx}{\sA}{\sB}}}, we know
+    \im{\cpstyjudg{\slenv^+}{\se^\div}{\cpspity{\cpsalpha}{\cpsstarty}{\cpsfunty{(\cpsfunty{\cpssigmaty{\cpsx}{\sA^\div}{\sB^\div}}{\cpsalpha})}{\cpsalpha}}}}.
+
+    Now, by \refrule{T-Cont}, it suffices to show that
+    \begin{displaymath}
+    \cpstyjudg{\slenv^+,\cpsalpha:\cpsstarty,\cpsk:\cpsfunty{\subst{\sB^+}{(\sfste{\se})^\div}{\cpsx}}{\cpsalpha}
+        ,\cpsy = \cpsappe{\se^\div}{\cpssigmaty{\cpsx}{\sA^\div}{\sB^\div}}{\cpsidk}}
+      {\cpslete{\cpsz}{\cpssnde{\cpsy}}{\cpsncappe{\cpsz}{\cpsalpha}{\cpsk}}}{\cpsalpha}
+    \end{displaymath}
+    Note that we now have the \tech{definitional equivalence} \im{\cpsy =
+      {\cpsncappe{\se^\div}{(\cpssigmaty{\cpsx}{\sA^\div}{\sB^\div})}{\cpsidk}}}.
+    By \refrule[refcps]{Let} it suffices to show
+    \begin{displaymath}
+    \cpstyjudg{\slenv^+,\begin{stackTL}\cpsalpha:\cpsstarty,\cpsk:\cpsfunty{\subst{\sB^+}{(\sfste{\se})^\div}{\cpsx}}{\cpsalpha}
+        ,\\\cpsy = \cpsncappe{\se^\div}{\cpssigmaty{\cpsx}{\sA^\div}{\sB^\div}}{\cpsidk},\\\cpsz =
+        \cpssnde{\cpsy} : \subst{\sB^\div}{\cpsfste{\cpsy}}{\cpsx}
+      \end{stackTL}}
+      {\cpsncappe{\cpsz}{\cpsalpha}{\cpsk}}{\cpsalpha}
+    \end{displaymath}
+
+    Note that
+    \begin{align}
+      \cpsz :~&\subst{\sB^\div}{\cpsfste{\cpsy}}{\cpsx}\\
+       =~&\cpspity{\cpsalpha}{\cpsstarty}{\cpsfunty{(\cpsfunty{\subst{\sB^+}{\cpsfste{\cpsy}}{\cpsx}}{\cpsalpha})}{\cpsalpha}}
+      & \text{by definition of \im{\sB^\div}} \\
+      \label{line:delta}\equiv~&\cpspity{\cpsalpha}{\cpsstarty}{\cpsfunty{(\cpsfunty{\subst{\sB^+}{\cpsfste{(\cpsncappe{\se^\div}{\_}{\cpsidk})}}{\cpsx}}{\cpsalpha})}{\cpsalpha}}
+         & \text{by \im{\delta} reduction on \im{\cpsy}}
+    \end{align}
+
+    \fullref[]{line:delta} above, in which we \(\delta\)-reduce \im{\cpsy}, is impossible
+    without \refrule{T-Cont}.
+
+    By \refrule[refcps]{Conv}, and since \im{\cpsk :
+      \cpsfunty{\subst{\sB^+}{(\sfste{\se})^\div}{\cpsx}}{\cpsalpha}},
+     to show \im{\cpsncappe{\cpsz}{\cpsalpha}{\cpsk} : \cpsalpha} it suffices to show that
+    \im{(\sfste{\se})^\div \equiv \cpsfste{(\cpsncappe{\se^\div}{\_}{\cpsidk})}}.
+
+    Note that \im{
+      (\sfste{\se})^\div = \begin{stackTL}
+        \cpsfune{\cpsalpha}{\cpsstarty}{\cpsfune{\cpskpr}{(\cpsfunty{\sA^+}{\cpsalpha})}{
+            \\\quad\cpscappe{\se^\div}{\cpsalpha}{(\cpsfune{\cpsy}{\cpssigmaty{\cpsx}{\sA^\div}{\sB^\div}}{
+                \cpsalete{\cpszpr}{\cpsfste{\cpsy}}{\sA^\div}{\cpsncappe{\cpszpr}{\cpsalpha}{\cpskpr}}})}}}
+        \end{stackTL}}
+    by definition of the translation.
+
+    By \refrule*[refcps]{eqv-eta1}{\im{\equiv}-\im{\eta}}, it suffices to show that
+    \begin{align}
+      & \cpscappe{\se^\div}{\cpsalpha}{(\cpsfune{\cpsy}{\cpssigmaty{\cpsx}{\sA^\div}{\sB^\div}}
+        \cpsalete{\cpszpr}{\cpsfste{\cpsy}}{\sA^\div}{\cpsncappe{\cpszpr}{\cpsalpha}{\cpskpr}})} \\
+      \label{line:cont} & \equiv \cpsappe{(\cpsfune{\cpsy}{\cpssigmaty{\cpsx}{\sA^\div}{\sB^\div}}{
+        \cpslete{\cpszpr}{\cpsfste{\cpsy}}{\cpsncappe{\cpszpr}{\cpsalpha}{\cpskpr}})}}{(\cpsncappe{\se^\div}{\_}{\cpsidk})}
+      & \text{\refrule*{eqv-cont}{\im{\equiv}-Cont}} \\
+      & \equiv \cpsncappe{(\cpsfste{(\cpsncappe{\se^\div}{\_}{\cpsidk})})}{\cpsalpha}{\cpskpr}
+        & \text{by reduction}
+    \end{align}
+    Notice that \fullref[]{line:cont} requires
+    \refrule*{eqv-cont}{\im{\equiv}-Cont} applied to the translation of the
+    \im{\sfont{fst}}.
+  \item \refrule[cpssrc]{Lam}
+
+    I give proofs for only the \tech{term}-level functions; the \tech{type}-level functions follow
+    exactly the same structure as \tech{type}-level function types.
+    There are two subcases.
+
+    \begin{proofcases}
+    \item[{\bfseries Sub-case:}] The function abstracts over a term, \im{\styjudg{\slenv}{\sfune{\sx}{\sA}{\se}}{\spity{\sx}{\sA}{\sB}}}
+
+    We must show
+
+    \im{\cpstyjudg{\slenv^+}{(\sfune{\sx}{\sA}{\se})^\div}{(\spity{\sx}{\sA}{\sB})^\div}}.
+
+    By definition of the translation, we must show
+
+    \im{\cpstyjudg{\slenv^+}{
+        \begin{stackTL}
+          \cpsfune{\cpsalpha}{\cpsstarty}{\cpsfune{\cpsk}{\cpsfunty{(\cpspity{\cpsx}{\sA^\div}{\sB^{\div}})}{\cpsalpha}}
+            {\\\quad(\cpsappe{\cpsk}{(\cpsfune{\cpsx}{\sA^\div}{\se^\div})})}}}
+        {\cpspity{\cpsalpha}{\cpsstarty}{
+            \cpsfunty{(\cpsfunty{\cpspity{\cpsx}{\sA^\div}{\sB^\div}}{\cpsalpha})}{\cpsalpha}}}
+        \end{stackTL}
+      }
+
+    It suffices to show that
+
+    \im{\cpstyjudg{\slenv^+,\cpsalpha:\cpsstarty,
+        \cpsk:\cpsfunty{\cpspity{\cpsx}{\sA^\div}{\sB^{\div}}}{\cpsalpha}}
+      {\cpsappe{\cpsk}{(\cpsfune{\cpsx}{\sA^\div}{\se^\div})}}{\cpsalpha}}.
+
+    By \refrule[refcps]{App}, it suffices to show that
+
+    \im{\cpstyjudg{\slenv^+,\cpsalpha:\cpsstarty,
+        \cpsk:\cpsfunty{\cpspity{\cpsx}{\sA^\div}{\sB^{\div}}}{\cpsalpha}}
+      {(\cpsfune{\cpsx}{\sA^\div}{\se^\div})}{\cpspity{\cpsx}{\sA^\div}{\sB^{\div}}}}
+
+    By part 2 of the induction hypothesis applied to
+    \im{\styjudg{\slenv,\sx:\sA}{\se}{\sB}}, we know that
+
+    \im{\cpstyjudg{\slenv^+,\cpsx:\sA^\div}{\se^\div}{\sB^\div}}
+
+    It suffices to show that
+
+    \im{\cpswf{\slenv^+,\cpsalpha:\cpsstarty,
+        \cpsk:\cpsfunty{\cpspity{\cpsx}{\sA^\div}{\sB^{\div}}}{\cpsalpha}}}
+    which follows easily by part 4 of the induction hypothesis applied to the typing derivations for
+    \im{\sA} and \im{\sB}.
+
+    \item[{\bfseries Sub-case:}] The function abstracts over a type,
+    \im{\styjudg{\slenv}{\sfune{\salpha}{\sK}{\se}}{\spity{\salpha}{\sK}{\sB}}}
+
+    We must show
+    \im{\cpstyjudg{\slenv^+}{(\sfune{\salpha}{\sK}{\se})^\div}
+      {(\spity{\salpha}{\sK}{\sB})^\div}}.
+
+    By definition of the translation, we must show that
+
+    \im{\cpstyjudg{\slenv^+}{\begin{stackTL}
+          \cpsfune{\cpsalphain{ans}}{\cpsstarty}{\cpsfune{\cpsk}{\cpsfunty{(\cpspity{\cpsalpha}{\sK^+}{\sB^{\div}})}{\cpsalpha}}
+            {\\\quad(\cpsappe{\cpsk}{(\cpsfune{\cpsalpha}{\sK^+}{\se^\div})})}}}
+        {\cpspity{\cpsalphain{ans}}{\cpsstarty}{
+            \cpsfunty{(\cpsfunty{\cpspity{\cpsalpha}{\sK^+}{\sB^\div}}{\cpsalphain{ans}})}{\cpsalphain{ans}}}}
+        \end{stackTL}
+      }
+
+    It suffices to show that
+
+    \im{\cpstyjudg{\slenv^+,\cpsalphain{ans}:\cpsstarty,
+        \cpsk:\cpsfunty{\cpspity{\cpsalpha}{\sK^+}{\sB^{\div}}}{\cpsalphain{ans}}}
+      {\cpsappe{\cpsk}{(\cpsfune{\cpsalpha}{\sK^+}{\se^\div})}}{\cpsalphain{ans}}}.
+
+    By \refrule[refcps]{App}, it suffices to show that
+
+    \im{\cpstyjudg{\slenv^+,\cpsalphain{ans}:\cpsstarty,
+        \cpsk:\cpsfunty{\cpspity{\cpsalpha}{\sK^+}{\sB^{\div}}}{\cpsalphain{ans}}}
+      {(\cpsfune{\cpsx}{\sA^\div}{\se^\div})}{\cpspity{\cpsalpha}{\sK^+}{\sB^{\div}}}}
+
+    By part 2 of the induction hypothesis applied to
+    \im{\styjudg{\slenv,\salpha:\sK}{\se}{\sB}}, we know that
+
+    \im{\cpstyjudg{\slenv^+,\cpsalpha:\sK^+}{\se^\div}{\sB^\div}}
+
+    It suffices to show that
+    \im{\cpswf{\slenv^+,\cpsalphain{ans}:\cpsstarty,
+        \cpsk:\cpsfunty{\cpspity{\cpsalpha}{\sK^+}{\sB^{\div}}}{\cpsalphain{ans}}}}
+    which follows easily by parts 5 and 4 of the induction hypothesis applied to the typing derivations for
+    \im{\sK} and \im{\sB}.
+    \end{proofcases}
+
+    \item \refrule[cpssrc]{App}
+      \begin{proofcases}
+    \item[{\bfseries Sub-case:}] A \tech{term}-level function applied to a term \im{\styjudg{\slenv}{\sappe{\seone}{\setwo}}{\subst{\sB}{\setwo}{\sx}}}
+
+    We must show that
+
+    \im{\styjudg{\slenv^+}{(\sappe{\seone}{\setwo})^\div}{(\subst{\sB}{\setwo}{\sx})^\div}}
+
+    By definition of the translation, we must show:
+
+    \im{\styjudg{\slenv^+}{\begin{stackTL}\cpsfune{\cpsalpha}{\cpsstarty}{\cpsfune{\cpsk}{\cpsfunty{(\subst{\sB}{\setwo}{\sx})^+}{\cpsalpha}}{
+            \\\quad\,\cpsncappe{\seone^{\div}}{\cpsalpha}{(\cpsfune{\cpsf}{\cpspity{\cpsx}{\sA^{\div}}{\sB^{\div}}}{\cpsncappe{(\cpsappe{\cpsf}{\setwo^{\div}})}{\cpsalpha}{\cpsk}})}}}}{(\subst{\sB}{\setwo}{\sx})^\div}\end{stackTL}}
+
+    By part 6 of \fullref[]{lem:cps:cbn:subst} and definition of \im{\sB^{\div}}, we must show:
+
+    %% NB: Crazy manual formatting and spacing
+    \im{\styjudg{\slenv^+}{\cpsfune{\cpsalpha}{\cpsstarty}{\begin{stackTL}
+            \cpsfune{\cpsk}{\cpsfunty{(\subst{\sB^+}{\setwo^{\div}}{\cpsx})}{\cpsalpha}}{
+              \\\quad \cpsncappe{\seone^{\div}}{\cpsalpha}{
+                (\begin{stackTL}\cpsfune{\cpsf}{\cpspity{\cpsx}{\sA^{\div}}{\sB^{\div}}}{
+                    \\\quad\,\cpsncappe{(\cpsappe{\cpsf}{\setwo^{\div}})}{\cpsalpha}{\cpsk}}
+                  )~~~~}}}}
+        {\cpspity{\cpsalpha}{\cpsstarty}{
+            \cpsfunty{(\cpsfunty{\subst{\sB^+}{\setwo^{\div}}{\cpsx}}{\cpsalpha})}{\cpsalpha}}}
+                \end{stackTL}
+          \end{stackTL}
+    }
+
+    It suffices to show that
+    \begin{itemize}
+      \item \im{\cpstyjudg{\slenv^+}{\subst{\sB^+}{\setwo^{\div}}{\cpsx}}{\cpsK}}
+        By part 3 of the induction hypothesis we know that
+        \im{\cpstyjudg{\slenv^+,\cpsx:\sA^\div}{\sB^+}{\cpsK}}, and by part 2 of the induction
+        hypothesis we know that \im{\cpstyjudg{\slenv^+}{\setwo^{\div}}{\sA^{\div}}}, hence the
+        goal follows by substitution.
+      \item
+        \im{\cpstyjudg{\slenv^+}{\seone^\div}{\cpspity{\cpsalpha}{\cpsstarty}{\cpsfunty{(\cpsfunty{\cpspity{\cpsx}{\sA^{\div}}{\sB^\div}}{\cpsalpha})}{\cpsalpha}}}},
+        which follows by part 2 of the induction hypothesis and by definition of \im{(\spity{\sx}{\sA}{\sB})^{\div}}.
+      \item \im{\cpstyjudg{\slenv^+,\cpsalpha:\cpsstarty,\cpsk:\cpsfunty{(\subst{\sB^+}{\setwo^{\div}}{\cpsx})}{\cpsalpha}}{(\cpsfune{\cpsf}{\cpspity{\cpsx}{\sA^{\div}}{\sB^{\div}}}{
+                  \cpsncappe{(\cpsappe{\cpsf}{\setwo^{\div}})}{\cpsalpha}{\cpsk}})}{\cpsfunty{\cpspity{\cpsx}{\sA^{\div}}{\sB^\div}}{\cpsalpha}}},
+            which follows since by part 2 of the induction hypothesis \im{\setwo^\div:\sA^\div} we
+            know \im{(\cpsappe{\cpsf}{\setwo^{\div}}) : \subst{\sB^{\div}}{\setwo^\div}{\cpsx}}
+            and by definition \im{\subst{\sB^{\div}}{\setwo^\div}{\cpsx} = \cpspity{\cpsalpha}{\cpsstarty}{\cpsfunty{(\cpsfunty{\subst{\sB^+}{\setwo^{\div}}{\cpsx}}{\cpsalpha})}{\cpsalpha}}}.
+    \end{itemize}
+
+    \item[{\bfseries Sub-case:}] A \tech{term}-level function applied to a type \im{\styjudg{\slenv}{\sappe{\seone}{\sA}}{\subst{\sB}{\sA}{\salpha}}}
+
+    The proof is similar to the previous case, but relies on showing that
+    \im{\cpstyjudg{\slenv^+}{\sA^+}{\sK^+}}, which follows by part 3 of the induction hypothesis.
+
+    \item[{\bfseries Sub-case:}] A type-level function applied to a term \im{\styjudg{\slenv}{\sappe{\sA}{\se}}{\subst{\sK}{\se}{\sx}}}
+
+    This case is straightforward by the part 3 and part 2 of the induction hypothesis.
+
+    \item[{\bfseries Sub-case:}] A type-level function applied to a type \im{\styjudg{\slenv}{\sappe{\sA}{\sB}}{\subst{\sK}{\sB}{\salpha}}}
+
+    This case is straightforward by the part 3 of the induction hypothesis.
+    \end{proofcases}
+
+  \item \refrule[cpssrc]{Conv} \im{\styjudg{\slenv}{\se}{\sA}} such that
+  \im{\styjudg{\slenv}{\se}{\sB}} and \im{\sA \equiv \sB}.
+
+  We must show that
+  \im{\se^\div} has type \im{\sA^\div = \cpspity{\cpsalpha}{\cpsstarty}{\cpsfunty{(\cpsfunty{\sA^+}{\cpsalpha})}{\cpsalpha}}}.
+
+  By the induction hypothesis, we know that \im{\se^\div : {\sB^\div =
+      \cpspity{\cpsalpha}{\cpsstarty}{\cpsfunty{(\cpsfunty{\sB^+}{\cpsalpha})}{\cpsalpha}}}}.
+  By \refrule[refcps]{Conv} it suffices to show that \im{\sA^+ \equiv \sB^+}, which follows
+  by \fullref[]{lem:cps:cbn:pres-equiv}. \qedhere
+  \end{proofcases}
+\end{proof}
+
+To recover a simple statement of the \tech{type-preservation} theorem over the
+\tech{PTS} syntax, I define two meta-functions for translating
+\tech{expressions} depending on their use.
+I define \im{\cpsterm{\st}} to translate a \tech{PTS} \tech{expression} in
+``\tech{term}'' position, \ie, when used on the left side of a type annotation as in
+\im{\st : \stpr}, and define \im{\cpstype{\stpr}} to translate an \tech{expression}
+in ``\tech{type}'' position, \ie, when used on the right side of a type annotation.
+I define these in terms of the translation shown above, noting that for every
+\im{\st : \stpr} in the \tech{PTS} syntax, one of the following is true:
+\im{\st} is a \tech{term} \im{\se} and \im{\stpr} is a \tech{type} \im{\sA} in
+the explicit syntax; \im{\st} is a \tech{type} \im{\sA} and \im{\stpr} is a
+\tech{kind} \im{\sK} in the explicit syntax; or \im{\st} is a \tech{kind}
+\im{\sK} and \im{\stpr} is a \tech{universe} \im{\sU} in the explicit syntax.
+\begin{displaymath}
+  \begin{array}{rcl}
+    \cpsterm{\st} & \defeq & \se^{\div}\text{ when \im{\st} is a term} \\
+    \cpsterm{\st} & \defeq & \sA^{+}\text{ when \im{\st} is a type} \\
+    \cpsterm{\st} & \defeq & \sK^{+}\text{ when \im{\st} is a kind} \\
+  \end{array}
+  \qquad\qquad\!\!\!\!\!
+  \begin{array}{rcl}
+    \cpstype{\stpr} & \defeq & \sA^{\div}\text{ when \im{\stpr} is a type} \\
+    \cpstype{\stpr} & \defeq & \sK^{+}\text{ when \im{\stpr} is a kind} \\
+    \cpstype{\stpr} & \defeq & \sU^+\text{ when \im{\stpr} is a universe} \\
+  \end{array}
+\end{displaymath}
+This notation is based on \citet{barthe2002}.
+
+\begin{theorem}[\cbnname{} Type Preservation]
+  \label{thm:cps:cbn:type-pres}
+  \im{\styjudg{\slenv}{\st}{\stpr}} then
+  \im{\styjudg{\slenv^{+}}{\cpsterm{\st}}{\cpstype{\stpr}}}
+\end{theorem}
+
+\subsection{Compiler Correctness}
+\label{sec:cps:cbn:correct}
+Recall from \fullref[]{chp:type-pres} that since we preserve
+\tech{conversion}, proving compiler correctness is simple.
+I use the standard definition of linking by substitution and the standard
+cross-language relation.
+
+I extend the \cbnname{} translation in a straightforward way to translate closing
+substitutions, written \im{\ssubst^\div}, and allow translated \tech{terms} to
+be linked with the translation of any valid closing substitution \im{\ssubst}.
+This definition supports a separate compilation theorem that allows linking with
+the output of this translation, but not with the output of other compilers.
+
+\FigCPSProg
+\FigCPSEval
+Now I can show that the \cbnname{} translation is correct with respect to
+separate compilation---if we first link and run to a \tech{value}, we get a related
+\tech{value} when we compile and then link with the compiled closing
+substitution.
+I first define well-formed programs and the evaluation function for \cpstlang.
+These are different than described in \fullref[]{chp:source}.
+I present well-formed programs and components in \fullref[]{fig:cps:wfprog}.
+CPS programs are well-formed when they are computations that produce a ground
+values, \ie, when they expect a continuation that expects a value of type
+\im{\cpsboolty}.
+The evaluation function is given in \fullref[]{fig:cps:eval}
+Since the target language is in \tech{CPS}, we must apply the halt continuation
+\im{\cpsidk} at the top-level to evaluate a program to an observation.
+\begin{theorem}[Separate Compilation Correctness]
+  \label{thm:cps:cbn:sep-comp}
+  If \im{\wf{\slenv}{\se}} and
+  \im{\ssubstok{\slenv}{\ssubst}},
+  then\\% manual break
+  \im{\seval{\ssubst(\se)} \approx \teval{\ssubst^+(\se^\div)}}.
+\end{theorem}
+\begin{proof}
+  Since \tech{conversion} implies \tech{equivalence}, we reason in terms of
+  \tech{equivalence}.
+  By \fullref[]{lem:cps:cbn:pres-red*}, \im{(\ssubst(\se))^\div \stepstar \cpse} and \im{\sv^\div
+    \equiv \cpse}.
+  By \fullref[]{lem:cps:cbn:subst}, \im{(\ssubst(\se))^\div \equiv
+    \ssubst^{\div}(\se^\div)}, hence \im{\ssubst^{\div}(\se^\div) \stepstar \cpse} and
+  \im{\sv^\div \equiv \cpse}.
+  Since the translation on all \tech{observations} is \im{\sv^\div =
+    \cpsnfune{\cpsalpha}{\cpsnfune{\cpsk}{\cpsappe{\cpsk}{\cpsv}}}}, where \im{\sv \approx \cpsv},
+  we know \im{\cpsncappe{\sv^\div}{\sA^+}{\cpsidk} \stepstar \cpsv} such that \im{\sv \approx \cpsv}.
+  Since \im{\sv^\div \equiv \cpse \equiv \ssubst^{\div}(\se^\div)}, we also know that
+  \im{\cpsappe{\ssubst^{\div}(\se^\div)}{\sA^+\cpsidk} \stepstar \cpsvpr} and \im{\cpsvpr \equiv
+    \cpsv}.
+  Since \im{\cpsv} is an \tech{observation}, \im{\cpsvpr = \cpsv} and \im{\sv \approx \cpsvpr}.
+\end{proof}
+
+\begin{corollary}[Whole-Program Correctness]
+  \label{thm:cps:cbn:correctness}
+  If \im{\wf{}{\se}} then
+  \im{\seval{\se} \approx \teval{\se^\div}}.
+\end{corollary}
+}

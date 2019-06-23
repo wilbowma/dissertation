@@ -1,0 +1,544 @@
+\newcommand{\FigCoCCCTermShort}[1][t]{
+  \begin{figure}[#1]
+    \judgshape[~where~{\im{\styjudg{\slenv}{\se}{\sA}}}]{\cctrans{\se} = \pcce}
+    \begin{displaymath}
+      \begin{array}{rcl}
+        \cctrans{\sx} & \defeq & \tx
+        \\
+
+        \cctrans{\sstarty} & \defeq & \pccstarty
+        \\
+
+        \cctrans{\spity{\sx}{\sA}{\sB}} & \defeq & \pccnexistty{(\pccalpha:\pccstarty,\pccn:\pccalpha)}{\pcctrlufunty{\pccn}{\pcccodety{\pccx:\pccA}{\pccB}}}
+        \\
+
+        \cctrans{\sfune{\sx}{\sA}{\se}} & \defeq &
+        \pccnpackoe{
+          \begin{stackTL}
+            \pccnsigmaty{(\pccxi:\cctrans{\sAi}\dots)},
+          \pccnpaire{\pccxi\dots},
+            \\\begin{stackTL}
+              (\pccnfune{\begin{stackTL}(\pccn:\pccnsigmaty{(\pccxi:\cctrans{\sAi}\dots)},\pccx:\pcclete{\pccnpaire{\pccxi\dots}}{\pccn}{\cctrans{\sA}})}{
+                  \\
+                  \pcclete{\pccnpaire{\pccxi\dots}}{\pccn}{\cctrans{\se}}})}
+                \end{stackTL}
+            \end{stackTL}
+          \end{stackTL}
+        \\&& \sxi:\sAi\dots{}=\DFV{\slenv}{\sfune{\sx}{\sA}{\se},\spity{\sx}{\sA}{\sB}} \\
+
+        \cctrans{\sappe{\seone}{\setwo}} & \defeq & \pccnunpacke{\pccalpha,\pccn,\pccf}{\cctrans{\seone}}{\pccappe{\pccf}{\pccn~\cctrans{\setwo}}}
+        \\
+
+        \cctrans{\salete{\sx}{\se}{\sA}{\sepr}} & \defeq & \pccalete{\tx}{\cctrans{\se}}{\cctrans{\sA}}{\cctrans{\sepr}}
+        \\
+
+        & \vdots &
+      \end{array}
+    \end{displaymath}
+    \caption{Parametric Closure Conversion from \pccslang to \pcctlang (excerpts)}
+    \label{fig:param-cc:cc:short}
+  \end{figure}
+}
+
+\newcommand{\FigCCTermOne}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\pccjudg{\slenv}{\se}{\sA}{\pcce}}
+    \begin{mathpar}
+      \inferrule*[right=\defrule{CC-Pi}]
+      {\pccjudg{\slenv}{\sA}{\sU}{\pccA} \\
+       \pccjudg{\slenv,\sx:\sA}{\sB}{\sstarty}{\pccB}}
+      {\pccjudg{\slenv}{\spity{\sx}{\sA}{\sB}}{\sUpr}{
+          \pccnexistty{(\pccalpha:\pccstarty,\pccn:\pccalpha)}{\pcctrlufunty{\pccn}{\pcccodety{\pccx:\pccA}{\pccB}}}}}
+
+      \inferrule*[right=\defrule{CC-Lam}]
+       {\pccjudg{\slenv,\sx:\st}{\se}{\stpr}{\pcce} \\
+        \pccjudg{\slenv}{\st}{\sU}{\pcct} \\
+        \pccjudg{\slenv,\sx:\st}{\stpr}{\sU}{\pcctpr} \\
+        \sxi:\sAi\dots = \DFV{\slenv}{\sfune{\sx}{\sA}{\se},\spity{\sx}{\sA}{\sB}} \\
+        \pccjudg{\slenv}{\sAi}{\sU}{\pccAi} \dots}
+       {\pccjudg{\slenv}{\sfune{\sx}{\st}{\se}}{\spity{\sx}{\st}{\stpr}}{
+            \pccnpackoe{\begin{stackTL}\pccnsigmaty{(\pccxi:\pccAi\dots)}, \pccnpaire{\pccxi\dots},
+                   \\\pccnfune{\begin{stackTL}
+                           (\begin{stackTL}\pccn:\pccnsigmaty{(\pccxi:\pccAi\dots)},\\\pccx:\pcclete{\pccnpaire{\pccxi\dots}}{\pccn}{\pcct}\end{stackTL})}
+                          {\\\pcclete{\pccnpaire{\pccxi\dots}}{\pccn}{\pcce
+          }}}}
+                              \end{stackTL}\end{stackTL}}
+
+      \inferrule*[right=\defrule{CC-App}]
+      {\pccjudg{\slenv}{\seone}{\_}{\pcceone} \\
+       \pccjudg{\slenv}{\setwo}{\_}{\pccetwo}}
+      {\pccjudg{\slenv}{\sappe{\seone}{\setwo}}{\st}{
+          \pccnunpacke{\pccalpha,\pccn,\pccf}{\pcceone}{\pccappe{\pccf}{\pccn~\pccetwo}}}}
+    \end{mathpar}
+    \caption{Parametric Closure Conversion from \pccslang to \pcctlang (1/2)}
+    \label{fig:param-cc:cc:full1}
+  \end{figure}
+}
+
+\newcommand{\FigCCTermTwo}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\pccjudg{\slenv}{\se}{\sA}{\pcce}}
+    \begin{mathpar}
+      \inferrule*[right=\defrule{CC-Var}]
+      {~}
+      {\pccjudg{\slenv}{\sx}{\sA}{\pccx}}
+
+      \inferrule*[right=\defrule{CC-*}]
+      {~}
+      {\pccjudg{\slenv}{\sstarty}{\sboxty}{\pccstarty}}
+
+      \inferrule*[right=\defrule{CC-Sig}]
+      {\ccjudg{\slenv}{\sA}{\stypety{i}}{\tA} \\
+       \ccjudg{\slenv,\sx:\sA}{\sB}{\stypety{i}}{\tB}}
+      {\ccjudg{\slenv}{\ssigmaty{\sx}{\sA}{\sB}}{\stypety{i}}{\tsigmaty{\tx}{\tA}{\tB}}}
+
+      \inferrule*[right=\defrule{CC-Pair}]
+      {\ccjudg{\slenv}{\seone}{\sA}{\teone} \\
+       \ccjudg{\slenv}{\setwo}{\subst{\sB}{\seone}{\sx}}{\tetwo} \\
+       \ccjudg{\slenv}{\sA}{\stypety{i}}{\tA} \\
+       \ccjudg{\slenv,\sx:\sA}{\sB}{\stypety{i}}{\tB}}
+      {\ccjudg{\slenv}{\sdpaire{\seone}{\setwo}{\ssigmaty{\sx}{\sA}{\sB}}}{\ssigmaty{\sx}{\sA}{\sB}}{\tdpaire{\teone}{\tetwo}{\tsigmaty{\tx}{\tA}{\tB}}}}
+
+      \inferrule*[right=\defrule{CC-Fst}]
+      {\ccjudg{\slenv}{\se}{\ssigmaty{\sx}{\sA}{\sB}}{\te}}
+      {\ccjudg{\slenv}{\sfste{\se}}{\sA}{\tfste{\te}}}
+
+      \inferrule*[right=\defrule{CC-Snd}]
+      {\ccjudg{\slenv}{\se}{\ssigmaty{\sx}{\sA}{\sB}}{\te}}
+      {\ccjudg{\slenv}{\ssnde{\se}}{\subst{\sB}{\sfste{\se}}{\sx}}{\tsnde{\te}}}
+
+      \inferrule*[right=\defrule{CC-Bool}]
+      {~}
+      {\pccjudg{\slenv}{\sboolty}{\sstarty}{\pccboolty}}
+
+      \inferrule*[right=\defrule{CC-True}]
+      {~}
+      {\pccjudg{\slenv}{\struee}{\sboolty}{\pcctruee}}
+
+      \inferrule*[right=\defrule{CC-False}]
+      {~}
+      {\pccjudg{\slenv}{\sfalsee}{\sboolty}{\pccfalsee}}
+
+      \inferrule*[right=\defrule{CC-If}]
+      {\pccjudg{\slenv}{\se}{\sboolty}{\pcce} \\
+       \pccjudg{\slenv}{\seone}{\sB}{\pcceone} \\
+       \pccjudg{\slenv}{\setwo}{\sB}{\pccetwo}}
+      {\pccjudg{\slenv}{\sife{\se}{\seone}{\setwo}}{\sB}{\pccife{\pcce}{\pcceone}{\pccetwo}}}
+
+      \inferrule*[right=\defrule{CC-Let}]
+      {\ccjudg{\slenv}{\se}{\sA}{\te} \\
+       \ccjudg{\slenv,\sx:\sA}{\sepr}{\sB}{\tepr}}
+      {\ccjudg{\slenv}{\slete{\sx}{\se}{\sepr}}{\subst{\sB}{\se}{\sx}}{\tlete{\tx}{\te}{\tepr}}}
+
+      \inferrule*[right=\defrule{CC-Conv}]
+      {\ccjudg{\slenv}{\se}{\sA}{\te}}
+      {\ccjudg{\slenv}{\se}{\sB}{\te}}
+    \end{mathpar}
+    \judgshape[~where~{\im{\swf{\slenv}}}]{\ccenvjudg{\slenv}{\tlenv}}
+    \begin{mathpar}
+      \inferrule*[right=\defrule{CC-Empty}]
+      {~}
+      {\ccenvjudg{\cdot}{\cdot}}
+
+      \inferrule*[right=\defrule{CC-Assum}]
+      {\ccenvjudg{\slenv}{\tlenv} \\
+       \ccjudg{\slenv}{\sA}{\sU}{\tA}}
+      {\ccenvjudg{\slenv,\sx:\sA}{\tlenv,\tx:\tA}}
+
+      \inferrule*[right=\defrule{CC-Def}]
+      {\ccenvjudg{\slenv}{\tlenv} \\
+       \ccjudg{\slenv}{\se}{\sA}{\te} \\
+       \pccjudg{\slenv}{\sA}{\sU}{\pccA}}
+      {\ccenvjudg{\slenv,\sx = \se : \sA}{\tlenv,\tx = \te : \pccA}}
+    \end{mathpar}
+    \caption{Parametric Closure Conversion from \pccslang to \pcctlang (2/2)}
+    \label{fig:param-cc:cc:full2}
+  \end{figure}
+}
+
+\section{Parametric Closure Conversion Translation}
+\label{sec:param-cc:cc}
+
+\FigCoCCCTermShort
+In \fullref[]{fig:param-cc:cc:short}, I present the key parametric
+closure-conversion rules.
+As in \fullref[]{chp:abs-cc}, formally, this translation must be defined on
+typing derivations, but for brevity I present the key translation rules on syntax.
+I define the complete translation in \fullref[]{sec:param-cc:cc:appendix}
+\fullref[]{fig:param-cc:cc:full1} and \fullref[]{fig:param-cc:cc:full2}.
+The translation of \tech{dependent function} types is the key to understanding
+our translation.
+As described in \fullref[]{sec:param-cc:ideas}, the idea in this translation is
+to translate \tech{dependent functions} of type \im{\spity{\sx}{\sA}{\sB}} to
+\tech{existential packages} of type
+\im{\pccnexistty{\pccalpha:\pccstarty,\pccn:\pccalpha}{(\pcctrlufunty{\pccn}{\pcccodety{\pccx:\pccA}{\pccB}})}}.
+In the translation of \tech{types}, we leave type variables free in the \tech{type} of the
+\tech{closure}--\ie, in \im{\pccA} and \im{\pccB}--but we leave them free under
+a \tech{translucent type}
+\im{(\pcctrlufunty{\pccn}{\pcccodety{\pccx:\pccA}{\pccB}})} that describes the
+new closed \tech{Code}.
+In the translation of functions, \im{\cctrans{\sfune{\sx}{\sA}{\se}}}, we produce
+closed type annotations that are only valid with respect to the
+\tech{environment} we produce in the \tech{closure}.
+When we check that the \tech{closure} produced by the translation has the
+\tech{type} produced by the translation, \ie, when showing \tech{type
+  preservation} for functions, the \tech{translucent type} introduces an
+equality \im{\pccn = env} into the type, unifying the closed \tech{type} of the
+\tech{closure} and the open \tech{type} of the \tech{code}.
+
+The rest of the translation is straightforward.
+We translate each \im{\sstarty} to \im{\pccstarty}.
+Similarly, we translate names \im{\sx} into \im{\pccx}.
+All omitted rules are structural.
+
+\subsection{Type Preservation}
+In this section, I show that \tech{parametric closure-conversion} is \tech{type
+  preserving}.
+I follow the standard architecture presented in \fullref[]{chp:type-pres}.
+
+Recall from \fullref[]{sec:param-cc:ideas} that the \tech{type preservation}
+argument relies on an equivalence between a \tech{type} \im{\pccA} with free
+variables \im{\pccxi\dots} and the same \tech{type} with those free variables
+projected out of the \tech{closure}'s \tech{environment}
+\im{\pccnpaire{\pccxi\dots}}, \ie,
+\im{\pccA \equiv \subst{\pccA}{\pccnpaire{\pccxi\dots}}{\pccnpaire{\pccxi\dots}}}.
+Since the \tech{environment} is always generated from the same free variables,
+this substitution is essentially a no-op.
+This argument is used in several proofs.
+I formalize this \tech{equivalence} in \fullref[]{lem:param-cc:cc:env-id}.
+The proof is a straightforward computation.
+\begin{lemma}
+  \label{lem:param-cc:cc:env-id}
+  \im{\pccequivjudg{\pcclenv,\pccn=\pccnpaire{\pccxi\dots}:\pccApr}{(\pcclete{\pccnpaire{\pccxi\dots}}{\pccn}{\pcce})}{\pcce}}.
+\end{lemma}
+\begin{proof}
+  \im{\pcclete{{\pccnpaire{\pccxi\dots}}}{\pccn}{\pcce} \step_{\delta} \pcclete{{\pccnpaire{\pccxi\dots}}}{{\pccnpaire{\pccxi\dots}}}{\pcce} \step_{\zeta}^{n}
+    \subst{\pcce}{\pccxi}{\pccxi} = \pcce}
+\end{proof}
+
+Next I prove \tech{compositionality}.
+As in \fullref[]{chp:abs-cc}, this is where we use most of the complexity of the
+target language, such as \tech{translucent types} and the \(\eta\)-principle for
+\tech{closures}.
+I go into detail for the key proof cases, \ie, those for the encoding of \tech{closures}.
+\begin{lemma}[Compositionality]
+  \label{lem:cc:pres-subst}
+  \im{\cctrans{(\subst{\se}{\sepr}{\sx})} \equiv \subst{\cctrans{\se}}{\cctrans{\sepr}}{\sx}}
+
+\end{lemma}
+\begin{proof}
+  By cases on structure of \im{\se}.
+  Omitted cases are straightforward.
+  \begin{proofcases}
+  \item \im{\se = \spity{\sy}{\sA}{\sB}}
+
+    Show \im{\cctrans{(\subst{(\spity{\sy}{\sA}{\sB})}{\sepr}{\sx})} \equiv \subst{\cctrans{(\spity{\sy}{\sA}{\sB})}}{\cctrans{\sepr}}{\sx}}.
+    \begin{align}
+      & \cctrans{(\subst{(\spity{\sy}{\sA}{\sB})}{\sepr}{\sx})} \nonumber \\
+      =~& \cctrans{(\spity{\sy}{\subst{\sA}{\sepr}{\sx}}{\subst{\sB}{\sepr}{\sx}})} \\
+      & \text{by substitution} \nonumber \\
+      =~& \pccnexistty{(\pccalpha:\pccstarty,\pccn:\pccalpha)}{\pcctrlufunty{\pccn}{\pcccodety{\pccy:\subst{\cctrans{\sA}}{\cctrans{\sepr}}{\pccx}}{\subst{\cctrans{\sB}}{\cctrans{\sepr}}{\pccx}}}} \\
+      & \text{by definition of translation} \nonumber \\
+      =~& \subst{(\pccnexistty{(\pccalpha:\pccstarty,\pccn:\pccalpha)}{\pcctrlufunty{\pccn}{\pcccodety{\pccy:\cctrans{\sA}}{\cctrans{\sB}}}})}{\cctrans{\sepr}}{\sx} \\
+      & \text{by substitution} \nonumber \\
+      =~& \subst{\cctrans{(\spity{\sy}{\sA}{\sB})}}{\cctrans{\sepr}}{\sx}
+    \end{align}
+  \item \im{\se = \sfune{\sx}{\sA}{\seone}}.\\
+    This case essentially asks ``when are two \tech{closures} equivalent?'',
+    since substitution on a function changes its \tech{closure} by changing the
+    \tech{environment}.
+    The \(\eta\) rules for \tech{closures} allows us to answer that question.
+    When substituting into a \tech{closure} before translation, we produce a
+    \tech{closure} whose \tech{environment} contains only free variables.
+    When substituting into a \tech{closure} after translation, we can put a
+    (potentially open) term into the \tech{environment} of a \tech{closure}.
+    \begin{displaymath}
+      \begin{stackTL}
+        p_L = \cctrans{(\subst{\se}{\sepr}{\sx})} = \pccnpackoe{\Sigma_{env}',
+          env', \begin{stackTL}\pccnfune{\pccn:\Sigma_{env}',\pccy:\pccAin{L}}{\\\quad\pcclete{env'}{\pccn}{\subst{\cctrans{\seone}}{\cctrans{\sepr}}{\pccx}}}}\end{stackTL}
+        \\\qquad\where{
+          \begin{stackTL}
+            env' =
+            \pccnpaire{\pccxin{0},\dots,\pccxin{i-1},\pccxin{i+1},\dots,\pccxin{m},\pccxin{m+1},\dots,\pccxin{n}}\\
+            \pccxin{0},\dots,\pccxin{i-1},\pccx,\pccxin{i+1},\dots,\pccxin{m} = \FV{(\cctrans{\se})}\\
+            \pccxin{m+1},\dots,\pccxin{n} = \FV{(\cctrans{\sepr})}\\
+            \pccAin{L} = \pcclete{env'}{\pccn}{\cctrans{\sA}}\\
+          \end{stackTL}
+        } \\
+        p_R =\subst{\cctrans{\se}}{\cctrans{\sepr}}{\sx} = \pccnpackoe{\Sigma_{env}, env, \pccnfune{\pccn:\Sigma_{env},\pccy:\pccAin{R}}{\pcclete{env}{\pccn}{\cctrans{\se}}}}
+        \\
+        \qquad\where{
+          \begin{stackTL}
+            env =
+            \pccnpaire{\pccxin{0},\dots,\pccxin{i-1},\cctrans{\sepr},\pccxin{i+1},\dots,\pccxin{m}}\\
+            \pccxin{0},\dots,\pccxin{i-1},\pccx,\pccxin{i+1},\dots,\pccxin{m} = \FV{(\cctrans{\st})}\\
+            \pcctin{R} = \pcclete{env}{\pccn}{\cctrans{\sA}}\\
+          \end{stackTL}
+        }
+    \end{stackTL}
+  \end{displaymath}
+  Note that in \im{p_L}, the \tech{environment} \im{env'} is missing \im{\pccx}
+  between \im{\pccxin{i-1}} and \im{\pccxin{i+1}} and contains the free
+  variables from \im{\cctrans{\sepr}}.
+  In \im{p_R}, the \tech{environment} \im{env} contains \im{\cctrans{\sepr}} in
+  place of \im{\pccx}.
+  To show that \im{p_L \equiv p_R}, it suffices by
+  \refrule*{eqv-eta1}{CC-\im{\equiv}-\im{\eta_1}} to show
+    \im{\subst{\cctrans{\se}}{\cctrans{\sepr}}{\pccx}
+    \equiv
+    \pccnunpacke{\pccalpha, \pccn, \pccf}{p_R}{\pccappe{\pccf}{\pccn~\pccy}}}. Observe that
+    \begin{displaymath}
+      \begin{stackTL}
+        \pccnunpacke{\pccalpha, \pccn, \pccf}{p_R}{\pccappe{\pccf}{\pccn~\pccy}} \\
+        \stepstar \pcclete{env}{env}{\cctrans{\se}} \\
+        \step_\zeta \pcclete{\pccnpaire{\pccxin{0},\dots,\pccxin{i-1},\pccxin{i+1},\dots,\pccxin{m}}}{\pccnpaire{\pccxin{0},\dots,\pccxin{i-1},\pccxin{i+1},\dots,\pccxin{m}}}{\subst{\cctrans{\se}}{\cctrans{\sepr}}{\pccx}}\\
+        \equiv \subst{\cctrans{\se}}{\cctrans{\sepr}}{\pccx}\text{ by \fullref[]{lem:param-cc:cc:env-id}.}
+        \end{stackTL}
+      \end{displaymath}
+  \end{proofcases}
+\end{proof}
+
+Now we can show that the translation preserves \tech{reduction} up to
+\tech{equivalence}, \ie, that the translation \im{\pcce} of a term \im{\se}
+weakly simulates one step of reduction of \im{\se}.
+Since \fullref[]{lem:cc:pres-subst} is in terms of \tech{definitional
+  equivalence}, I show weak simulation up to \tech{definitional equivalence}.
+I give the key cases.
+\begin{lemma}[Preservation of Reduction]
+  \label{lem:cc:pres-red}
+  If \im{\sstepjudg[\step_x]{\slenv}{\se}{\sepr}} then
+  \im{\pccstepjudg[\stepstar]{\cctrans{\slenv}}{\cctrans{\se}}{\pcce}} and \im{\pcce \equiv \cctrans{\sepr}}
+\end{lemma}
+\begin{proof}
+  By cases on the judgment \im{\se \step_x \sepr}.
+  All cases are straightforward by computation
+  and \fullref[]{lem:cc:pres-subst}.
+  \begin{proofcases}
+  \item \im{\sx \step_\delta \sepr~\where{\sx = \sepr \in \slenv}}
+
+    Suffices to show that \im{\pccx \step_\delta \cctrans{\sepr}~\where{\pccx = \cctrans{\sepr} \in \slenv}}, which follows by definition of \im{\pccenvjudg{\slenv}{\pcclenv}}.
+  \item \im{\sappe{(\sfune{\sx}{\sA}{\seone})}{\setwo} \step_\beta \subst{\seone}{\setwo}{\sx}}
+
+    We must show that \im{\cctrans{(\sappe{(\sfune{\sx}{\sA}{\seone})}{\setwo})}
+      \stepstar \pccepr \equiv  \cctrans{(\subst{\seone}{\setwo}{\sx})}}.
+
+    \begin{align}
+      & \cctrans{(\sappe{(\sfune{\sx}{\sA}{\seone})}{\setwo})} \nonumber \\
+      =~&
+      \begin{stackTL}
+      \pccnunpacke{\pccalpha,\pccn,\pccf}{(\pccnpackoe{\pccApr,\pccnpaire{\pccxi\dots},\begin{stackTL}
+            \pccnfune{(\pccn:\pccApr,\pccx:\pccA)}{
+              \\\quad
+              \pcclete{\pccnpaire{\pccxi\dots}}{\pccn}{\cctrans{\seone}}}}
+      )\end{stackTL}}{\\\quad\pccappe{\pccf}{\pccn~\cctrans{\setwo}}}
+      \end{stackTL} \\
+      \step_\exists~& \pccappe{(\begin{stackTL}
+          \pccnfune{(\pccn:\pccApr,\pccx:\pccA)}{
+              \pcclete{\pccnpaire{\pccxi\dots}}{\pccn}{\cctrans{\seone}}}
+      \end{stackTL})}{\pccnpaire{\pccxi\dots}~\cctrans{\setwo}} \\
+      \step_\beta~& \subst{\pcclete{\pccnpaire{\pccxi\dots}}{\pccnpaire{\pccxi\dots}}{\cctrans{\seone}}}{\cctrans{\setwo}}{\pccx} \\
+      \equiv~& \subst{\cctrans{\seone}}{\cctrans{\setwo}}{\pccx} \\
+      & \text{by \fullref{lem:param-cc:cc:env-id}} \nonumber \\
+      \equiv~& \cctrans{(\subst{\seone}{\setwo}{\sx})} \\
+      & \text{by \fullref{lem:cc:pres-subst}} \nonumber
+    \end{align}
+  \end{proofcases}
+\end{proof}
+
+\begin{lemma}[Preservation of Conversion]
+  \label{lem:cc:pres-norm}
+  If \im{\sstepjudg[\stepstar]{\slenv}{\se}{\sepr}} then
+  \im{\pccstepjudg[\stepstar]{\cctrans{\slenv}}{\cctrans{\se}}{\pcce}} and \im{\pccequivjudg{\cctrans{\slenv}}{\pcce}{\cctrans{\sepr}}}.
+\end{lemma}
+\begin{proof}
+  The proof is by induction on the derivation of \im{\sstepjudg[\stepstar]{\slenv}{\se}{\sepr}}.
+  The proof is entirely uninteresting, following essentially from \fullref{lem:cc:pres-red}.
+\end{proof}
+
+To show that \tech{equivalence} is preserved, we require \(\eta\)-equivalence
+for \tech{closures} in the case of \(\eta\)-equivalent source terms.
+\begin{lemma}[Preservation of Equivalence]
+  \label{lem:cc:pres-equiv}
+  If \im{\sequivjudg{\slenv}{\se}{\sepr}}, then
+  \im{\pccequivjudg{\cctrans{\slenv}}{\cctrans{\se}}{\seto{\sprime+}}}.
+\end{lemma}
+\begin{proof}
+  By induction on the \im{\se \equiv \sepr} judgment.
+  \begin{proofcases}
+      \item \refrule*[refcpssrc]{eqv}{\im{\equiv}}
+      By assumption, \im{\se \stepstar \seone} and \im{\sepr \stepstar \seone}.
+
+      By \fullref[]{lem:cc:pres-norm}, \im{\cctrans{\se} \stepstar \pcce} and
+      \im{\pcce \equiv \cctrans{\seone}}, and similarly.
+      \im{\cctrans{\sepr} \stepstar \pccepr} and \im{\pccepr \equiv \cctrans{\seone}}.
+      The result follows by symmetry and transitivity of \im{\equiv}.
+    \item \refrule*[refcpssrc]{eqv-eta1}{\im{\equiv}-\im{\eta_1}}
+    By assumption, \im{\se \stepstar \sfune{\sx}{\st}{\seone}}, \im{\sepr \stepstar \setwo} and
+    \im{\seone \equiv \sappe{\setwo}{\sx}}.
+
+    Must show \im{\cctrans{\se} \equiv \cctrans{\sepr}}.
+
+    By \fullref{lem:cc:pres-norm}, \im{\cctrans{\se} \stepstar \pcce} and \im{\pcce \equiv
+      \cctrans{\sfune{\sx}{\st}{\seone}}}, and similarly \im{\cctrans{\sepr} \stepstar \pccepr} and \im{\pccepr
+      \equiv \cctrans{\setwo}}.
+
+    By transitivity, it suffices to show \im{\cctrans{\sfune{\sx}{\st}{\seone}}
+      \equiv \cctrans{\setwo}}.
+
+    By \refrule*{eqv-eta1}{\im{\equiv}-\im{\eta_1}} and
+    \fullref{lem:param-cc:cc:env-id}, it suffices to show
+    \begin{displaymath}
+      \cctrans{\seone} \equiv
+      {\pccnunpacke{\pccalpha,\pccn,\pccf}{\cctrans{\setwo}}{\pccappe{\pccf}{\pccn~\pccx}}}.
+    \end{displaymath}
+
+    Note that
+    \im{\pccnunpacke{\pccalpha,\pccn,\pccf}{\cctrans{\setwo}}{\pccappe{\pccf}{\pccn~\pccx}}}
+    is exactly \im{\cctrans{(\sappe{\setwo}{\sx})}}, so the result follows by the
+    induction hypothesis.
+
+    \item \refrule*[refcpssrc]{eqv-eta2}{\im{\equiv}-\im{\eta_2}}
+    Symmetric to the previous case; requires
+    \refrule*{eqv-eta2}{\im{\equiv}-\im{\eta_2}} instead of
+    \refrule*{eqv-eta1}{\im{\equiv}-\im{\eta_1}}.
+  \end{proofcases}
+\end{proof}
+
+Now we can prove the central lemma necessary for showing \tech{type
+  preservation}.
+\begin{lemma}[Type and Well-formedness Preservation]
+  \label{lem:cc:type-pres}
+  ~
+  \begin{enumerate}
+    \item If \im{\wf{\slenv}} then \im{\pccwf{\cctrans{\slenv}}}
+    \item If \im{\styjudg{\slenv}{\se}{\sA}} then \im{\pcctyjudg{\cctrans{\slenv}}{\cctrans{\se}}{\cctrans{\sA}}}
+  \end{enumerate}
+\end{lemma}
+\begin{proof}
+  Parts 1 and 2 proven by simultaneous induction on the mutually defined judgments
+    \im{\wf{\slenv}} and \im{\styjudg{\slenv}{\se}{\sA}}.
+
+  Part 1 follows easily by induction and part 2.
+  I give the key cases for part 2.
+
+  \begin{proofcases}
+    \item \refrule[refcpssrc]{*}, follows by part 1.
+    \item \refrule[refcpssrc]{Var}, follows by part 1.
+    \item \refrule[refcpssrc]{Pi-*}
+
+    We have that \im{\styjudg{\slenv}{\spity{\sx}{\sA}{\sB}}{\sstarty}}.
+
+    We must show that \im{\pcctyjudg{\pcclenv}{\pccnexistty{(\pccalpha:\pccstarty,\pccn:\pccalpha)}{\pcctrlufunty{\pccn}{\pcccodety{\pccx:\cctrans{\sA}}}{\cctrans{\sB}}}}{\pccstarty}}
+
+    By \refrule{Exist}, it suffices to show
+    \im{\pcctyjudg{\pcclenv,\pccalpha:\pccstarty,\pccn:\pccalpha}{(\pcctrlufunty{\pccn}{\pcccodety{\pccx:\cctrans{\sA}}}{\cctrans{\sB}})}{\pccstarty}}.
+
+    By \refrule*{trfunty}{\im{\trlufunarrow}}, it suffices to show \im{\pcctyjudg{\pcclenv,\pccalpha:\pccstarty,\pccn:\pccalpha}{\pcccodety{\pccnpr:\pccalpha,\pccx:\cctrans{\sA}}{\cctrans{\sB}}}{\pccstarty}}
+
+    By \refrule[refpcc]{Code-*}, it suffices to show
+    \im{\pcctyjudg{\pcclenv,\pccalpha:\pccstarty,\pccn:\pccalpha,\pccnpr:\pccalpha,\pccx:\cctrans{\sA}}{\cctrans{\sB}}{\pccstarty}},
+    which follows by the induction hypothesis applied to \im{\styjudg{\slenv,\sx:\sA}{\sB}{\sstarty}}.
+    \item \refrule[refcpssrc]{Lam}
+
+    We must show that
+    \im{\pcctyjudg{\pcclenv}{\cctrans{(\sfune{\sx}{\sA}{\se})}}{\cctrans{(\spity{\sx}{\sA}{\sB})}}}
+
+    The key to this proof is to show that
+
+    \im{\pcctyjudg{\pcclenv}{(\pccnfune{(\pccn:\pccApr,\pccx:\pcclete{env}{\pccn}{\cctrans{\sA}})}{\pcclete{env}{\pccn}{\cctrans{\se}}})}{\pcctrlufunty{env}{\pcccodety{\pccx:\cctrans{\sA}}{\cctrans{\sB}}}}}
+
+    \im{\where{\begin{stackTL}
+          env = \tnpaire{\pccxin{0},\dotsm\pccxin{n}} \\
+          \pccApr = \pccnsigmaty{(\pccxin{0}:\pccAin{0},\dots,\pccxin{n}:\pccAin{n})}
+      \end{stackTL}}}
+
+    Note that by definition, \im{\pcctyjudg{\pcclenv}{env}{\pccApr}}.
+
+    Note also that
+    \im{\pccequivjudg{\pcclenv,\pccn=env:\pccApr}{\pcclete{env}{\pccn}{\cctrans{\sA}}}{\cctrans{\sA}}},
+    by \fullref{lem:param-cc:cc:env-id}.
+
+    So, by \refrule[refpcc]{Conv} and \refrule*{trfunty}{\im{\trlufunarrow}}, it suffices to show:
+
+    \im{\pcctyjudg{\pcclenv}{\begin{stackTL}\pccnfune{(\pccn:\pccApr,\pccx:\pcclete{env}{\pccn}{\cctrans{\sA}})}{\pcclete{env}{\pccn}{\cctrans{\se}}}}{
+        \\\pcccodety{(\pccn:\pccApr,\pccx:\pcclete{env}{\pccn}{\cctrans{\sA}})}{\pcclete{env}{\pccn}{\cctrans{\sB}}}}
+    \end{stackTL}}
+
+    By \refrule[refpcc]{Code} and \refrule[refpcc]{Let}, it suffices to show that
+
+    \im{\pcctyjudg{\pccn:\pccApr,\pccx:\pcclete{env}{\pccn}{\cctrans{\sA}},\pccxin{0} =
+          \pccprje{0}{\pccn} : \pcctin{0},\dots,\pccxin{n} = \pccprje{n}{\pccn} : \pccAin{n}}{\cctrans{\se}}{\cctrans{\sB}}}
+
+      Note that by the induction hypothesis we know that
+      \im{\pcctyjudg{\pcclenv,\pccx:\cctrans{\sA}}{\cctrans{\se}}{\cctrans{\sB}}}.
+
+      The goal follows since, by definition of the translation, the free
+      variables of \im{\cctrans{\se}} are exactly \im{\pccxin{0},\pccxin{n}},
+      and all other variables of \im{\pcclenv} are not referenced in
+      \im{\cctrans{\se}} or \im{\cctrans{\sB}}.
+
+    \item \refrule[refcpssrc]{App}
+
+    We must show that
+    \im{\pcctyjudg{\pcclenv}{\cctrans{(\sappe{\se}{\sepr})}}{\cctrans{(\subst{\sB}{\sepr}{\sx})}}}
+
+    That is, we must show
+
+    \im{\pcctyjudg{\pcclenv}{\pccnunpacke{\pccalpha,\pccn,\pccf}{\cctrans{\se}}{\pccappe{\pccf}{\pccn~\cctrans{\sepr}}}}{\cctrans{(\subst{\sB}{\sepr}{\sx})}}}
+
+    By \refrule{Unpack}, it suffices to show, (1):
+
+    \im{\pcctyjudg{\pcclenv}{\cctrans{\se}}{\pccnexistty{\pccalpha:\pccstarty,\pccn:\pccalpha}{\pcctrlufunty{\pccn}{\pcccodety{\pccx:\cctrans{\sA}}{\cctrans{\sB}}}}}},
+
+    which follows immediately from the induction hypothesis, and (2):
+
+    \im{\pcctyjudg{\pcclenv,\pccalpha:\pccstarty,\pccn:\pccalpha,\pccf:\pcctrlufunty{\pccn}{\pcccodety{\pccx:\cctrans{\sA}}{\cctrans{\sB}}}}{\pccappe{\pccf}{\pccn~\cctrans{\sepr}}}{\cctrans{(\subst{\sB}{\sepr}{\sx})}}}
+
+    By \refrule[refpcc]{Conv} and \fullref{lem:cc:pres-subst}, it suffices to show
+
+    \im{\pcctyjudg{\pcclenv,\pccalpha:\pccstarty,\pccn:\pccalpha,\pccf:\pcctrlufunty{\pccn}{\pcccodety{\pccx:\cctrans{\sA}}{\cctrans{\sB}}}}{\pccappe{\pccf}{\pccn~\cctrans{\sepr}}}{\subst{\cctrans{\sB}}{\cctrans{\sepr}}{\pccx}}}
+
+    By \refrule{TrApp}, it suffices to show that
+
+    \im{\pcctyjudg{\pcclenv,\pccalpha:\pccstarty,\pccn:\pccalpha,\pccy:\pcctrlufunty{\pccn}{\pcccodety{\pccx:\cctrans{\sA}}{\cctrans{\sB}}}}{\cctrans{\sepr}}{\cctrans{\sA}}},
+    which follows by the induction hypothesis.
+  \end{proofcases}
+\end{proof}
+
+\begin{corollary}[Type Preservation]
+  If \im{\styjudg{\slenv}{\se}{\sA}} then \im{\pcctyjudg{\cctrans{\slenv}}{\cctrans{\se}}{\cctrans{\sA}}}.
+\end{corollary}
+
+\subsection{Compiler Correctness}
+The proof of correctness with respect to separate compilation follows exactly
+the pattern in \fullref[]{chp:type-pres}.
+I define linking by substitution, as usual, and define observations and whole
+program as evaluation to booleans.
+\begin{theorem}[Separate Compilation Correctness]
+  \label{thm:cc:comp-correct}
+  If \im{\wf{\slenv}{\se}},
+  \im{\wf{\slenv}{\ssubst}},
+  \im{\wf{\cctrans{\slenv}}{\pccsubst}},
+  and \im{\cctrans{\ssubst} \equiv \pccsubst}
+  then
+  \im{\seval{\ssubst(\se)} \approx \teval{\pccsubst(\cctrans{\se})}}
+\end{theorem}
+\begin{proof}
+  Since \im{\equiv} on \tech{observations} implies \im{\approx}, it suffices to show
+  \im{\seval{\ssubst(\se)} \equiv \teval{\pccsubst(\cctrans{\se})}}.
+  Since the translation commutes with substitution, preserves equivalence, reduction implies
+  equivalence, and equivalence is transitive, the following diagram commutes.
+
+  \vtop{%
+    \begin{tikzcd}
+    \cctrans{(\ssubst(\se))} \arrow[r, "\equiv"] \arrow[d, "\equiv"]
+    & \pccsubst(\cctrans{\se}) \arrow[d, "\equiv"] \\
+      \cctrans{\sv} \arrow[r, "\equiv"]
+      & \pccvpr
+  \end{tikzcd}}\qedhere
+\end{proof}
+
+\begin{corollary}[Whole-Program Correctness]
+  If \im{\wf{\cdot}{\se}}
+  then \im{\seval{\se} \approx \teval{\cctrans{\se}}}
+\end{corollary}

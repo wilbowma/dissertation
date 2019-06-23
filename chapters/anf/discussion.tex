@@ -1,0 +1,369 @@
+\section{Related and Future Work}
+\label{sec:anf:discuss}
+\label{sec:anf:related}
+
+\subsection{Comparison to CPS}
+\label{sec:discuss:cps}
+ANF is usually seen in opposition to CPS, so I briefly discuss similarities and
+differences between our type-preserving ANF and prior work on-type preserving
+CPS.
+ANF is favored as a compiler intermediate representation, although not
+universally.
+\citet{maurer2017} argue for ANF, over alternatives such as CPS, because ANF
+makes control flow explicit but keeps evaluation order implicit, automatically
+avoids administrative redexes, simplifies many optimizations, and keeps code in
+direct style.
+\citet{kennedy2007} argues the opposite---that CPS is preferred to ANF---and
+summarizes the arguments for and against.
+
+Most recent work on CPS translation of dependently typed language has focused on
+expressing control effects.
+\citet{pedrot2017:lola} uses a non-standard CPS translation to internalize
+classical reasoning in the Calculus of Inductive Constructions (CIC).
+\citet{cong2018:lam-pi-s-r,cong2018:tfp} develop CPS translations to
+express delimited control effects, via \texttt{shift} and \texttt{reset}, in a
+dependently typed language.
+\citet{miquey2017} uses a CPS translation to model a dependent sequent calculus.
+When expressing control effects in dependently typed languages, it is
+\emph{necessary} to prevent certain dependencies from being expressed to
+maintain consistency~\cite{barthe2002,herbelin2005}, therefore these
+translations do not try to recover dependencies in the way we discuss in
+\fullref[]{sec:anf:ideas}.
+
+My own CPS translation, \fullref[]{chp:cps} (published before writing this
+chapter as \citet{bowman2018:cps-sigma}) does avoid control effects and seeks to
+develop a type preserving translation.
+The new typing rule I add is similar to my \refrule{K-Bind} in \tlang, and is
+used for the same purpose: to recover disrupted dependencies.
+Unfortunately, that encoding does not scale to higher universes, and relies on
+interpreting all functions as parametric (discussed further in
+\fullref[]{chp:conclusions}).
+By contrast, this ANF translation works with higher universes and, since \tlang
+is a subset of \slang, the ANF translation is orthogonal to parametricity.
+
+\subsection{Branching and Join Points}
+The \tech{ANF} translation presented so far does not support all of \slang; in
+particular, it omits the \tech{dependent conditional}.
+This is primarily for simplicity, as many of the problems with \tech{ANF} are
+orthogonal to \tech{dependent conditional}.
+However, \tech{dependent conditionals} do introduce non-trivial challenges for
+\tech{ANF} translation.
+In this section, I give the translation and argue that it is \tech{type preserving}.
+
+It is well-known that \tech{ANF} in the presence of branching constructs, such
+as \texttt{if}, can cause considerable code duplication for branches.
+For instance, supposing we have an (for the moment, non-dependent) \texttt{if},
+the na\"ive \tech{ANF} translation is the following.
+%
+\begin{displaymath}
+  \anf{\sife{\se}{\seone}{\setwo}}{\tK} = \anf{\se}{\tlete{\tx}{\hole}{\tife{\tx}{(\anf{\seone}{\tK})}{(\anf{\setwo}{\tK})}}}
+\end{displaymath}
+%
+Notice that the current \tech{continuation} \im{\tK} is duplicated in the branches.
+
+The well-known solution is to add a \emph{join point}---essentially, a
+continuation that is used only for avoiding code duplication in branch
+constructs.
+Using join points, we would translate \sfonttext{if} as follows.
+%
+\begin{displaymath}
+  \anf{\sife{\se}{\seone}{\setwo}}{\tK} =
+    \anf{\se}{\tlete{\tx}{\hole}{\begin{stackTL}\tlete{\tj}{\tfune{\txpr}{\tA}{\tK\hw{\txpr}}}{
+            \\\,\,\quad\begin{stackTL}
+              \tife{\tx}{\anf{\seone}{\tlete{\txone}{\hole}{~\tappe{\tj}{\txone}}}\\\quad\,\,\,\,}{\,\,\anf{\setwo}{\tlete{\txtwo}{\hole}{~\tappe{\tj}{\txtwo}}}}
+          \end{stackTL}}}
+    \end{stackTL}}
+\end{displaymath}
+%
+Instead of duplicating \im{\tK}, we create a join point \im{\tj} which is called in the branches.
+
+Extending the translation to support join points requires (for decidable
+type checking) that the translation generate a type annotation \im{\tA} for the
+join point, where \im{\tA} is the translation of the type of the \tfonttext{if}
+statement.
+It is easy to extend the translation to be defined on typing derivations; in
+fact, the rest of the translation defined in this dissertation are defined on
+typing derivations, and the proof architecture described in
+\fullref[]{chp:type-pres} is designed to support this.
+The only disadvantage is that structuring the translation this way disallows
+typed equivalence, unless the problem discussed in \fullref[]{chp:type-pres} can
+be solved.
+
+The real problem arises when we have \emph{\techs{dependent conditional}}, in
+which the result type of the branches can depend on the scrutinee of the
+conditional.
+Recall that typing rule for dependent \texttt{if}, reproduced below.
+%
+\begin{displaymath}
+  \inferrule
+  {\styjudg{\slenv,\sy:\sboolty}{\sB}{\sU} \\
+   \styjudg{\slenv}{\se}{\sboolty}\\
+   \styjudg{\slenv}{\seone}{\subst{\sB}{\struee}{\sy}} \\
+   \styjudg{\slenv}{\setwo}{\subst{\sB}{\sfalsee}{\sy}}}
+  {\styjudg{\slenv}{\sife{\se}{\seone}{\setwo}}{\subst{\sB}{\se}{\sy}}}
+\end{displaymath}
+
+We can describe the problem clearly using \tech{continuation} typing.
+The \tech{ANF} translation of this term is with respect to \tech{continuation} \im{\tK
+  : (\ehole{\sife{\se}{\seone}{\setwo}} : \anfh{\subst{\sB}{\se}{\sy}})
+  \Rightarrow \tBpr}.
+However, the \tech{ANF} translation will use \im{\tK} in an ill-typed way,
+producing in one branch \im{\anfh{\seone}{\tK}}, and in the other branch
+\im{\anfh{\setwo}{\tK}}.
+For the first branch, for instance, we must show that now \im{\tK : (\ehole{\seone} :
+\anfh{\subst{\sB}{\struee}{\sy}}) \Rightarrow \tBpr}.
+The definitions, \im{\edefs{\se}}, introduced by the translation of \texttt{if}
+are not sufficient to show that this type is equivalent to the type of \im{\tK}
+expected for the translation of \texttt{if}.
+I discuss an essentially similar problem for \tech{CPS} with
+\techs{dependent conditional} in \fullref[]{chp:cps}.
+
+We could resolve this, it seems, if we could assume that while type checking the
+first branch that \im{\se = \struee}, and similarly for the second branch that
+\im{\se = \sfalsee}.
+But one of these is not true; we cannot have that both \im{\se = \struee} and
+\im{\se = \sfalsee}.
+Since in \tlang we require reduction under both branches during type checking,
+reduction under this inconsistent assumption could cause divergence.
+
+To enable us to make inconsistent assumptions like the above but ensure
+strong normalization, my idea is to use explicit equality proofs and explicit
+coercions.
+The coercions would block reduction until they have a \tech{proof} of
+equality, and since we will never end up with a \tech{proof} that
+\im{\struee = \sfalsee}, the inconsistent assumption can never be used in
+reduction.
+But the coercion would allow the ANF translation to type check.
+
+With this idea, the type rule for \sfonttext{if} would be the following.
+%
+\begin{displaymath}
+  \inferrule
+  {\styjudg{\slenv,\sy:\sboolty}{\sB}{\sU} \\
+   \styjudg{\slenv}{\se}{\sboolty} \\
+   \styjudg{\slenv,\sp:\se = \struee}{\seone}{\subst{\sB}{\struee}{\sy}} \\
+   \styjudg{\slenv,\sp:\se = \sfalsee}{\setwo}{\subst{\sB}{\sfalsee}{\sy}}}
+  {\styjudg{\slenv}{\sife{\se}{\seone}{\setwo}}{\subst{\sB}{\se}{\sy}}}
+\end{displaymath}
+%
+Then, the \tech{ANF} na\"ive translation for \tech{dependent conditionals} would
+be the following; I give the join-point translation shortly.
+%
+\begin{displaymath}
+  \anf{\sife{\se}{\seone}{\setwo}}{\tK} = \anf{\se}{
+    \tlete{\begin{stackTL}\tx}{\hole}{\\
+      \begin{stackTL}\tife{\tx}{\anf{\seone}{\tlete{\txone}{\hole}{\tK\hw{\tcoee{\tp}{\txone}}}}\\\quad\,\,\,\,}{\,\,\,{\anf{\setwo}{\tlete{\txtwo}{\hole}{\tK\hw{\tcoee{\tp}{\txtwo}}}}}}}
+      \end{stackTL}
+      \end{stackTL}}
+\end{displaymath}
+%
+The term \im{\tcoee{\tp}{\te}} is an elimination for the identity type
+(derivable from only axiom \im{J}, a standard axiom admitted in many dependent
+type theories), with the following standard semantics.
+Recall that the result type of \im{\tK} cannot depend on the term in its hole,
+so we do not need a similar conversion for the result of \im{\tK}.
+%
+\begin{mathpar}
+  \inferrule
+   {\styjudg{\tlenv,\tx:\tA}{\tB}{\tU} \\
+    \styjudg{\tlenv}{\tp}{\teone = \tetwo} \\
+    \styjudg{\tlenv}{\te}{\subst{\tB}{\teone}{\tx}}}
+   {\styjudg{\tlenv}{\tcoee{\tp}{\te}}{\subst{\tB}{\tetwo}{\tx}}}
+
+   \inferrule
+   {\styjudg{\tlenv}{\te}{\tA}}
+   {\styjudg{\tlenv}{\tappe{\tfonttext{refl}}{\te}}{\te = \te}}
+
+   \tcoee{{\tappe{\tfonttext{refl}}{\te}}}{\te} \step \te
+\end{mathpar}
+
+The translation with join points is below, and requires no further additions.
+\begin{displaymath}
+  \anf{\sife{\se}{\seone}{\setwo}}{\tK} =
+  \anf{\se}{\tlete{\tx}{\hole}{\begin{stackTL}\tlete{\tj}{\tfune{\txpr}{\tA}{\tK\hw{\txpr}}}{
+          \\\quad
+          \begin{stackTL}\tife{\tx}{\anf{\seone}{\tlete{\txone}{\hole}{\tappe{\tj}{\tcoee{\tp}{\txone}}}}\\\quad\,\,\,\,}{\,\,\anf{\setwo}{\tlete{\txtwo}{\hole}{\tappe{\tj}{\tcoee{\tp}{\txtwo}}}}}
+    \end{stackTL}}}
+  \end{stackTL}}
+\end{displaymath}
+The type annotation \im{\tA} would be the translation of the type source
+\sfonttext{if} expression.
+This is why, formally, the translation must be defined over typing derivations
+instead of syntax.
+
+I conjecture that this translation would be type preserving, but a full
+investigation is left as future work.
+
+\citet{cong2018:lam-pi-s-r} use a similar approach to extend the \tech{CPS}
+translation presented in \fullref[]{chp:cps} to inductive types with dependent
+case analysis.
+
+\subsection{Dependent Pattern Matching and Commutative Cuts}
+The above problem with \techs{dependent conditional} is exactly the problem of
+commutative cuts for case analysis~\cite{boutillier2012,herbelin2009:pps-talk}.
+Formally, the problem of commutative cuts can be phrased: Is the following
+transformation \tech{type preserving}?
+%
+\begin{displaymath}
+  \sK\hw{\sife{\se}{\seone}{\setwo}} \leadsto \sife{\se}{\sK\hw{\seone}}{\sK\hw{\setwo}}
+\end{displaymath}
+%
+\tech{ANF} necessarily performs this transformation, as shown in the previous section.
+
+Ignoring \tech{ANF} for a moment, in general this \emph{is not} \tech{type
+  preserving}, and \tech{stack} typing shows why.
+Suppose that we have a non-\tech{ANF} \tech{stack} \im{\sK} with the following
+typing derivation.
+%
+\begin{mathpar}
+  \inferrule
+  {\styjudg{\slenv,\sypr:\sboolty}{\sBpr}{\sUpr} \\
+    \styjudg{\slenv,\sy:\subst{\sBpr}{\se}{\sypr}}{\sB}{\sU} \\
+   \slenv \vdash {\sife{\se}{\seone}{\setwo}} : \subst{\sBpr}{\se}{\sypr}}
+  {\slenv \vdash \sK : ({\sife{\se}{\seone}{\setwo}} : \subst{\sBpr}{\se}{\sypr}) \Rightarrow \subst{\sB}{({\sife{\se}{\seone}{\setwo}})}{\sy}}
+\end{mathpar}
+%
+Note that the result type of this \tech{stack}, \im{\sBpr}, \emph{may} depend on
+the term in the hole, since this is not in \tech{ANF}.
+The problem is that after the commutative cut, we must show that
+\im{\sK\hw{\seone}} and \im{\sK\hw{\setwo}} are well-typed in the branches,
+which is not true in general since \im{\sK} expects
+\im{\sife{\se}{\seone}{\setwo}}.
+
+If we add the equalities \im{\se = \struee} and \im{\se = \sfalsee} while type
+checking the branches, as proposed in the previous section, then it appears that
+we can make the terms \im{\sK\hw{\seone}} and \im{\sK\hw{\setwo}} well-typed, although
+it requires a generalization of \fullref[]{lem:anf:ecca:cut}.
+However, we still cannot show the commutative cut is \tech{type preserving},
+since the result type \im{\sB} also depends on the term in the hole.
+And now, the two branches of the \sfonttext{if} have different types:
+\im{\sK\hw{\seone} : \subst{\sB}{\seone}{\sy}}, while \im{\sK\hw{\setwo} :
+  \subst{\sB}{\setwo}{\sy}}.
+Since the branches of an \sfonttext{if} must have the same type (up to
+equivalence), it appears that we must show \im{\seone \equiv \setwo}.
+
+In fact, what we need to show is essentially another, smaller, commutative cut.
+Viewing \im{\sB} as a type-level \tech{stack}, we must show
+\im{\sB\hw{\sife{\se}{\seone}{\setwo}} \equiv
+  \sife{\se}{\sB\hw{\seone}}{\sB\hw{\setwo}}}.
+This is smaller in the sense that the type of this type cannot contain a
+commutative cut.
+For booleans, we could pursue this by adding yet another appeal to
+\im{J}, but this approach does not scale to indexed inductive types.
+
+But, there is a solution: we can make the commutative cut type preserving, even
+for general inductive types.
+\citet{boutillier2012} give an extension to CIC that allows for typing commutative
+cuts, in particular, by relaxing the termination checker.
+Explaining the solution is out of scope for this work.
+I only want to point out two things.
+First, the solution adds an environment of \emph{equalities} to the termination
+checker, just as I propose for \tech{stack} typing and for typing \sfonttext{if}
+above.
+Second, the solution requires \emph{axiom K}, a very strong requirement which is
+inconsistent with certain extensions to type theory, such as univalence.
+This raises the question: does \tech{ANF} in general require axiom \emph{K}?
+
+I conjecture the answer is no, and the reason is the interesting property we
+observed in \fullref[]{sec:anf:target}: in \tech{ANF}, the result type cannot
+depend on the term in the hole.
+This additional structure seems to avoid some problems of commutative
+cuts, and I hope that it will be enough to scale \tech{ANF} to indexed inductive
+types without additional requirements on the type theory.
+I have one additional reason to be hopeful: even if we need a stronger axiom than
+\im{J}, work on dependent pattern matching suggests that univalence may replace
+axiom \emph{K} for our purposes.
+
+Recent work on dependent pattern matching creates typing rules similar to what we
+suggest above to yield additional equalities during a pattern
+match~\cite{barras2008:new-cic-elim,cockx2016}.
+There is another unfortunate similarity: some work on dependent pattern matching
+requires axiom \emph{K}.
+In particular, \citet{barras2008:new-cic-elim} give a new eliminator for CIC
+which adds additional equalities while checking branches of an elimination, and show
+that this new typing rule is equivalent to axiom \emph{K}.
+\citet{cockx2016} discuss a proof-relevant view of unification, in the context
+of Agda's dependent pattern matching.
+They note that the heterogeneous equalities usually required by dependent
+pattern matching require axiom \emph{K} to be useful.
+They also take a different approach, and build on an idea from homotopy type
+theory that one equality can ``layer over'' another, to get a proof relevant
+unification algorithm that does not rely on \emph{K}, and yet yields the
+additional equalities for dependent pattern matching.
+
+\subsection{Dependent Call-by-Push-Value and Monadic Form}
+Call-by-push-value (\deftech{CBPV}) is similar to the \tech{ANF} target
+language, and to \tech{CPS} target languages.
+In essence, \tech{CBPV} is a \(\lambda\) calculus in monadic normal form
+suitable for reasoning about \tech{CBV} or \tech{CBN}, due to explicit
+sequencing of computations.
+It has \techs{value}, \techs{computation}, and \techs{stack}, similar to
+\tech{ANF}, and has compositional typing rules (which inspired much of my own
+presentation).
+The particular structure of \tech{CBPV} is beneficial when modeling effects; all
+\techs{computation} should be considered to carry an arbitrary effect, while
+\techs{value} do not.
+
+Work on designing a dependent call-by-push-value (\deftech{dCBPV}) runs into
+some of the same design issues that we see in \tech{ANF}
+\cite{ahman2017:dissertation,vakar2017:dissertation}, but critically, avoids the
+central difficulties introduced in \fullref[]{sec:anf:ideas}.
+The reason is essentially that monadic normal form is more compositional than
+\tech{CPS} or \tech{ANF}, so \tech{dependency} is not disrupted in the same way.
+
+Recall from \fullref[]{sec:anf:target} that our definition of composition was
+entirely motivated by the need to compose \tech*{anf:config}{configurations} and
+\techs{stack}.
+In \tech{CBPV}, and monadic form generally, there is no distinction between
+\tech{computation} and \tech*{anf:config}{configurations}, and \texttt{let} is
+free to compose \tech*{anf:config}{configurations}.
+This means that \tech*{anf:config}{configurations} can return intermediate
+\techs{computation}, instead of composing the entire rest of the stack inside
+the body of a \texttt{let}.
+The monadic translation of \im{\ssnde{\se}} from \fullref[]{sec:anf:ideas}, which is
+problematic in \tech{CPS} and \tech{ANF}, is given below and is easily
+\tech{type preserving}.
+%
+\begin{displaymath}
+  \anfh{\ssnde{\se} : \subst{\sB}{\se}{\sy}} = \tlete{\tx}{\anfh{\se}}{\tsnde{\tx}} : \subst{\anfh{\sB}}{\anfh{\se}}{\ty}
+\end{displaymath}
+
+Note that since \texttt{let} can bind the ``configuration'' \im{\anfh{\se}}, the
+typing rule \rulename{Let} and the compositionality lemma suffice to show
+\tech{type preservation}, without any reasoning about definitions.
+In fact, we don't even need \emph{definitions} for monadic form; we only need a
+dependent result type for \tfonttext{let}.
+The dependent typing rule for \tfonttext{let} without definition is essentially
+the rule given by \citet{vakar2017:dissertation}, called the dependent Kleisli
+extension, to support the \tech{CBV} monadic translation of type theory into
+\tech{dCBPV}, and the \tech{CBN} translation with strong dependent pairs.
+\citet{vakar2017:dissertation} observes that without the dependent Kleisli
+extension, \tech{CBV} translation is ill-defined (not \tech{type preserving}),
+and \tech{CBN} only works for dependent elimination of positive types.
+A similar observation was made independently in my own work with Nick Rioux,
+Youyou Cong, and Amal Ahmed~(\citeyear{bowman2018:cps-sigma}, presented in
+\fullref[]{chp:cps}): type-preserving \tech{CBV} \tech{CPS} fails for \(\Pi\)
+types, in addition to the well-known
+result that the \tech{CBN} translation failed for \(\Sigma\)
+types~\cite{barthe2002}.
+
+If we restrict the language so that types can only depend on
+\emph{\techs{value}}, then the extension with dependent \texttt{let} is not
+necessary.
+This restriction seems sensible in the context of modeling effects.
+\citet{ahman2017:dissertation} in \deftech{eMLTT}, a co-discovered variant of
+dependent \tech{CBPV}, avoids dependent let altogether, but comes up with many
+useful models of dependent types with effects.
+\citet{ahman2017:dissertation}, however, does not give a translation from type
+theory into \tech{eMLTT}, and it seems likely that an extension with dependent
+let would be required to do so.
+(This would be necessary to build on \tech{eMLTT} as a compiler IL.)
+However, as \citet{vakar2017:dissertation} points out, it is not clear what it
+\emph{means} to have a type depend on an effectful computation, and trying to do
+so makes it impossible to model effects in \tech{dCBPV} the way one would hope.
+
+In \tech{eMLTT}, stacks cannot have a result type that depends on the value it
+is composed with, just as in our \rulename{K-Bind} rule.
+However, the \tech{dCBPV} of \citet{vakar2017:dissertation} \emph{does} allow
+the result type of stacks to depend on values, but only on values.
+It is unclear what trade-offs each approach presents.

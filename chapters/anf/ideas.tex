@@ -1,0 +1,235 @@
+\section{Main Ideas}
+\label{sec:anf:ideas}
+The idea behind ANF is to make control flow explicit in the syntax of a program
+so transfer of control can be expressed as a jump.
+ANF encodes \emph{computation} (\eg, reducing an expression to a value) as
+sequencing simple intermediate computations with \im{let} expressions.
+To reduce \im{\se} to a value in a high-level language, we need to describe the
+evaluation order and control flow of each language primitive.
+For example, if \im{\se} is an application \im{\sappe{\seone}{\setwo}} and we
+want a call-by-value semantics, we say the language first evaluates
+\im{\seone} to a value, then evaluates \im{\setwo} to a value, then performs
+the function application.
+ANF makes this explicit in the syntax by decomposing \im{\se} into a
+series of primitive computations sequenced by \tfonttext{let}, as in
+\im{\tnlete{\txin{0}=\tNin{0},...,\txin{n}=\tNin{n}}{\tN}}, where each
+\im{\tNin{i}} is either a value or a primitive computation applied
+to a value.
+The ANF translation of \im{\sappe{\seone}{\setwo}} is the following.
+\begin{mathpar}
+  \tnlete{\begin{stackTL}
+      \txin{1_0}=\tNin{1_0},...,\txin{1_n}=\tNin{1_n},
+      \txin{1}=\tNin{1}\\
+      \txin{2_0}=\tNin{2_0},...,\txin{2_n}=\tNin{2_n},
+      \txin{2}=\tNin{2}\\}
+  {(\tappe{\txone}{\txtwo})}
+  \end{stackTL}
+\end{mathpar}
+\begin{mathpar}
+  \text{where~}\begin{stackTL}
+    \sembrace{\seone} = (\tnlete{\txin{1_0}=\tNin{1_0},...,\txin{1_n}=\tNin{1_n}}{\tNin{1}})\\
+    \sembrace{\setwo} = (\tnlete{\txin{2_0}=\tNin{2_0},...,\txin{2_n}=\tNin{2_n}}{\tNin{2}})\\
+  \end{stackTL}
+\end{mathpar}
+
+Roughly, we can think of this translation as
+\im{\tnlete{\txone=\sembrace{\seone},\txtwo=\sembrace{\setwo}}{\tappe{\txone}{\txtwo}}}.
+This rough translation is only ANF if \im{\seone} and \im{\setwo} are values or
+primitive computations.
+In general, the ANF translation reassociates all the intermediate computations
+from \im{\sembrace{\seone}} and \im{\sembrace{\setwo}} so there are no nested
+\tfonttext{let} expressions.
+Once in ANF, it is simple to formalize a machine semantics to implement
+evaluation by always reducing the left-most computation, which will be a
+primitive operation.
+
+The problem in developing a type-preserving translation for a dependently typed
+language is that changing the structure of a program disrupts
+the \tech{dependencies} described in \fullref[]{chp:source}, \ie,
+an expression \im{\sepr} whose type and evaluation depends on a sub-expression
+\im{\se}.
+Recall that I call to a sub-expression such as \im{\se} \emph{depended upon}.
+This pattern happens in dependent elimination forms, such as application and
+projection.
+For example, for a dependent function \im{\seone : \spity{\sx}{\sA}{\sB}},
+the application is typed as \im{\sappe{\seone}{\setwo} : {\subst{\sB}{\setwo}{\sx}}}.
+Notice that the \emph{depended upon} sub-expression \im{\setwo} is copied into the type.
+If we transform the expression \im{\sappe{\seone}{\setwo}}, we can easily change
+the type.
+For example, recall the ANF translation for this expression given earlier.
+\begin{displaymath}
+\tnlete{\begin{stackTL}
+      \txin{1_0}=\tNin{1_0},...,\txin{1_n}=\tNin{1_n},
+      \txin{1}=\tNin{1}\\
+      \txin{2_0}=\tNin{2_0},...,\txin{2_n}=\tNin{2_n},
+      \txin{2}=\tNin{2}\\}
+  {(\tappe{\txone}{\txtwo})}
+  \end{stackTL}
+\end{displaymath}
+Using the standard typing rule for dependent \tfonttext{let} (without
+definitions), the type of the ANF translation above is
+\im{\subst{\sembrace{\sB}}{\txtwo}{\tx}} (the type of the body), with all
+\tfonttext{let}-bindings substituted into this type, \ie, roughly
+\im{\subst{\subst{\sembrace{\sB}}{\txtwo}{\tx}}{\tNin{2_0}}{\txin{2_0}}[...][\tNin{2_n}/\txin{2_n}][\tNtwo/\txtwo]}.
+To show type preservation, we must show that the target type system can prove
+that this type is equivalent to the translation of the original type, \ie,
+\im{\sembrace{\subst{\sB}{\setwo}{\sx}}}.
+Intuitively, it \emph{ought} to be true that the intermediate computations
+\im{(\tNin{2_0},...,\tNin{2_n},\tNin{2})} are
+equivalent to \im{\sembrace{\setwo}}, since those are the computations that
+must happen to compute the value of \im{\setwo}.
+Therefore, the two types \emph{ought} to be equivalent.
+
+But the intuitive argument that ANF ought to be type preserving is wrong.
+Instead of the \im{(\tappe{\txone}{\txtwo})} appearing in the body directly as
+above, consider the expression below in which \im{(\tappe{\txone}{\txtwo})} is
+bound and then used.
+\begin{mathpar}
+  \tnlete{...}{\tlete{\ty}{(\tappe{\txone}{\txtwo})}{\tappe{\tf}{\ty}}}
+
+  \where{\tf : (\subst{\sembrace{\sB}}{\sembrace{\setwo}}{\tx}) \to \tC}
+\end{mathpar}
+To show type preservation, we now need to reestablish a dependent type that is
+\tfonttext{let}-bound, instead of in the body of a \tfonttext{let}.
+The type derivation fails, as follows.
+\begin{mathpar}
+  \inferrule
+      {\inferrule
+        {~}
+        {... \vdash {(\tappe{\txone}{\txtwo})} : \subst{\sembrace{\sB}}{\txtwo}{\tx}}\\
+    \inferrule
+        {\text{fails}}
+    {...,\ty:\subst{\sembrace{\sB}}{\txtwo}{\tx} \vdash \tappe{\tf}{\ty} : \tC}}
+  {... \vdash \tlete{\ty}{(\tappe{\txone}{\txtwo})}{\tappe{\tf}{\ty}} : \subst{\tC}{(\tappe{\txone}{\txtwo})}{\ty}}
+\end{mathpar}
+This fails since \im{\tf} expects
+\im{\ty : (\subst{\sembrace{\sB}}{\sembrace{\setwo}}{\tx})}, but is applied to
+\im{\ty : \subst{\sembrace{\sB}}{\txtwo}{\tx}}.
+We cannot show the two types are equal without substituting all the (elided)
+bindings as described earlier, but that substitution happens after it is needed.
+The problem is that the dependent typing rule for \tfonttext{let} only binds a
+depended-upon expression in the type of the \emph{body} of the \tfonttext{let},
+not in the types of \emph{bound expressions}.
+
+The typing rule for \tfonttext{let} only allows dependency in the type of the
+overall expression---that is, in the ``output'' of the typing judgment---but we
+need some way to thread dependencies into the sub-derivations while checking
+bound expressions.
+For example, if we could express dependencies in the \emph{input}, something
+like \im{... \txtwo = \sembrace{\setwo} \vdash {(\tappe{\txone}{\txtwo})} :
+  \subst{\sembrace{\sB}}{\sembrace{\setwo}}{\tx}}, then we could complete the
+derivation and prove type-preservation.
+And this is exactly the intuition we formalize.
+
+We formalize this intuition using \emph{definitions}~\cite{severi1994:dpts}
+introduced in \fullref[]{chp:source}.
+Recall that the typing rule for \tfonttext{let} with definitions is the following.
+\begin{mathpar}
+  \inferrule
+  {\ttyjudg{\tlenv}{\te}{\tA}\\
+   \ttyjudg{\tlenv,\tx=\te}{\tepr}{\tApr}}
+  {\ttyjudg{\tlenv}{\tlete{\tx}{\te}{\tepr}}{\subst{\tApr}{\te}{\tx}}}
+\end{mathpar}
+
+The definition \im{\tx = \te} is introduced when type checking the body of the
+\tfonttext{let}, and can be used to solve type equivalence in sub-derivations,
+instead of only in the substitution \im{\subst{\tApr}{\te}{\tx}} in the "output"
+of the typing rule.
+While this is an extension to the type theory (so one may worry that the
+\tech{ANF} translation applies to fewer dependently typed languages), it is a
+standard extension that is admissible in any Pure Type System
+(PTS)~\cite{severi1994:dpts}, and is a feature already found in dependently
+typed languages such as Coq.
+
+Using definitions, we can prove that, under the definitions \im{\txin{2_0} =
+  \tNin{2_0}, ..., \txin{2_n} = \tNin{2_n},\txtwo = \tNtwo} produced from the ANF translation
+\im{\sembrace{\setwo}} (written \im{\edefs{\setwo}}), the desired equivalence
+\im{\txtwo \equiv \sembrace{\setwo}} holds.
+We use \im{\ehole{\setwo}} to refer to the innermost computation produced by
+the ANF translation, in this case \im{\ehole{\setwo} = \tNtwo}.
+Then we can prove \im{\edefs{\setwo} \vdash \ehole{\setwo} \equiv \anfh{\setwo}}
+(formally captured by \fullref[]{lem:anf:export-equal}).
+Since we also have the definition, \im{\txtwo = \tNtwo}, we conclude that
+\im{\edefs{\setwo} \vdash \txtwo \equiv \anfh{\setwo}}.
+
+To formalize this type preservation argument, we need to step back and define
+the ANF translation precisely.
+In the source, looking at an expression such as \im{\sappe{\seone}{\setwo}}, we
+do not know whether the expression is embedded in a larger context.
+This matters in ANF, since we can no longer compose expressions by nesting, but
+instead must compose expressions with \tfonttext{let}.
+This is why the above example translation disassembled the translation of
+\im{\seone} and \im{\setwo} into a new, larger, \tfonttext{let} expression.
+To formalize the ANF translation, it helps to have a more compositional syntax
+for translating an expression and composing it with an unknown context.
+
+I develop a compositional translation by indexing the ANF translation by a target language
+(non-first-class) \emph{continuation} \im{\tK} representing the rest of the computation in which a translated expression will be used.
+A continuation \im{\tK} is a program with a hole (single linear variable)
+\im{\hole}, and can be composed with a computation \im{\tK\hw{\tN}} to form a
+program \im{\tM}.
+In ANF, there are only two continuations: either \im{\hole} or
+\im{\tlete{\tx}{\hole}{\tM}}.
+Using continuations, we define ANF translation for functions and application as
+follows.
+\begin{displaymath}
+  \begin{aligned}[t]
+    \anf{\sfune{\sx}{\sA}{\se}}{\tK} &= \tK\hw{\tfune{\tx}{(\anf{\sA}{\hole})}{(\anf{\se}{\hole})}} \\
+    \anf{\sappe{\seone}{\setwo}}{\tK} &= \anf{\seone}{\tlete{\txone}{\hole}{\anf{\setwo}{\tlete{\txtwo}{\hole}{\tK\hw{\tappe{\txone}{\txtwo}}}}}}
+  \end{aligned}
+\end{displaymath}
+This allows us to focus on composing the primitive operations instead of
+reassociating \tfonttext{let} bindings.
+
+The key typing rule for continuations is the following.
+\begin{mathpar}
+  \inferrule*[right=\rulename{K-Bind}]
+  {\styjudg{\tlenv}{\tN}{\tA} \\
+   \styjudg{\tlenv,\ty=\tN}{\tM}{\tB}}
+  {\styjudg{\tlenv}{\tlete{\ty}{\hole}{\tM}}{(\tN : \tA) \Rightarrow \tB}}
+\end{mathpar}
+The type \im{(\tN : \tA) \Rightarrow \tB} of continuations describes that the
+continuation must be composed with the term \im{\tN} of type \im{\tA}, and the
+result will be of type \im{\tB}.
+This expresses syntactically the intuition that continuations must be used
+linearly to avoid control effects, which are known to cause inconsistency with dependent
+types~\cite{barthe2002,herbelin2005}.
+Note that this type allows us to introduce the definition \im{\ty = \tN} via the
+type, before we know how the continuation is used.\footnote{This is
+  essentially a singleton type, but as mentioned in \fullref[]{chp:source}, I
+  avoid explicit encoding with singleton types to focus on the intuition:
+  tracking dependencies.}
+I discuss this rule further in \fullref[]{sec:anf:target}.
+The \fullref{lem:anf:ecca:cut} expresses that continuation typing is not an
+extension to the target type theory, which is important to ensure ANF can be
+applied in practice.
+
+The key lemma to prove type preservation is the following.
+\begin{lemma}
+  If \im{\styjudg{\slenv}{\se}{\sA}} and \im{\ttyjudg{\tlenv,\edefs{\se}}{\tK}{(\ehole{\se}:\sembrace{\sA}) \Rightarrow \tB}}, then \im{\ttyjudg{\tlenv}{\anf{\se}{\tK}}{\tB}}.
+\end{lemma}
+\noindent This lemma captures the fact that each time we build a new \im{\tK} in the ANF translation, we must show it is
+well-typed, and that is where we apply the reasoning about definitions.
+Proving that \im{\tK} has the above type requires proving \im{\tlenv,\edefs{\se} \vdash
+  \ehole{\se} : \anfh{\sA}}.
+For our running example, this means proving
+\im{\tlenv,\edefs{\sappe{\seone}{\setwo}} \vdash \tappe{\txone}{\txtwo} :
+  \anfh{\subst{\sB}{\setwo}{\sx}}}.
+Recall that \im{\tappe{\txone}{\txtwo} : \subst{\anfh{\sB}}{\txtwo}{\tx}}.
+As we saw earlier, definitions allow us to prove that \im{\tlenv,\edefs{\sappe{\seone}{\setwo}}
+  \vdash \txtwo \equiv \sembrace{\setwo}}; therefore, combined with compositionality
+(\im{\anfh{\subst{\sB}{\setwo}{\sx}} \equiv
+  \subst{\anfh{\sB}}{\anfh{\setwo}}{\tx}}, \fullref[]{lem:anf:subst}), the proof is complete!
+The earlier failing derivation now succeeds:
+
+\begin{mathpar}
+  \inferrule
+      {\inferrule
+        {\fullref[]{lem:anf:subst} \\
+          \fullref[]{lem:anf:export-equal}}
+        {\edefs{\sappe{\seone}{\setwo}} \vdash {(\tappe{\txone}{\txtwo})} : \subst{\sembrace{\sB}}{\anfh{\setwo}}{\tx}}\quad
+    \inferrule
+        {\text{succeeds!}}
+    {\ty:\subst{\sembrace{\sB}}{\anfh{\setwo}}{\tx} \vdash \tappe{\tf}{\ty} : \tC}}
+  {\edefs{\sappe{\seone}{\setwo}} \vdash \tlete{\ty}{(\tappe{\txone}{\txtwo})}{\tappe{\tf}{\ty}} : \subst{\tC}{(\tappe{\txone}{\txtwo})}{\ty}}
+\end{mathpar}

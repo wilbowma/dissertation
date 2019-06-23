@@ -1,0 +1,212 @@
+\renewcommand{\techprefix}{anfapp}
+\renewcommand{\tlang}{\anftlang}
+\renewcommand{\slang}{\anfslang}
+
+\newcommand{\FigECCASyntaxE}[1][t]{
+  \begin{figure}[#1]
+    \begin{bnfgrammar}
+      \bnflabel{Universes} &
+      \tU & \!\!\bnfdef & \tpropty \bnfalt \ttypety{i}
+      \bnfnewline
+
+      \bnflabel{Values} & \tV & \bnfdef & \tx \bnfalt \tU \bnfalt \tpity{\tx}{\tM}{\tM} \bnfalt \tfune{\tx}{\tM}{\tM} \bnfalt  \tsigmaty{\tx}{\tM}{\tM}
+      \\&& \bnfalt & \tdpaire{\tV}{\tV}{\tM}
+      \bnfnewline
+
+      \bnflabel{Computations} & \tN & \bnfdef & \tV \bnfalt \tappe{\tV}{\tV} \bnfalt \tfste{\tV} \bnfalt \tsnde{\tV}
+      \bnfnewline
+
+      \bnflabel{Configurations} & \tM & \bnfdef & \tN \bnfalt \tlete{\tx}{\tN}{\tM}
+      \bnfnewline
+
+      \bnflabel{Continuations} & \tK  & \bnfdef & \hole \bnfalt \tlete{\tx}{\hole}{\tM}
+      \bnfnewline
+
+      \bnflabel{Expressions} & \te,\tA,\tB & \bnfdef & \tx
+                                                       \bnfalt \tU
+                                                       \bnfalt \tpity{\tx}{\tA}{\tB}
+                                                       \bnfalt \tfune{\tx}{\tA}{\te}
+                                                       \bnfalt \tappe{\te}{\te}
+                                                       \bnfalt \tsigmaty{\tx}{\tA}{\tB}
+      \\
+                           &&\bnfalt& \tdpaire{\teone}{\tetwo}{\tsigmaty{\tx}{\tA}{\tB}}
+                                      \bnfalt \tfste{\te}
+                                      \bnfalt \tsnde{\te}
+                                      \bnfalt \tboolty
+                                      \bnfalt \ttruee
+                                      \\ && \bnfalt &
+                                      \tfalsee
+                                      \bnfalt \tife{\te}{\teone}{\tetwo}
+                                      \bnfalt \tlete{\tx}{\te}{\te}
+      \bnfnewline
+
+      \bnflabel{Environments} &
+      \tlenv & \bnfdef & \cdot \bnfalt \tlenv,\tx:\tA \bnfalt \tlenv,\tx=\te
+    \end{bnfgrammar}
+    \caption{\tlang Syntax}
+  \end{figure}
+}
+
+\newcommand{\FigECCAObs}[1][t]{
+  \begin{figure}[#1]
+    \begin{bnfgrammar}
+      \bnflabel{\tlang Observations} &
+      \tv & \bnfdef & \ttruee \bnfalt \tfalsee
+    \end{bnfgrammar}
+
+    \caption{\anftlang Observations}
+    \label{fig:ecca:obs}
+  \end{figure}
+}
+
+\newcommand{\FigANFObsRel}[1][t]{
+  \begin{figure}[#1]
+    \judgshape{\sv \approx \tv}
+    \begin{mathpar}
+      \struee \approx \ttruee
+
+      \sfalsee \approx \tfalsee
+    \end{mathpar}
+    \caption{Observation Relation between \slang and \anftlang}
+  \end{figure}
+}
+
+\newcommand{\FigAObs}[1][t]{
+  \begin{figure}[#1]
+    \begin{bnfgrammar}
+      \bnflabel{\slang Observations} &
+      \sv & \bnfdef & \struee \bnfalt \sfalsee
+      \bnfnewline
+
+      \bnflabel{\tlang Observations} &
+      \tv & \bnfdef & \ttruee \bnfalt \tfalsee
+    \end{bnfgrammar}
+    \judgshape{\sv \approx \tv}
+    \begin{mathpar}
+      \struee \approx \ttruee
+
+      \sfalsee \approx \tfalsee
+    \end{mathpar}
+    \caption{\slang and \anftlang Observations}
+    \label{fig:ecc+:obs}
+  \end{figure}
+}
+
+\newcommand{\FigECCALinking}[1][t]{
+  \begin{figure}[#1]
+    \begin{bnfgrammar}
+      \bnflabel{Closing Substitutions} &
+      \tsubst & \defeq & \cdot \bnfalt \tsubst[\tx \mapsto \tM]
+    \end{bnfgrammar}
+    \judgshape{\wf{\tlenv}{\tsubst}}
+    \begin{mathpar}
+      \inferrule
+      {~}
+      {\wf{\cdot}{\cdot}}
+
+      \inferrule
+      {\wf{\tlenv}{\tsubst} \\
+       \ttyjudg{\cdot}{\tM}{\tA}}
+      {\wf{\tlenv,\tx:\tA}{\tsubst[\tx \mapsto \tM]}}
+
+      \inferrule
+      {\wf{\tlenv}{\tsubst} \\
+       \styjudg{\tlenv}{\tM}{\tA}}
+      {\wf{\tlenv,\tx = \tM}{\tsubst[\tx \mapsto \tsubst(\tM)]}}
+    \end{mathpar}
+    \judgshape{\tsubst(\tM) = \tM}
+    \begin{mathpar}
+      \cdot(\tM) = \tM
+
+      \tsubst[\tx \mapsto \tMpr](\tM) = \tsubst(\hsubst{\tM}{\tx}{\tMpr})
+    \end{mathpar}
+    \caption{\anftlang Closing Substitutions and Linking}
+    \label{fig:ecca:link}
+  \end{figure}
+}
+
+\chapter{Reference for \anftlang}
+\label{chp:anftlang:appendix}
+This appendix contains the complete definitions for \anftlang.
+All \anftlang figures from \fullref[]{chp:anf} are reproduced and completed with
+elided parts here, and elided figures are presented here.
+
+Recall that \anftlang is a syntactic restriction of \slang that supports a
+machine evaluation semantics.
+The primary difference between the figure here and in \fullref[]{chp:anf} is the
+syntax is extended with non-ANF expressions to formally describe type checking
+in \anftlang.
+Recall that the type system for \anftlang is the same as \slang, so the figures
+related to the type system are identical to those in \fullref[]{sec:source:appendix}.
+
+\begin{typographical}
+  In this appendix, I typeset \anftlang in a \emph{\tfonttext{bold, red, serif font}}.
+\end{typographical}
+
+\begingroup
+\let\label\discard
+
+\FigECCASyntaxE[ht]
+
+\endgroup
+
+\begingroup
+\let\scolor\tcolor
+\let\sfont\tfont
+\let\sfontsym\tfontsym
+\let\label\discard
+\renewcommand{\slang}{\anftlang}
+
+\FigECCRed[ht]
+\FigECCConvFull[ht]
+\FigECCEqv[ht]
+\FigECCSub[ht]
+\FigECCTyping[ht]
+
+\endgroup
+
+\begingroup
+\renewcommand{\tA}{\tMin{A}}
+\renewcommand{\tB}{\tMin{B}}
+\let\label\discard
+
+\FigECCAHetero[ht]
+\FigECCAStackTypes[ht]
+\FigStackExports[ht]
+
+\endgroup
+
+\begingroup
+\let\label\discard
+\renewcommand{\se}{\tM}
+\renewcommand{\slenv}{\tlenv}
+\renewcommand{\slang}{\anftlang}
+\renewcommand{\sboolty}{\tboolty}
+
+\FigECCProg[ht]
+\FigECCAObs[ht]
+
+\FigECCARed[ht]
+\FigECCALinking[ht]
+\endgroup
+
+\cleardoublepage
+\chapter{Reference for {{ANF}} Translation}
+This appendix contains the complete definitions for the ANF translation from
+\fullref[]{chp:anf}.
+All figures related to the ANF translation are reproduced and completed with
+elided parts here, and elided figures are presented here.
+
+\begin{typographical}
+  In this appendix, I typeset the source language, \anfslang, in a
+  \emph{\sfonttext{blue, non-bold, sans-serif font}}, and the target language,
+  \anftlang, in a \emph{\tfonttext{bold, red, serif font}}.
+\end{typographical}
+
+\begingroup
+\let\label\discard
+
+\FigANFObsRel[ht]
+\FigTrans[ht]
+
+\endgroup
