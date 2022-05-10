@@ -25,14 +25,14 @@ dissertation: $(OUTPUT_DIR)/dissertation.pdf
 mttex/%.sty:
 	git submodule update --init mttex
 
-ifeq (,$(wildcard ~/workspace/org/bib.bib))
-else
-bib.bib: ~/workspace/org/bib.bib
-	if [[ ! -f bib.bib ]]; then touch bib.bib; fi
-	chmod +w bib.bib
-	cp -f ~/workspace/org/bib.bib .
-	chmod -w bib.bib
-endif
+#ifeq (,$(wildcard ~/workspace/org/bib.bib))
+#else
+#bib.bib: ~/workspace/org/bib.bib
+#	if [[ ! -f bib.bib ]]; then touch bib.bib; fi
+#	chmod +w bib.bib
+#	cp -f ~/workspace/org/bib.bib .
+#	chmod -w bib.bib
+#endif
 
 $(OUTPUT_DIR)/chapters $(OUTPUT_DIR)/frontbackmatters:
 	mkdir -p $@
