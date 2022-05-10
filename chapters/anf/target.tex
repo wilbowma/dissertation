@@ -184,7 +184,8 @@ While the substitution \im{\subst{\tM}{\tV}{\tx}} is well-defined, substituting
 the resulting term, itself a \emph{\tech{configuration}}, into the
 \tech{continuation} \im{\tK} could result in the non-\tech{ANF} term
 \im{\tlete{\tx}{\tM}{\tMpr}}.
-In \tech{ANF}, \tech{continuations} cannot be nested.
+In \tech{ANF}, \tech{configurations} cannot be nested.
+
 
 To ensure \tech{reduction} preserves \tech{ANF}, I define composition of a
 \tech{continuation} \im{\tK} and a \tech{configuration} \im{\tM},
